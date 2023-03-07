@@ -20,10 +20,7 @@ repository=https://github.com/GlownyUrzadGeodezjiIKartografii/WalidatorPlikowGML
 
 hasProcessingProvider=no
 # Uncomment the following line and add your changelog:
-changelog=
-1.	Zmiana ścieżek do github oraz zgłaszania błędów.
-2.	Poprawione wyświetlanie GUI dla różnych skal tekstu Windows.
-3.	Dodana data i godzina do nazw plików raportów.
+changelog= Zmiana ścieżek do github oraz zgłaszania błędów. Poprawione wyświetlanie GUI dla różnych skal tekstu Windows. Dodana data i godzina do nazw plików raportów. Nowa wersja schematu aplikacyjnego GML dla danych EGiB.
 
 # Tags are comma separated with spaces allowed
 tags=python, GML, XSD, walidacja, BDOO, BDOT10k, PRNG, GESUT, EGiB, BDOT500

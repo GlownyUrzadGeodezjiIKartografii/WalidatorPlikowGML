@@ -126,7 +126,7 @@ class walidatorPlikowGML:
                     'PRNG':"/XSD/PRNG/NG_PRNG.xsd",
                     'BDOT500':"/XSD/BDOT500/BDOT500_1.3tech.xsd",
                     'GESUT':"/XSD/GESUT/GESUT_1.3tech.xsd",
-                    'EGIB':"/XSD/EGIB/EGIB_1.6.xsd"
+                    'EGIB':"/XSD/EGIB/EGIB_1.7.xsd"
                    }
         
         if self.first_start == True:
