@@ -1,0 +1,1413 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--GUGiK 19.01.2023  schemat techniczny-->
+<schema xmlns="http://www.w3.org/2001/XMLSchema" xmlns:ges="geodezyjnaEwidencjaSieciUzbrojeniaTerenu:1.0" xmlns:gml="http://www.opengis.net/gml/3.2" targetNamespace="geodezyjnaEwidencjaSieciUzbrojeniaTerenu:1.0" elementFormDefault="qualified" attributeFormDefault="unqualified" version="1.3">
+	<import namespace="http://www.opengis.net/gml/3.2" schemaLocation="http://schemas.opengis.net/gml/3.2.1/gml.xsd"/>
+	<element name="GES_OgolnyObiekt" type="ges:GES_OgolnyObiektType" substitutionGroup="gml:AbstractFeature"/>
+	<complexType name="GES_OgolnyObiektType">
+		<complexContent>
+			<extension base="gml:AbstractFeatureType">
+				<sequence>
+					<element name="idIIP">
+						<complexType>
+							<complexContent>
+								<extension base="gml:AbstractMemberType">
+									<sequence>
+										<element ref="ges:GES_IdentyfikatorIIP"/>
+									</sequence>
+								</extension>
+							</complexContent>
+						</complexType>
+					</element>
+					<element name="startObiekt" type="dateTime">
+            <annotation>
+              <documentation>Data i czas utworzenia obiektu w bazie danych.</documentation>
+            </annotation>
+          </element>
+					<element name="startWersjaObiekt" type="dateTime">
+            <annotation>
+              <documentation>Data i czas utworzenia wersji obiektu w bazie danych.</documentation>
+            </annotation>
+          </element>
+					<element name="koniecWersjaObiekt" type="dateTime" minOccurs="0" maxOccurs="1">
+            <annotation>
+              <documentation>Data i czas przeniesienia wersji obiektu do archiwum.</documentation>
+            </annotation>
+          </element>
+					<element name="koniecObiekt" type="dateTime" minOccurs="0" maxOccurs="1">
+            <annotation>
+              <documentation>Data i czas przeniesienia obiektu do archiwum.</documentation>
+            </annotation>
+          </element>
+					<element name="zrodlo" type="ges:GES_ZrodloType"/>
+					<element name="dataPrzyjeciaDoZasobu" type="date" minOccurs="0" maxOccurs="1"/>
+					<element name="numerOperatu" type="string" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="GES_OgolnyObiektPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ges:GES_OgolnyObiekt"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="GES_IdentyfikatorIIP" type="ges:GES_IdentyfikatorIIPType" substitutionGroup="gml:AbstractObject"/>
+	<complexType name="GES_IdentyfikatorIIPType">
+		<sequence>
+			<element name="lokalnyId">
+				<annotation>
+					<documentation>Identyfikator lokalny obiektu nadawany przez dostawcę zbioru danych, unikalny w przestrzeni nazw</documentation>
+				</annotation>
+				<simpleType>
+					<restriction base="string">
+						<pattern value="[A-Za-z0-9]{8}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{12}"/>
+					</restriction>
+				</simpleType>		
+			</element>
+			<element name="przestrzenNazw">
+				<annotation>
+					<documentation>Przestrzeń nazw identyfikujaca zbiór danych, z którego pochodzi obiekt.</documentation>
+				</annotation>
+				<simpleType>
+					<restriction base="string">
+						<pattern value="PL\.[A-Za-z]{1,6}\.\d{1,6}\.[A-Za-z0-9]{1,8}"/>
+					</restriction>
+				</simpleType>
+			</element>
+			<element name="wersjaId" type="dateTime" minOccurs="0" maxOccurs="1">
+				<annotation>
+					<documentation>Identyfikator wersji obiektu.</documentation>
+				</annotation>
+			</element>
+		</sequence>
+	</complexType>
+	<complexType name="GES_IdentyfikatorIIPPropertyType">
+		<sequence>
+			<element ref="ges:GES_IdentyfikatorIIP"/>
+		</sequence>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="GES_ObiektGESUT" type="ges:GES_ObiektGESUTType" substitutionGroup="ges:GES_OgolnyObiekt"/>
+	<complexType name="GES_ObiektGESUTType">
+		<complexContent>
+			<extension base="ges:GES_OgolnyObiektType">
+				<sequence>
+					<element name="status" type="ges:GES_StatusType"/>
+					<element name="eksploatacja" type="ges:GES_EksploatacjaType" minOccurs="0" maxOccurs="1"/>
+					<element name="wladajacy" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="idBranzowy" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="informacjaDodatkowa" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="rzednaObiektu" type="ges:GES_RzednaPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="GES_ObiektGESUTPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ges:GES_ObiektGESUT"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="GES_Przewod" type="ges:GES_PrzewodType" substitutionGroup="ges:GES_ObiektGESUT"/>
+	<complexType name="GES_PrzewodType">
+		<complexContent>
+			<extension base="ges:GES_ObiektGESUTType">
+				<sequence>
+					<element name="geometria" type="gml:CurvePropertyType"/>
+					<element name="funkcja" type="ges:GES_FunkcjaType" minOccurs="0" maxOccurs="1"/>
+					<element name="przebieg" type="ges:GES_PrzebiegType" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="GES_PrzewodPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ges:GES_Przewod"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="GES_UrzadzenieZwiazaneZPrzewodami" type="ges:GES_UrzadzenieZwiazaneZPrzewodamiType" substitutionGroup="ges:GES_ObiektGESUT"/>
+	<complexType name="GES_UrzadzenieZwiazaneZPrzewodamiType">
+		<complexContent>
+			<extension base="ges:GES_ObiektGESUTType">
+				<sequence>
+					<element name="geometria" type="gml:GeometryPropertyType"/>
+					<element name="ksztaltUrzadzenia" type="ges:GES_KsztaltUrzadzType" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="GES_UrzadzenieZwiazaneZPrzewodamiPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ges:GES_UrzadzenieZwiazaneZPrzewodami"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="GES_UrzadzeniaTowarzyszczaceLiniowe" type="ges:GES_UrzadzeniaTowarzyszczaceLinioweType" substitutionGroup="ges:GES_ObiektGESUT"/>
+	<complexType name="GES_UrzadzeniaTowarzyszczaceLinioweType">
+		<complexContent>
+			<extension base="ges:GES_ObiektGESUTType">
+				<sequence>
+					<element name="geometria" type="gml:GeometryPropertyType"/>
+					<element name="rodzajUrzadzenia" type="ges:GES_RodzUrzadzTowLinioweType"/>
+					<element name="rodzajSieci" type="ges:GES_RodzajSieciType" minOccurs="0" maxOccurs="unbounded"/>
+					<element name="srednica" type="integer" minOccurs="0" maxOccurs="1"/>
+					<element name="wymiarPoziomy" type="integer" minOccurs="0" maxOccurs="1"/>
+					<element name="wymiarPionowy" type="integer" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="GES_UrzadzeniaTowarzyszczaceLiniowePropertyType">
+		<sequence minOccurs="0">
+			<element ref="ges:GES_UrzadzeniaTowarzyszczaceLiniowe"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="GES_InneUrzadzeniaTowarzyszace" type="ges:GES_InneUrzadzeniaTowarzyszaceType" substitutionGroup="ges:GES_ObiektGESUT"/>
+	<complexType name="GES_InneUrzadzeniaTowarzyszaceType">
+		<complexContent>
+			<extension base="ges:GES_ObiektGESUTType">
+				<sequence>
+					<element name="geometria" type="gml:GeometryPropertyType"/>
+					<element name="rodzajUrzadzenia" type="ges:GES_RodzajInneUrzadzTowType"/>
+					<element name="ksztaltUrzadzenia" type="ges:GES_KsztaltUrzadzType" minOccurs="0" maxOccurs="1"/>
+					<element name="rodzajSieci" type="ges:GES_RodzajSieciType" minOccurs="0" maxOccurs="unbounded"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="GES_InneUrzadzeniaTowarzyszacePropertyType">
+		<sequence minOccurs="0">
+			<element ref="ges:GES_InneUrzadzeniaTowarzyszace"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="GES_PrzewodWodociagowy" type="ges:GES_PrzewodWodociagowyType" substitutionGroup="ges:GES_Przewod"/>
+	<complexType name="GES_PrzewodWodociagowyType">
+		<complexContent>
+			<extension base="ges:GES_PrzewodType">
+				<sequence>
+					<element name="typPrzewodu" type="ges:GES_TypSUWPType" minOccurs="0" maxOccurs="1"/>
+					<element name="srednica" type="integer" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="GES_PrzewodWodociagowyPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ges:GES_PrzewodWodociagowy"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="GES_PrzewodKanalizacyjny" type="ges:GES_PrzewodKanalizacyjnyType" substitutionGroup="ges:GES_Przewod"/>
+	<complexType name="GES_PrzewodKanalizacyjnyType">
+		<complexContent>
+			<extension base="ges:GES_PrzewodType">
+				<sequence>
+					<element name="typPrzewodu" type="ges:GES_TypSUKPType" minOccurs="0" maxOccurs="1"/>
+					<element name="rodzaj" type="ges:GES_RodzajKanalizacjiType" minOccurs="0" maxOccurs="1"/>
+					<element name="srednica" type="integer" minOccurs="0" maxOccurs="1"/>
+					<element name="wymiarPoziomy" type="integer" minOccurs="0" maxOccurs="1"/>
+					<element name="wymiarPionowy" type="integer" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="GES_PrzewodKanalizacyjnyPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ges:GES_PrzewodKanalizacyjny"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="GES_PrzewodElektroenergetyczny" type="ges:GES_PrzewodElektroenergetycznyType" substitutionGroup="ges:GES_Przewod"/>
+	<complexType name="GES_PrzewodElektroenergetycznyType">
+		<complexContent>
+			<extension base="ges:GES_PrzewodType">
+				<sequence>
+					<element name="typPrzewodu" type="ges:GES_TypSUEPType" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="GES_PrzewodElektroenergetycznyPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ges:GES_PrzewodElektroenergetyczny"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="GES_PrzewodGazowy" type="ges:GES_PrzewodGazowyType" substitutionGroup="ges:GES_Przewod"/>
+	<complexType name="GES_PrzewodGazowyType">
+		<complexContent>
+			<extension base="ges:GES_PrzewodType">
+				<sequence>
+					<element name="typPrzewodu" type="ges:GES_TypSUGPType" minOccurs="0" maxOccurs="1"/>
+					<element name="srednica" type="integer" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="GES_PrzewodGazowyPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ges:GES_PrzewodGazowy"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="GES_PrzewodCieplowniczy" type="ges:GES_PrzewodCieplowniczyType" substitutionGroup="ges:GES_Przewod"/>
+	<complexType name="GES_PrzewodCieplowniczyType">
+		<complexContent>
+			<extension base="ges:GES_PrzewodType">
+				<sequence>
+					<element name="typPrzewodu" type="ges:GES_TypSUCPType" minOccurs="0" maxOccurs="1"/>
+					<element name="srednica" type="integer" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="GES_PrzewodCieplowniczyPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ges:GES_PrzewodCieplowniczy"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="GES_PrzewodTelekomunikacyjny" type="ges:GES_PrzewodTelekomunikacyjnyType" substitutionGroup="ges:GES_Przewod"/>
+	<complexType name="GES_PrzewodTelekomunikacyjnyType">
+		<complexContent>
+			<extension base="ges:GES_PrzewodType">
+				<sequence>
+					<element name="typPrzewodu" type="ges:GES_TypSUTPType" minOccurs="0" maxOccurs="1"/>
+					<element name="wiazka" type="boolean"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="GES_PrzewodTelekomunikacyjnyPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ges:GES_PrzewodTelekomunikacyjny"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="GES_PrzewodSpecjalny" type="ges:GES_PrzewodSpecjalnyType" substitutionGroup="ges:GES_Przewod"/>
+	<complexType name="GES_PrzewodSpecjalnyType">
+		<complexContent>
+			<extension base="ges:GES_PrzewodType">
+				<sequence>
+					<element name="typPrzewodu" type="ges:GES_TypSUSPType" minOccurs="0" maxOccurs="1"/>
+					<element name="srednica" type="integer" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="GES_PrzewodSpecjalnyPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ges:GES_PrzewodSpecjalny"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="GES_PrzewodNiezidentyfikowany" type="ges:GES_PrzewodNiezidentyfikowanyType" substitutionGroup="ges:GES_Przewod"/>
+	<complexType name="GES_PrzewodNiezidentyfikowanyType">
+		<complexContent>
+			<extension base="ges:GES_PrzewodType">
+				<sequence>
+					<element name="srednica" type="integer" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="GES_PrzewodNiezidentyfikowanyPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ges:GES_PrzewodNiezidentyfikowany"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="GES_UrzadzeniaSiecWodociagowa" type="ges:GES_UrzadzeniaSiecWodociagowaType" substitutionGroup="ges:GES_UrzadzenieZwiazaneZPrzewodami"/>
+	<complexType name="GES_UrzadzeniaSiecWodociagowaType">
+		<complexContent>
+			<extension base="ges:GES_UrzadzenieZwiazaneZPrzewodamiType">
+				<sequence>
+					<element name="rodzajUrzadzenia" type="ges:GES_RodzajUrzadzWodType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="GES_UrzadzeniaSiecWodociagowaPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ges:GES_UrzadzeniaSiecWodociagowa"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="GES_UrzadzeniaSiecKanalizacyjna" type="ges:GES_UrzadzeniaSiecKanalizacyjnaType" substitutionGroup="ges:GES_UrzadzenieZwiazaneZPrzewodami"/>
+	<complexType name="GES_UrzadzeniaSiecKanalizacyjnaType">
+		<complexContent>
+			<extension base="ges:GES_UrzadzenieZwiazaneZPrzewodamiType">
+				<sequence>
+					<element name="rodzajUrzadzenia" type="ges:GES_RodzajUrzadzKanalType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="GES_UrzadzeniaSiecKanalizacyjnaPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ges:GES_UrzadzeniaSiecKanalizacyjna"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="GES_UrzadzeniaSiecElektroenergetyczna" type="ges:GES_UrzadzeniaSiecElektroenergetycznaType" substitutionGroup="ges:GES_UrzadzenieZwiazaneZPrzewodami"/>
+	<complexType name="GES_UrzadzeniaSiecElektroenergetycznaType">
+		<complexContent>
+			<extension base="ges:GES_UrzadzenieZwiazaneZPrzewodamiType">
+				<sequence>
+					<element name="rodzajUrzadzenia" type="ges:GES_RodzajUrzadzElektrType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="GES_UrzadzeniaSiecElektroenergetycznaPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ges:GES_UrzadzeniaSiecElektroenergetyczna"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="GES_UrzadzeniaSiecGazowa" type="ges:GES_UrzadzeniaSiecGazowaType" substitutionGroup="ges:GES_UrzadzenieZwiazaneZPrzewodami"/>
+	<complexType name="GES_UrzadzeniaSiecGazowaType">
+		<complexContent>
+			<extension base="ges:GES_UrzadzenieZwiazaneZPrzewodamiType">
+				<sequence>
+					<element name="rodzajUrzadzenia" type="ges:GES_RodzajUrzadzGazType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="GES_UrzadzeniaSiecGazowaPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ges:GES_UrzadzeniaSiecGazowa"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="GES_UrzadzeniaSiecCieplownicza" type="ges:GES_UrzadzeniaSiecCieplowniczaType" substitutionGroup="ges:GES_UrzadzenieZwiazaneZPrzewodami"/>
+	<complexType name="GES_UrzadzeniaSiecCieplowniczaType">
+		<complexContent>
+			<extension base="ges:GES_UrzadzenieZwiazaneZPrzewodamiType">
+				<sequence>
+					<element name="rodzajUrzadzenia" type="ges:GES_RodzajUrzadzCieplType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="GES_UrzadzeniaSiecCieplowniczaPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ges:GES_UrzadzeniaSiecCieplownicza"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="GES_UrzadzeniaSiecTelekomunikacyjna" type="ges:GES_UrzadzeniaSiecTelekomunikacyjnaType" substitutionGroup="ges:GES_UrzadzenieZwiazaneZPrzewodami"/>
+	<complexType name="GES_UrzadzeniaSiecTelekomunikacyjnaType">
+		<complexContent>
+			<extension base="ges:GES_UrzadzenieZwiazaneZPrzewodamiType">
+				<sequence>
+					<element name="rodzajUrzadzenia" type="ges:GES_RodzajUrzadzTelekomType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="GES_UrzadzeniaSiecTelekomunikacyjnaPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ges:GES_UrzadzeniaSiecTelekomunikacyjna"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="GES_UrzadzeniaTechniczneSieciSpecjalnej" type="ges:GES_UrzadzeniaTechniczneSieciSpecjalnejType" substitutionGroup="ges:GES_UrzadzenieZwiazaneZPrzewodami"/>
+	<complexType name="GES_UrzadzeniaTechniczneSieciSpecjalnejType">
+		<complexContent>
+			<extension base="ges:GES_UrzadzenieZwiazaneZPrzewodamiType">
+				<sequence>
+					<element name="rodzajUrzadzenia" type="ges:GES_RodzajUrzadzSpecjType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="GES_UrzadzeniaTechniczneSieciSpecjalnejPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ges:GES_UrzadzeniaTechniczneSieciSpecjalnej"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="GES_UrzadzenieNiezidentyfikowane" type="ges:GES_UrzadzenieNiezidentyfikowaneType" substitutionGroup="ges:GES_UrzadzenieZwiazaneZPrzewodami"/>
+	<complexType name="GES_UrzadzenieNiezidentyfikowaneType">
+		<complexContent>
+			<extension base="ges:GES_UrzadzenieZwiazaneZPrzewodamiType">
+				<sequence/>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="GES_UrzadzenieNiezidentyfikowanePropertyType">
+		<sequence minOccurs="0">
+			<element ref="ges:GES_UrzadzenieNiezidentyfikowane"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="GES_Rzedna" type="ges:GES_RzednaType" substitutionGroup="ges:GES_OgolnyObiekt"/>
+	<complexType name="GES_RzednaType">
+		<complexContent>
+			<extension base="ges:GES_OgolnyObiektType">
+				<sequence>
+					<element name="geometria" type="gml:PointPropertyType"/>
+					<element name="rzednaGory" type="double" minOccurs="0" maxOccurs="1"/>
+					<element name="rzednaDolu" type="double" minOccurs="0" maxOccurs="1"/>
+					<element name="rzedna" type="double" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="GES_RzednaPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ges:GES_Rzedna"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+  <element name="PrezentacjaGraficzna" type="ges:PrezentacjaGraficznaType" substitutionGroup="gml:AbstractFeature"/>
+  <complexType name="PrezentacjaGraficznaType">
+    <complexContent>
+      <extension base="gml:AbstractFeatureType">
+        <sequence>
+          <element name="kodObiektu" type="string" minOccurs="0" maxOccurs="1"/>
+          <element name="geometria" type="gml:GeometryPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+          <element name="katObrotu" minOccurs="0" maxOccurs="1">
+			<simpleType>
+				<restriction base="double">
+					<minInclusive value="0"/>
+				</restriction>
+			</simpleType>
+		  </element>
+          <element name="parametrPrzeskalowania" type="double" minOccurs="0" maxOccurs="1"/>
+          <element name="etykieta" minOccurs="0" maxOccurs="unbounded">
+            <complexType>
+              <complexContent>
+                <extension base="gml:AbstractMemberType">
+                  <sequence>
+                    <element ref="ges:Etykieta"/>
+                  </sequence>
+                </extension>
+              </complexContent>
+            </complexType>
+          </element>
+          <element name="obiektPrzedstawiany" type="ges:GES_OgolnyObiektPropertyType" minOccurs="0" maxOccurs="1"/>
+        </sequence>
+      </extension>
+    </complexContent>
+  </complexType>
+  <complexType name="PrezentacjaGraficznaPropertyType">
+    <sequence minOccurs="0">
+      <element ref="ges:PrezentacjaGraficzna"/>
+    </sequence>
+    <attributeGroup ref="gml:AssociationAttributeGroup"/>
+    <attributeGroup ref="gml:OwnershipAttributeGroup"/>
+  </complexType>
+  <element name="Etykieta" type="ges:EtykietaType" substitutionGroup="gml:AbstractObject"/>
+  <complexType name="EtykietaType">
+    <sequence>
+      <element name="geometria" type="gml:PointPropertyType"/>
+      <element name="justyfikacja" minOccurs="0" maxOccurs="1">	
+		<simpleType>
+			<restriction base="integer">
+				<minExclusive value="0"/>
+				<maxInclusive value="9"/>
+			</restriction>
+		</simpleType>
+	  </element>
+	  <element name="katObrotu" minOccurs="0" maxOccurs="1">
+		<simpleType>
+			<restriction base="double">
+				<minInclusive value="0"/>
+			</restriction>
+		</simpleType>
+	  </element>
+      <element name="odnosnik" type="gml:PointPropertyType" minOccurs="0" maxOccurs="1"/>
+      <element name="parametrPrzeskalowania" type="double" minOccurs="0" maxOccurs="1"/>
+    </sequence>
+  </complexType>
+  <complexType name="EtykietaPropertyType">
+    <sequence>
+      <element ref="ges:Etykieta"/>
+    </sequence>
+    <attributeGroup ref="gml:OwnershipAttributeGroup"/>
+  </complexType>
+	<simpleType name="GES_ZrodloType">
+    <annotation>
+      <documentation>Żródło danych o obiekcie bazy GESUT.</documentation>
+    </annotation>
+		<restriction base="string">
+			<enumeration value="O">
+				<annotation>
+					<appinfo>
+						<gml:description>pomiarBezposredni</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="A">
+				<annotation>
+					<appinfo>
+						<gml:description>pomiarAparatura</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="D">
+				<annotation>
+					<appinfo>
+						<gml:description>Wektoryzacja</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="F">
+				<annotation>
+					<appinfo>
+						<gml:description>pomiarFotogrametryczny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="M">
+				<annotation>
+					<appinfo>
+						<gml:description>pomiarBezposredniDoSzczegTeren</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="B">
+				<annotation>
+					<appinfo>
+						<gml:description>daneBranzowe</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="K">
+				<annotation>
+					<appinfo>
+						<gml:description>dokumentacjaZNarady</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="I">
+				<annotation>
+					<appinfo>
+						<gml:description>inne</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="X">
+				<annotation>
+					<appinfo>
+						<gml:description>nieokreslone</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="GES_StatusType">
+    <annotation>
+      <documentation>Status obiektu bazy GESUT.</documentation>
+    </annotation>
+		<restriction base="string">
+			<enumeration value="i">
+				<annotation>
+					<appinfo>
+						<gml:description>istniejacy</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="p">
+				<annotation>
+					<appinfo>
+						<gml:description>projektowany</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="GES_EksploatacjaType">
+    <annotation>
+      <documentation>Status eksploatacji obiektu bazy GESUT.</documentation>
+    </annotation>
+		<restriction base="string">
+			<enumeration value="c">
+				<annotation>
+					<appinfo>
+						<gml:description>czynny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="n">
+				<annotation>
+					<appinfo>
+						<gml:description>nieczynny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="GES_FunkcjaType">
+    <annotation>
+      <documentation>Funkcja przewodu.</documentation>
+    </annotation>
+		<restriction base="string">
+			<enumeration value="g">
+				<annotation>
+					<appinfo>
+						<gml:description>glowny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="p">
+				<annotation>
+					<appinfo>
+						<gml:description>przylacze</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="GES_PrzebiegType">
+    <annotation>
+      <documentation>Przebieg przewodu.</documentation>
+    </annotation>
+		<restriction base="string">
+			<enumeration value="p">
+				<annotation>
+					<appinfo>
+						<gml:description>podziemny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="z">
+				<annotation>
+					<appinfo>
+						<gml:description>naziemny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="n">
+				<annotation>
+					<appinfo>
+						<gml:description>nadziemny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="GES_KsztaltUrzadzType">
+    <annotation>
+      <documentation>Kształt urządzeń.</documentation>
+    </annotation>
+		<restriction base="string">
+			<enumeration value="o">
+				<annotation>
+					<appinfo>
+						<gml:description>okragly</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="k">
+				<annotation>
+					<appinfo>
+						<gml:description>kwadratowy</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="p">
+				<annotation>
+					<appinfo>
+						<gml:description>prostokatny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="w">
+				<annotation>
+					<appinfo>
+						<gml:description>owalny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="n">
+				<annotation>
+					<appinfo>
+						<gml:description>nieokreslony</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="GES_RodzajSieciType">
+    <annotation>
+      <documentation>Rodzaj sieci do której należy urządzenie.</documentation>
+    </annotation>
+		<restriction base="string">
+			<enumeration value="w">
+				<annotation>
+					<appinfo>
+						<gml:description>siecWodociagowa</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="k">
+				<annotation>
+					<appinfo>
+						<gml:description>siecKanalizacyjna</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="e">
+				<annotation>
+					<appinfo>
+						<gml:description>siecElektroenergetyczna</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="g">
+				<annotation>
+					<appinfo>
+						<gml:description>siecGazowa</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="c">
+				<annotation>
+					<appinfo>
+						<gml:description>siecCieplownicza</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="t">
+				<annotation>
+					<appinfo>
+						<gml:description>siecTelekomunikacyjna</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="s">
+				<annotation>
+					<appinfo>
+						<gml:description>siecSpecjalna</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="x">
+				<annotation>
+					<appinfo>
+						<gml:description>siecNiezidentyfikowana</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="GES_RodzUrzadzTowLinioweType">
+    <annotation>
+      <documentation>Rodzaj liniowych urządzeń towarzyszących.</documentation>
+    </annotation>
+		<restriction base="string">
+			<enumeration value="l">
+				<annotation>
+					<appinfo>
+						<gml:description>kanalTechnologiczny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="o">
+				<annotation>
+					<appinfo>
+						<gml:description>obudowaOchronna</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="GES_RodzajInneUrzadzTowType">
+    <annotation>
+      <documentation>Rodzaj innych urządzeń towarzyszących.</documentation>
+    </annotation>
+		<restriction base="string">
+			<enumeration value="k">
+				<annotation>
+					<appinfo>
+						<gml:description>komoraPodziemna</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="w">
+				<annotation>
+					<appinfo>
+						<gml:description>wlazDoKomoryKanalu</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="p">
+				<annotation>
+					<appinfo>
+						<gml:description>slupPrzewNapowietrznych</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="y">
+				<annotation>
+					<appinfo>
+						<gml:description>slupTrakcyjny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="n">
+				<annotation>
+					<appinfo>
+						<gml:description>podporaPrzewodow</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="b">
+				<annotation>
+					<appinfo>
+						<gml:description>budowlaPodziemna</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="GES_TypSUWPType">
+    <annotation>
+      <documentation>Typy przewodów wodociągowych.</documentation>
+    </annotation>
+		<restriction base="string">
+			<enumeration value="o">
+				<annotation>
+					<appinfo>
+						<gml:description>ogolny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="l">
+				<annotation>
+					<appinfo>
+						<gml:description>lokalny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="GES_TypSUKPType">
+		<annotation>
+			<documentation>Typy przewodów kanalizacyjnych.</documentation>
+		</annotation>
+		<restriction base="string">
+			<enumeration value="o">
+				<annotation>
+					<appinfo>
+						<gml:description>ogolnosplawny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="d">
+				<annotation>
+					<appinfo>
+						<gml:description>deszczowy</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="s">
+				<annotation>
+					<appinfo>
+						<gml:description>sanitarny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="p">
+				<annotation>
+					<appinfo>
+						<gml:description>przemyslowy</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="l">
+				<annotation>
+					<appinfo>
+						<gml:description>lokalny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+  <simpleType name="GES_RodzajKanalizacjiType">
+    <annotation>
+      <documentation>Rodzaje przewodów kanalizacyjnych.</documentation>
+    </annotation>
+    <restriction base="string">
+      <enumeration value="g">
+				<annotation>
+					<appinfo>
+						<gml:description>grawitacyjna</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+      <enumeration value="t">
+				<annotation>
+					<appinfo>
+						<gml:description>tloczna</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+    </restriction>
+  </simpleType>
+	<simpleType name="GES_TypSUEPType">
+		<annotation>
+			<documentation>Typy przewodów elektroenergetycznych.</documentation>
+		</annotation>
+		<restriction base="string">
+			<enumeration value="ww">
+				<annotation>
+					<documentation>Najwyższego napięcia (od 145kV do 750kV włącznie)</documentation>
+					<appinfo>
+						<gml:description>najwyzszegoNapiecia</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="w">
+				<annotation>
+					<documentation>Wysokiego napięcia (od 45kV do 145kV włącznie)</documentation>
+					<appinfo>
+						<gml:description>wysokiegoNapiecia</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="s">
+				<annotation>
+					<documentation>Średniego napięcia (od 1kV do 45kV włącznie)</documentation>
+					<appinfo>
+						<gml:description>sredniegoNapiecia</gml:description>
+					</appinfo>					
+				</annotation>
+			</enumeration>
+			<enumeration value="n">
+				<annotation>
+					<documentation>Niskiego napięcia (od 0,4kV włącznie do 1kV włącznie)</documentation>
+					<appinfo>
+						<gml:description>niskiegoNapiecia</gml:description>
+					</appinfo>	
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="GES_TypSUGPType">
+		<annotation>
+			<documentation>Typy przewodów gazowych.</documentation>
+		</annotation>
+		<restriction base="string">
+			<enumeration value="w">
+				<annotation>
+					<appinfo>
+						<gml:description>wysokiegoCisnienia</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="p">
+				<annotation>
+					<appinfo>
+						<gml:description>podwyzszonegoSredniegoCisnienia</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="s">
+				<annotation>
+					<appinfo>
+						<gml:description>sredniegoCisnienia</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="n">
+				<annotation>
+					<appinfo>
+						<gml:description>niskiegoCisnienia</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="GES_TypSUCPType">
+		<annotation>
+      <documentation>Typy przewodów ciepłowniczych.</documentation>
+		</annotation>
+		<restriction base="string">
+			<enumeration value="w">
+				<annotation>
+					<appinfo>
+						<gml:description>wysokiegoParametruCiepla</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="n">
+				<annotation>
+					<appinfo>
+						<gml:description>niskiegoParametruCiepla</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="GES_TypSUTPType">
+		<annotation>
+			<documentation>Typy przewodów telekomunikacyjnych.</documentation>
+		</annotation>
+		<restriction base="string">
+			<enumeration value="s">
+				<annotation>
+					<appinfo>
+						<gml:description>swiatlowod</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="i">
+				<annotation>
+					<appinfo>
+						<gml:description>inny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="GES_TypSUSPType">
+    <annotation>
+      <documentation>Typy przewodów specjalnych.</documentation>
+    </annotation>   
+		<restriction base="string">
+			<enumeration value="b">
+				<annotation>
+					<appinfo>
+						<gml:description>benzynowy</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="n">
+				<annotation>
+					<appinfo>
+						<gml:description>naftowy</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="i">
+				<annotation>
+					<appinfo>
+						<gml:description>inny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="GES_RodzajUrzadzWodType">
+    <annotation>
+      <documentation>Rodzaje urządzeń wodociągowych.</documentation>
+    </annotation>
+    <restriction base="string">
+			<enumeration value="u">
+				<annotation>
+					<appinfo>
+						<gml:description>urzadzenieTechniczne</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="w">
+				<annotation>
+					<appinfo>
+						<gml:description>zasuwaZawor</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="r">
+				<annotation>
+					<appinfo>
+						<gml:description>hydrofornia</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="h">
+				<annotation>
+					<appinfo>
+						<gml:description>hydrant</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="d">
+				<annotation>
+					<appinfo>
+						<gml:description>zdrojUliczny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="s">
+				<annotation>
+					<appinfo>
+						<gml:description>studniaZwykla</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="g">
+				<annotation>
+					<appinfo>
+						<gml:description>studniaGlebinowa</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+  <simpleType name="GES_RodzajUrzadzKanalType">
+    <annotation>
+      <documentation>Rodzaje urządzeń kanalizacyjnych.</documentation>
+    </annotation>
+    <restriction base="string">
+      <enumeration value="u">
+				<annotation>
+					<appinfo>
+						<gml:description>urzadzenieTechniczne</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+      <enumeration value="w">
+				<annotation>
+					<appinfo>
+						<gml:description>zasuwaZawor</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+      <enumeration value="s">
+				<annotation>
+					<appinfo>
+						<gml:description>studniaKanalizacyjna</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+      <enumeration value="k">
+				<annotation>
+					<appinfo>
+						<gml:description>kratkaSciekowa</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+      <enumeration value="l">
+				<annotation>
+					<appinfo>
+						<gml:description>odwodnienieLiniowe</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+      <enumeration value="m">
+				<annotation>
+					<appinfo>
+						<gml:description>osadnikSzambo</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+      <enumeration value="d">
+				<annotation>
+					<appinfo>
+						<gml:description>przydomowaOczyszczalniaSciekow</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+      <enumeration value="e">
+				<annotation>
+					<appinfo>
+						<gml:description>wylotKanalu</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+      <enumeration value="n">
+				<annotation>
+					<appinfo>
+						<gml:description>przepompownia</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+    </restriction>
+  </simpleType>  
+	<simpleType name="GES_RodzajUrzadzElektrType">
+    <annotation>
+      <documentation>Rodzaje urządzeń elektroenergetycznych.</documentation>
+    </annotation>
+		<restriction base="string">
+			<enumeration value="u">
+				<annotation>
+					<appinfo>
+						<gml:description>urzadzenieTechniczne</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="s">
+				<annotation>
+					<appinfo>
+						<gml:description>szafaElektroenergetycznaKontener</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="t">
+				<annotation>
+					<appinfo>
+						<gml:description>stacjaTransformatorowa</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="o">
+				<annotation>
+					<appinfo>
+						<gml:description>latarnia</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="m">
+				<annotation>
+					<appinfo>
+						<gml:description>masztOswietleniowy</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="a">
+				<annotation>
+					<appinfo>
+						<gml:description>turbinaWiatrowa</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="l">
+				<annotation>
+					<appinfo>
+						<gml:description>stacjaLadowaniaPojazdowElektr</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="GES_RodzajUrzadzGazType">
+    <annotation>
+      <documentation>Rodzaje urządzeń gazowych.</documentation>
+    </annotation>
+		<restriction base="string">
+			<enumeration value="u">
+				<annotation>
+					<appinfo>
+						<gml:description>urzadzenieTechniczne</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="w">
+				<annotation>
+					<appinfo>
+						<gml:description>zasuwaZawor</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="s">
+				<annotation>
+					<appinfo>
+						<gml:description>szafaGazowaKontener</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="n">
+				<annotation>
+					<appinfo>
+						<gml:description>stacjaGazowa</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="v">
+				<annotation>
+					<appinfo>
+						<gml:description>zbiornikGazu</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="GES_RodzajUrzadzCieplType">
+    <annotation>
+      <documentation>Rodzaje urządzeń ciepłowniczych.</documentation>
+    </annotation>
+		<restriction base="string">
+			<enumeration value="u">
+				<annotation>
+					<appinfo>
+						<gml:description>urzadzenieTechniczne</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="w">
+				<annotation>
+					<appinfo>
+						<gml:description>zasuwaZawor</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="GES_RodzajUrzadzTelekomType">
+		<restriction base="string">
+			<enumeration value="u">
+				<annotation>
+					<appinfo>
+						<gml:description>urzadzenieTechniczne</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="s">
+				<annotation>
+					<appinfo>
+						<gml:description>szafaTelekomunikacyjnaKontener</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="w">
+				<annotation>
+					<appinfo>
+						<gml:description>wiezaTelekomunikacyjna</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="k">
+				<annotation>
+					<appinfo>
+						<gml:description>slupekTelekomunikacyjny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="GES_RodzajUrzadzSpecjType">
+    <annotation>
+      <documentation>Rodzaje urządzeń specjalnych.</documentation>
+    </annotation>
+		<restriction base="string">
+			<enumeration value="u">
+				<annotation>
+					<appinfo>
+						<gml:description>urzadzenieTechniczne</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+</schema>

@@ -1,0 +1,1241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--GUGiK 19.01.2023  schemat techniczny-->
+<schema xmlns="http://www.w3.org/2001/XMLSchema" xmlns:ot="bazaDanychObiektowTopograficznych500:1.0" xmlns:gml="http://www.opengis.net/gml/3.2" targetNamespace="bazaDanychObiektowTopograficznych500:1.0" elementFormDefault="qualified" attributeFormDefault="unqualified" version="1.3tech">
+	<import namespace="http://www.opengis.net/gml/3.2" schemaLocation="http://schemas.opengis.net/gml/3.2.1/gml.xsd"/>
+		<element name="OT_ObiektBDOT500" type="ot:OT_ObiektBDOT500Type" substitutionGroup="gml:AbstractFeature" abstract="true">
+		<annotation>
+			<documentation>Klasa abstrakcyjna grupująca atrybuty obiektów topograficznych o szczegółowości zapewniającej tworzenie standardowych opracowań kartograficznych w skalach 1:500 – 1:5 000.</documentation>
+		</annotation>
+	</element>
+	<complexType name="OT_ObiektBDOT500Type" abstract="true">
+		<complexContent>
+			<extension base="gml:AbstractFeatureType">
+				<sequence>
+					<element name="idIIP">
+						<complexType>
+							<complexContent>
+								<extension base="gml:AbstractMemberType">
+									<sequence>
+										<element ref="ot:OT_IdentyfikatorIIP"/>
+									</sequence>
+								</extension>
+							</complexContent>
+						</complexType>
+					</element>
+					<element name="startObiekt" type="dateTime">
+						<annotation>
+							<documentation>Data i czas utworzenia obiektu w bazie danych.</documentation>
+						</annotation>
+					</element>
+					<element name="startWersjaObiekt" type="dateTime">
+						<annotation>
+							<documentation>Data i czas utworzenia wersji obiektu w bazie danych.</documentation>
+						</annotation>
+					</element>
+					<element name="koniecWersjaObiekt" type="dateTime" minOccurs="0" maxOccurs="1">
+						<annotation>
+							<documentation>Data i czas przeniesienia wersji obiektu do archiwum.</documentation>
+						</annotation>
+					</element>
+					<element name="koniecObiekt" type="dateTime" minOccurs="0" maxOccurs="1">
+						<annotation>
+							<documentation>Data i czas przeniesienia obiektu do archiwum.</documentation>
+						</annotation>
+					</element>
+					<element name="zrodlo" type="ot:OT_ZrodloType"/>
+					<element name="dataPrzyjeciaDoZasobu" type="date" minOccurs="0" maxOccurs="1"/>
+					<element name="informacjaDodatkowa" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="numerOperatu" type="string" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_ObiektBDOT500PropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_ObiektBDOT500"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_IdentyfikatorIIP" type="ot:OT_IdentyfikatorIIPType" substitutionGroup="gml:AbstractObject"/>
+	<complexType name="OT_IdentyfikatorIIPType">
+		<sequence>
+			<element name="lokalnyId">
+				<annotation>
+					<documentation>Identyfikator lokalny obiektu nadawany przez dostawcę zbioru danych, unikalny w przestrzeni nazw.</documentation>
+				</annotation>
+				<simpleType>
+					<restriction base="string">
+						<pattern value="[A-Za-z0-9]{8}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{12}"/>
+					</restriction>
+				</simpleType>
+			</element>
+			<element name="przestrzenNazw">
+				<annotation>
+					<documentation>Przestrzeń nazw identyfikujaca zbiór danych, z którego pochodzi obiekt.</documentation>
+				</annotation>
+				<simpleType>
+					<restriction base="string">
+						<pattern value="PL\.[A-Za-z]{1,6}\.\d{1,6}\.[A-Za-z0-9]{1,8}"/>
+					</restriction>
+				</simpleType>				
+			</element>
+      <element name="wersjaId" type="dateTime" minOccurs="0" maxOccurs="1">
+        <annotation>
+          <documentation>Identyfikator wersji obiektu.</documentation>
+        </annotation>
+      </element>
+		</sequence>
+	</complexType>
+	<complexType name="OT_IdentyfikatorIIPPropertyType">
+		<sequence>
+			<element ref="ot:OT_IdentyfikatorIIP"/>
+		</sequence>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_BudynekNiewykazanyWEGIB" type="ot:OT_BudynekNiewykazanyWEGIBType" substitutionGroup="ot:OT_ObiektBDOT500"/>
+	<complexType name="OT_BudynekNiewykazanyWEGIBType">
+		<complexContent>
+			<extension base="ot:OT_ObiektBDOT500Type">
+				<sequence>
+					<element name="geometria" type="gml:MultiSurfacePropertyType"/>
+					<element name="rodzajKST" type="ot:OT_RodzajWgKSTType"/>
+					<element name="status" type="ot:OT_StatusBudynkuType"/>
+					<element name="liczbaKondygnacjiNadziemnych" type="integer" minOccurs="0" maxOccurs="1"/>
+					<element name="liczbaKondygnacjiPodziemnych" type="integer" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_BudynekNiewykazanyWEGIBPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_BudynekNiewykazanyWEGIB"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_BlokBudynku" type="ot:OT_BlokBudynkuType" substitutionGroup="ot:OT_ObiektBDOT500"/>
+	<complexType name="OT_BlokBudynkuType">
+		<complexContent>
+			<extension base="ot:OT_ObiektBDOT500Type">
+				<sequence>
+					<element name="geometria" type="gml:SurfacePropertyType"/>
+					<element name="rodzajBloku" type="ot:OT_RodzajBlokuType"/>
+					<element name="oznaczenieBloku" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="numerNajwyzszejKondygnacji" type="integer" minOccurs="0" maxOccurs="1"/>
+					<element name="numerNajnizszejKondygnacji" type="integer" minOccurs="0" maxOccurs="1"/>
+          <element name="blokZBudynkiem" type="ot:OT_BudynekNiewykazanyWEGIBPropertyType">
+            <annotation>
+              <documentation>Budynek w którym blok budynku został wyodrębniony.</documentation>
+            </annotation>
+          </element>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_BlokBudynkuPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_BlokBudynku"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_ObiektTrwaleZwiazanyZBudynkami" type="ot:OT_ObiektTrwaleZwiazanyZBudynkamiType" substitutionGroup="ot:OT_ObiektBDOT500"/>
+	<complexType name="OT_ObiektTrwaleZwiazanyZBudynkamiType">
+		<complexContent>
+			<extension base="ot:OT_ObiektBDOT500Type">
+				<sequence>
+					<element name="geometria" type="gml:GeometryPropertyType"/>
+					<element name="rodzajObiektu" type="ot:OT_RodzajObiektuZwiazanegoZBudynkiemType"/>
+					<element name="poliliniaKierunkowa" type="gml:CurvePropertyType" minOccurs="0" maxOccurs="1"/>
+          <element name="budynekZObiektami" type="ot:OT_BudynekNiewykazanyWEGIBPropertyType">
+            <annotation>
+              <documentation>Budynek z którym obiekt jest związany.</documentation>
+            </annotation>
+          </element>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_ObiektTrwaleZwiazanyZBudynkamiPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_ObiektTrwaleZwiazanyZBudynkami"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_Budowle" type="ot:OT_BudowleType" substitutionGroup="ot:OT_ObiektBDOT500"/>
+	<complexType name="OT_BudowleType">
+		<complexContent>
+			<extension base="ot:OT_ObiektBDOT500Type">
+				<sequence>
+					<element name="geometria" type="gml:GeometryPropertyType"/>
+					<element name="rodzajBudowli" type="ot:OT_RodzajBudowliType"/>
+					<element name="poliliniaKierunkowa" type="gml:CurvePropertyType" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_BudowlePropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_Budowle"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_Ogrodzenia" type="ot:OT_OgrodzeniaType" substitutionGroup="ot:OT_ObiektBDOT500"/>
+	<complexType name="OT_OgrodzeniaType">
+		<complexContent>
+			<extension base="ot:OT_ObiektBDOT500Type">
+				<sequence>
+					<element name="geometria" type="gml:MultiCurvePropertyType"/>
+					<element name="rodzajOgrodzenia" type="ot:OT_RodzajOgrodzeniaType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_OgrodzeniaPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_Ogrodzenia"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_Komunikacja" type="ot:OT_KomunikacjaType" substitutionGroup="ot:OT_ObiektBDOT500"/>
+	<complexType name="OT_KomunikacjaType">
+		<complexContent>
+			<extension base="ot:OT_ObiektBDOT500Type">
+				<sequence>
+					<element name="geometria" type="gml:GeometryPropertyType"/>
+					<element name="rodzajObiektu" type="ot:OT_RodzajKomunikacjaType"/>
+					<element name="rodzajNawierzchni" type="ot:OT_RodzajNawierzchniType" minOccurs="0" maxOccurs="1"/>
+					<element name="polozenie" type="ot:OT_PolozenieCiaguKomunikacyjnegoType" minOccurs="0" maxOccurs="1"/>
+					<element name="poliliniaKierunkowa" type="gml:CurvePropertyType" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_KomunikacjaPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_Komunikacja"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_SportIRekreacja" type="ot:OT_SportIRekreacjaType" substitutionGroup="ot:OT_ObiektBDOT500"/>
+	<complexType name="OT_SportIRekreacjaType">
+		<complexContent>
+			<extension base="ot:OT_ObiektBDOT500Type">
+				<sequence>
+					<element name="geometria" type="gml:GeometryPropertyType"/>
+					<element name="RodzajObiektu" type="ot:OT_RodzajObiektuSportType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_SportIRekreacjaPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_SportIRekreacja"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_ZagospodarowanieTerenu" type="ot:OT_ZagospodarowanieTerenuType" substitutionGroup="ot:OT_ObiektBDOT500"/>
+	<complexType name="OT_ZagospodarowanieTerenuType">
+		<complexContent>
+			<extension base="ot:OT_ObiektBDOT500Type">
+				<sequence>
+					<element name="geometria" type="gml:GeometryPropertyType"/>
+					<element name="rodzajObiektu" type="ot:OT_RodzajZagospodType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_ZagospodarowanieTerenuPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_ZagospodarowanieTerenu"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_Wody" type="ot:OT_WodyType" substitutionGroup="ot:OT_ObiektBDOT500"/>
+	<complexType name="OT_WodyType">
+		<complexContent>
+			<extension base="ot:OT_ObiektBDOT500Type">
+				<sequence>
+					<element name="geometria" type="gml:GeometryPropertyType"/>
+					<element name="rodzajObiektu" type="ot:OT_RodzajWodyType"/>
+					<element name="poczatekGorySkarpy" type="gml:PointPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+					<element name="koniecGorySkarpy" type="gml:PointPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+					<element name="nazwaWlasna" type="string" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_WodyPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_Wody"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_Skarpa" type="ot:OT_SkarpaType" substitutionGroup="ot:OT_ObiektBDOT500"/>
+	<complexType name="OT_SkarpaType">
+		<complexContent>
+			<extension base="ot:OT_ObiektBDOT500Type">
+				<sequence>
+					<element name="geometria" type="gml:SurfacePropertyType"/>
+					<element name="rodzajSkarpy" type="ot:OT_RodzajSkarpyType"/>
+					<element name="poczatekGorySkarpy" type="gml:PointPropertyType" minOccurs="0" maxOccurs="1"/>
+					<element name="koniecGorySkarpy" type="gml:PointPropertyType" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_SkarpaPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_Skarpa"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_Rzedna" type="ot:OT_RzednaType" substitutionGroup="ot:OT_ObiektBDOT500"/>
+	<complexType name="OT_RzednaType">
+		<complexContent>
+			<extension base="ot:OT_ObiektBDOT500Type">
+				<sequence>
+					<element name="geometria" type="gml:PointPropertyType"/>
+					<element name="rodzajRzednej" type="ot:OT_RodzajRzednejType"/>
+					<element name="rzedna" type="double"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_RzednaPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_Rzedna"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="PrezentacjaGraficzna" type="ot:PrezentacjaGraficznaType" substitutionGroup="gml:AbstractFeature"/>
+	<complexType name="PrezentacjaGraficznaType">
+		<complexContent>
+			<extension base="gml:AbstractFeatureType">
+				<sequence>
+					<element name="kodObiektu" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="geometria" type="gml:GeometryPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+					<element name="katObrotu" minOccurs="0" maxOccurs="1">
+						<simpleType>
+							<restriction base="double">
+								<minInclusive value="0"/>
+							</restriction>
+						</simpleType>
+					</element>
+					<element name="parametrPrzeskalowania" type="double" minOccurs="0" maxOccurs="1"/>
+					<element name="etykieta" minOccurs="0" maxOccurs="unbounded">
+						<complexType>
+							<complexContent>
+								<extension base="gml:AbstractMemberType">
+									<sequence>
+										<element ref="ot:Etykieta"/>
+									</sequence>
+								</extension>
+							</complexContent>
+						</complexType>
+					</element>
+				  <element name="obiektPrzedstawiany" type="ot:OT_ObiektBDOT500PropertyType" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="PrezentacjaGraficznaPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:PrezentacjaGraficzna"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="Etykieta" type="ot:EtykietaType" substitutionGroup="gml:AbstractObject"/>
+	<complexType name="EtykietaType">
+		<sequence>
+			<element name="geometria" type="gml:PointPropertyType"/>
+			<element name="justyfikacja" minOccurs="0" maxOccurs="1">	
+				<simpleType>
+					<restriction base="integer">
+						<minExclusive value="0"/>
+						<maxInclusive value="9"/>
+					</restriction>
+				</simpleType>
+			</element>
+			<element name="katObrotu" minOccurs="0" maxOccurs="1">
+				<simpleType>
+					<restriction base="double">
+						<minInclusive value="0"/>
+					</restriction>
+				</simpleType>
+			</element>
+			<element name="odnosnik" type="gml:PointPropertyType" minOccurs="0" maxOccurs="1"/>
+			<element name="parametrPrzeskalowania" type="double" minOccurs="0" maxOccurs="1"/>
+		</sequence>
+	</complexType>
+	<complexType name="EtykietaPropertyType">
+		<sequence>
+			<element ref="ot:Etykieta"/>
+		</sequence>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<simpleType name="OT_ZrodloType">
+			<annotation>
+			<documentation>Żródło danych o obiekcie bazy BDOT500.</documentation>
+		</annotation>
+		<restriction base="string">
+			<enumeration value="O">
+				<annotation>
+					<appinfo>
+						<gml:description>pomiarBezposredni</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="D">
+				<annotation>
+					<appinfo>
+						<gml:description>Wektoryzacja</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="F">
+				<annotation>
+					<appinfo>
+						<gml:description>pomiarFotogrametryczny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="M">
+				<annotation>
+					<appinfo>
+						<gml:description>pomiarBezposredniDoSzczegTeren</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="I">
+				<annotation>
+					<appinfo>
+						<gml:description>inne</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="X">
+				<annotation>
+					<appinfo>
+						<gml:description>nieokreslone</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajWgKSTType">
+		<annotation>
+			<documentation>Rodzaj budynku wg. KŚT</documentation>
+		</annotation>
+		<restriction base="string">
+			<enumeration value="m">
+				<annotation>
+					<appinfo>
+						<gml:description>mieszkalny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="g">
+				<annotation>
+					<appinfo>
+						<gml:description>produkcyjnyUslugowyIGospodarczy</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="t">
+				<annotation>
+					<appinfo>
+						<gml:description>transportuILacznosci</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="k">
+				<annotation>
+					<appinfo>
+						<gml:description>oswiatyNaukiIKulturyOrazSportu</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="z">
+				<annotation>
+					<appinfo>
+						<gml:description>szpitalaIInneBudynkiOpiekiZdrowotnej</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="b">
+				<annotation>
+					<appinfo>
+						<gml:description>biurowy</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="h">
+				<annotation>
+					<appinfo>
+						<gml:description>handlowoUslugowy</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="p">
+				<annotation>
+					<appinfo>
+						<gml:description>przemyslowy</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="s">
+				<annotation>
+					<appinfo>
+						<gml:description>zbiornikSilosIBudynekMagazynowy</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="i">
+				<annotation>
+					<appinfo>
+						<gml:description>budynekNiemieszkalny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_StatusBudynkuType">
+		<annotation>
+			<documentation>Status budynku.</documentation>
+		</annotation>
+		<restriction base="string">
+			<enumeration value="i">
+				<annotation>
+					<appinfo>
+						<gml:description>istniejący</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="b">
+				<annotation>
+					<appinfo>
+						<gml:description>wBudowie</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajBlokuType">
+		<annotation>
+			<documentation>Rodzaj bloku budynku.</documentation>
+		</annotation>
+		<restriction base="string">
+			<enumeration value="n">
+				<annotation>
+					<appinfo>
+						<gml:description>kondygnacjeNadziemne</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="p">
+				<annotation>
+					<appinfo>
+						<gml:description>kondygnacjePodziemne</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="l">
+				<annotation>
+					<appinfo>
+						<gml:description>lacznik</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="a">
+				<annotation>
+					<appinfo>
+						<gml:description>nawis</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="z">
+				<annotation>
+					<appinfo>
+						<gml:description>przejazdPrzezBudynek</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="y">
+				<annotation>
+					<appinfo>
+						<gml:description>inny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajObiektuZwiazanegoZBudynkiemType">
+		<annotation>
+			<documentation>Rodzaj obiektu trwale związanego z budynkiem.</documentation>
+		</annotation>
+		<restriction base="string">
+			<enumeration value="t">
+				<annotation>
+					<appinfo>
+						<gml:description>taras</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="w">
+				<annotation>
+					<appinfo>
+						<gml:description>werandaGanek</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="i">
+				<annotation>
+					<appinfo>
+						<gml:description>wiatrolap</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="s">
+				<annotation>
+					<appinfo>
+						<gml:description>schody</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="r">
+				<annotation>
+					<appinfo>
+						<gml:description>rampa</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="o">
+				<annotation>
+					<appinfo>
+						<gml:description>podpora</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="j">
+				<annotation>
+					<appinfo>
+						<gml:description>wjazdDoPodziemia</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="d">
+				<annotation>
+					<appinfo>
+						<gml:description>podjazdDlaOsobNiepelnosprawnych</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajBudowliType">
+		<restriction base="string">
+			<enumeration value="k">
+				<annotation>
+					<appinfo>
+						<gml:description>chlodniaKominowa</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="o">
+				<annotation>
+					<appinfo>
+						<gml:description>kominPrzemyslowy</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="c">
+				<annotation>
+					<appinfo>
+						<gml:description>wiezaCisnien</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="z">
+				<annotation>
+					<appinfo>
+						<gml:description>wiezaPrzeciwpozarowa</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="s">
+				<annotation>
+					<appinfo>
+						<gml:description>wiezaSzybuKopalnianego</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="w">
+				<annotation>
+					<appinfo>
+						<gml:description>wiezaWidokowa</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="b">
+				<annotation>
+					<appinfo>
+						<gml:description>zbiornikSilos</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="a">
+				<annotation>
+					<appinfo>
+						<gml:description>wiata</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="m">
+				<annotation>
+					<appinfo>
+						<gml:description>smietnik</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="f">
+				<annotation>
+					<appinfo>
+						<gml:description>figuraKrzyz</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="t">
+				<annotation>
+					<appinfo>
+						<gml:description>fontanna</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="p">
+				<annotation>
+					<appinfo>
+						<gml:description>pomnik</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="r">
+				<annotation>
+					<appinfo>
+						<gml:description>ruinaZabytkowa</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="n">
+				<annotation>
+					<appinfo>
+						<gml:description>scianaOporowa</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="d">
+				<annotation>
+					<appinfo>
+						<gml:description>podpora</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="i">
+				<annotation>
+					<appinfo>
+						<gml:description>innaBudowla</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajOgrodzeniaType">
+		<restriction base="string">
+			<enumeration value="o">
+				<annotation>
+					<appinfo>
+						<gml:description>ogrodzenieTrwale</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="b">
+				<annotation>
+					<appinfo>
+						<gml:description>brama</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="f">
+				<annotation>
+					<appinfo>
+						<gml:description>furtka</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajKomunikacjaType">
+		<annotation>
+			<documentation>Rodzaj obiektu komunikacyjnego.</documentation>
+		</annotation>
+		<restriction base="string">
+			<enumeration value="j">
+				<annotation>
+					<appinfo>
+						<gml:description>jezdnia</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="k">
+				<annotation>
+					<appinfo>
+						<gml:description>kraweznik</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="c">
+				<annotation>
+					<appinfo>
+						<gml:description>chodnik</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="g">
+				<annotation>
+					<appinfo>
+						<gml:description>drogaRowerow</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="u">
+				<annotation>
+					<appinfo>
+						<gml:description>obszarUtwardzony</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="r">
+				<annotation>
+					<appinfo>
+						<gml:description>rowPrzydrozny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="s">
+				<annotation>
+					<appinfo>
+						<gml:description>schodyWCiaguKomunikacyjnym</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="m">
+				<annotation>
+					<appinfo>
+						<gml:description>most</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="z">
+				<annotation>
+					<appinfo>
+						<gml:description>przepust</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="w">
+				<annotation>
+					<appinfo>
+						<gml:description>wiadukt</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="e">
+				<annotation>
+					<appinfo>
+						<gml:description>estakada</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="b">
+				<annotation>
+					<appinfo>
+						<gml:description>barieraOchronna</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="y">
+				<annotation>
+					<appinfo>
+						<gml:description>ekranAkustyczny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="t">
+				<annotation>
+					<appinfo>
+						<gml:description>tor</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="n">
+				<annotation>
+					<appinfo>
+						<gml:description>peron</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="a">
+				<annotation>
+					<appinfo>
+						<gml:description>rampa</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="l">
+				<annotation>
+					<appinfo>
+						<gml:description>kolejLinowa</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="i">
+				<annotation>
+					<appinfo>
+						<gml:description>innyObiektKomunikacyjny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajNawierzchniType">
+		<annotation>
+			<documentation>Rodzaj nawierzchni obiektu komunikacyjnego.</documentation>
+		</annotation>
+		<restriction base="string">
+			<enumeration value="mb">
+				<annotation>
+					<appinfo>
+						<gml:description>masaBitumiczna</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="kb">
+				<annotation>
+					<appinfo>
+						<gml:description>kostkaBrukowa</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="pb">
+				<annotation>
+					<appinfo>
+						<gml:description>plytyBetonowe</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="bt">
+				<annotation>
+					<appinfo>
+						<gml:description>beton</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="zw">
+				<annotation>
+					<appinfo>
+						<gml:description>zwirTluczen</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="gr">
+				<annotation>
+					<appinfo>
+						<gml:description>gruntNaturalny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="i">
+				<annotation>
+					<appinfo>
+						<gml:description>inny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_PolozenieCiaguKomunikacyjnegoType">
+		<restriction base="string">
+			<enumeration value="-1">
+				<annotation>
+					<appinfo>
+						<gml:description>podPowierzchniaGruntu</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="0">
+				<annotation>
+					<appinfo>
+						<gml:description>naPowierzchniGruntu</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="1">
+				<annotation>
+					<appinfo>
+						<gml:description>ponadPowierzchniaGruntuPoziom1</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="2">
+				<annotation>
+					<appinfo>
+						<gml:description>ponadPowierzchniaGruntuPoziom2</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="3">
+				<annotation>
+					<appinfo>
+						<gml:description>ponadPowierzchniaGruntuPoziom3</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="4">
+				<annotation>
+					<appinfo>
+						<gml:description>ponadPowierzchniaGruntuPoziom4</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajObiektuSportType">
+		<annotation>
+			<documentation>Rodzaj obiektu sportowego.</documentation>
+		</annotation>
+		<restriction base="string">
+			<enumeration value="b">
+				<annotation>
+					<appinfo>
+						<gml:description>basenOdkryty</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="p">
+				<annotation>
+					<appinfo>
+						<gml:description>placSportowy</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="z">
+				<annotation>
+					<appinfo>
+						<gml:description>placGierIZabaw</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="w">
+				<annotation>
+					<appinfo>
+						<gml:description>wyciagNarciarski</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="i">
+				<annotation>
+					<appinfo>
+						<gml:description>innyObiektSportowy</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajZagospodType">
+		<annotation>
+			<documentation>Rodzaj zagospodarowania terenu.</documentation>
+		</annotation>
+		<restriction base="string">
+			<enumeration value="z">
+				<annotation>
+					<appinfo>
+						<gml:description>terenZalesiony</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="k">
+				<annotation>
+					<appinfo>
+						<gml:description>zadrzewienieZakrzewienie</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="c">
+				<annotation>
+					<appinfo>
+						<gml:description>cmentarz</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="t">
+				<annotation>
+					<appinfo>
+						<gml:description>trawnik</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="l">
+				<annotation>
+					<appinfo>
+						<gml:description>drzewoLisciaste</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="g">
+				<annotation>
+					<appinfo>
+						<gml:description>drzewoIglaste</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="i">
+				<annotation>
+					<appinfo>
+						<gml:description>inneZagospodarowanie</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajWodyType">
+		<annotation>
+			<documentation>Rodzaj obiektu związanego z akwenami wodnymi.</documentation>
+		</annotation>
+		<restriction base="string">
+			<enumeration value="p">
+				<annotation>
+					<appinfo>
+						<gml:description>wodaPlynaca</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="s">
+				<annotation>
+					<appinfo>
+						<gml:description>wodaStojaca</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="w">
+				<annotation>
+					<appinfo>
+						<gml:description>walPrzeciwpowodziowy</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="m">
+				<annotation>
+					<appinfo>
+						<gml:description>rowMelioracyjny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="j">
+				<annotation>
+					<appinfo>
+						<gml:description>jaz</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="l">
+				<annotation>
+					<appinfo>
+						<gml:description>sluza</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="g">
+				<annotation>
+					<appinfo>
+						<gml:description>grobla</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="z">
+				<annotation>
+					<appinfo>
+						<gml:description>zapora</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="t">
+				<annotation>
+					<appinfo>
+						<gml:description>ostroga</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="o">
+				<annotation>
+					<appinfo>
+						<gml:description>pomostMolo</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="i">
+				<annotation>
+					<appinfo>
+						<gml:description>innyObiekt</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajSkarpyType">
+		<restriction base="string">
+			<enumeration value="u">
+				<annotation>
+					<appinfo>
+						<gml:description>skarpaUmocniona</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="k">
+				<annotation>
+					<appinfo>
+						<gml:description>skarpaNieumocniona</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajRzednejType">
+		<restriction base="string">
+			<enumeration value="n">
+				<annotation>
+					<appinfo>
+						<gml:description>rzednaNaturalna</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="s">
+				<annotation>
+					<appinfo>
+						<gml:description>rzednaSztuczna</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+</schema>

@@ -1,0 +1,511 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--GUGiK 23.02.2022-->
+<schema xmlns="http://www.w3.org/2001/XMLSchema" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:rng="urn:gugik:specyfikacje:gmlas:panstwowyRejestrNazwGeograficznych:1.0" targetNamespace="urn:gugik:specyfikacje:gmlas:panstwowyRejestrNazwGeograficznych:1.0" elementFormDefault="qualified" attributeFormDefault="unqualified" version="3.2">
+	<import namespace="http://www.opengis.net/gml/3.2" schemaLocation="http://schemas.opengis.net/gml/3.2.1/gml.xsd"/>
+	<element name="NG_NazwaGeograficznaRP" type="rng:NG_NazwaGeograficznaRPType" substitutionGroup="gml:AbstractFeature"/>
+	<complexType name="NG_NazwaGeograficznaRPType">
+		<complexContent>
+			<extension base="gml:AbstractFeatureType">
+				<sequence>
+				    <element name="idiip" type="string"/>
+					<element name="identyfikatorPRNG" type="string"/>
+					<element name="wersjaObiektu" type="dateTime" minOccurs="0"/>
+					<element name="poczatekWersjiObiektu" type="dateTime"/>
+					<element name="koniecWersjiObiektu" type="dateTime" minOccurs="0"/>
+					<element name="nazwaGlowna" type="string"/>
+					<element name="elementRozrozniajacy" type="string" minOccurs="0"/>
+					<element name="elementRodzajowy" type="string" minOccurs="0"/>
+					<element name="statusNazwy" type="rng:NG_TypStatusNazwyRPType"/>
+					<element name="waznaOd" type="date" minOccurs="0"/>
+					<element name="waznaDo" type="date" minOccurs="0"/>
+					<element name="kategoriaObiektu" type="rng:NG_TypKategoriaType"/>
+					<element name="rodzajObiektu" type="rng:NG_TypRodzajObiektuRPType"/>
+					<element name="identyfikatorZewnetrzny" type="string" minOccurs="0"/>
+					<element name="nazwaMiejscowosciNadrzednej" type="string" minOccurs="0"/>
+					<element name="identyfikatorMiejscowosciNadrzednej" type="string" minOccurs="0"/>
+					<element name="reprezentacjaObiektu" maxOccurs="unbounded">
+						<complexType>
+							<sequence>
+								<element name="rodzajReprezent" type="rng:NG_TypRodzajPunktuRPType"/>
+								<element name="identyfikatorGminy" type="string" minOccurs="0"/>
+								<element name="gmina" type="string" minOccurs="0"/>
+								<element name="powiat" type="string" minOccurs="0"/>
+								<element name="wojewodztwo" type="string" minOccurs="0"/>
+								<element name="wspolrzedneGeograficzne" type="gml:DirectPositionType"/>
+								<element name="wspolrzedneXY" type="gml:DirectPositionType"/>
+							</sequence>
+						</complexType>
+					</element>
+					<element name="geometriaObiektu" type="gml:MultiPointPropertyType"/>
+					<element name="dopelniacz" type="string"/>
+					<element name="przymiotnik" type="string" minOccurs="0"/>
+					<element name="zrodloInformacji" type="rng:NG_TypDokumentType" maxOccurs="unbounded"/>
+					<element name="nazwaOboczna" type="string" minOccurs="0" maxOccurs="unbounded"/>
+					<element name="nazwaHistoryczna" type="string" minOccurs="0" maxOccurs="unbounded"/>
+					<element name="nazwaDodatkowa" type="rng:NG_TypNazwaObiektuType" minOccurs="0" maxOccurs="unbounded"/>
+					<element name="endonim" type="rng:NG_TypNazwaObiektuType" minOccurs="0" maxOccurs="unbounded"/>
+					<element name="egzonim" type="rng:NG_TypNazwaObiektuType" minOccurs="0" maxOccurs="unbounded"/>
+					<element name="informacjeDodatkowe" type="string" minOccurs="0"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="NG_NazwaGeograficznaRPPropertyType">
+		<sequence minOccurs="0">
+			<element ref="rng:NG_NazwaGeograficznaRP"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="NG_NazwaGeograficznaSwiata" type="rng:NG_NazwaGeograficznaSwiataType" substitutionGroup="gml:AbstractFeature"/>
+	<complexType name="NG_NazwaGeograficznaSwiataType">
+		<complexContent>
+			<extension base="gml:AbstractFeatureType">
+				<sequence>
+					<element name="idiip" type="string"/>
+					<element name="identyfikatorPRNG" type="string"/>
+					<element name="wersjaObiektu" type="dateTime" minOccurs="0"/>
+					<element name="poczatekWersjiObiektu" type="dateTime"/>
+					<element name="koniecWersjiObiektu" type="dateTime" minOccurs="0"/>
+					<element name="nazwaGlowna" type="string"/>
+					<element name="nazwaDluga" type="string" minOccurs="0"/>
+					<element name="elementRozrozniajacy" type="string" minOccurs="0"/>
+					<element name="elementRodzajowy" type="string" minOccurs="0"/>
+					<element name="statusNazwy" type="rng:NG_TypStatusNazwySwiataType"/>
+					<element name="waznaOd" type="date" minOccurs="0"/>
+					<element name="waznaDo" type="date" minOccurs="0"/>
+					<element name="nazwaOboczna" type="string" minOccurs="0"/>
+					<element name="nazwaHistoryczna" type="string" minOccurs="0" maxOccurs="unbounded"/>
+					<element name="rodzajObiektu" type="rng:NG_TypRodzajObiektuSwType"/>
+					<element name="odmianaNazwyGlownej" type="rng:NG_TypOdmianaNazwySwiatType" minOccurs="0"/>
+					<element name="odmianaNazwyDlugiej" type="rng:NG_TypOdmianaNazwySwiatType" minOccurs="0"/>
+					<element name="odmianaNazwyObocznej" type="rng:NG_TypOdmianaNazwySwiatType" minOccurs="0"/>
+					<element name="obiektNadrzedny" type="string" minOccurs="0"/>
+					<element name="reprezentacjaObiektu" maxOccurs="unbounded">
+						<complexType>
+							<sequence>
+								<element name="rodzajReprezent" type="rng:NG_TypRodzajPunktuSwiataType"/>
+								<element name="polozenieTerytorialne" type="string"/>
+								<element name="wspolrzedneGeograficzne" type="string"/>
+							</sequence>
+						</complexType>
+					</element>
+					<element name="geometriaObiektu" type="gml:MultiPointPropertyType"/>
+					<element name="endonimNazwyGeografSwiata" minOccurs="0" maxOccurs="unbounded">
+						<complexType>
+							<sequence>
+								<element name="endonim" type="string"/>
+								<element name="endonimWZapOryg" type="string" minOccurs="0"/>
+								<element name="jezykEndonimu" type="string"/>
+								<element name="pismoEndonimu" type="string"/>
+								<element name="systemTransliteracji" type="string" minOccurs="0" maxOccurs="unbounded"/>
+								<element name="transkrypcja" type="string" minOccurs="0"/>
+								<element name="polozenieTerytEndonimu" type="string" maxOccurs="unbounded"/>
+							</sequence>
+						</complexType>
+					</element>
+					<element name="zrodloInformacji" type="rng:NG_TypDokumentType" maxOccurs="unbounded"/>
+					<element name="informacjeDodatkowe" type="string" minOccurs="0"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="NG_NazwaGeograficznaSwiataPropertyType">
+		<sequence minOccurs="0">
+			<element ref="rng:NG_NazwaGeograficznaSwiata"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="NG_TypNazwaObiektu" type="rng:NG_TypNazwaObiektuType" substitutionGroup="gml:AbstractObject"/>
+	<complexType name="NG_TypNazwaObiektuType">
+		<sequence>
+			<element name="nazwa" type="string"/>
+			<element name="jezyk" type="rng:NG_KodJezykaType"/>
+			<element name="latynizacja" type="string" minOccurs="0"/>
+		</sequence>
+	</complexType>
+	<complexType name="NG_TypNazwaObiektuPropertyType">
+		<sequence>
+			<element ref="rng:NG_TypNazwaObiektu"/>
+		</sequence>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="NG_TypDokument" type="rng:NG_TypDokumentType" substitutionGroup="gml:AbstractObject"/>
+	<complexType name="NG_TypDokumentType">
+		<sequence>
+			<element name="tytul" type="string"/>
+			<element name="data" type="date" minOccurs="0"/>
+			<element name="wydawca" type="string" minOccurs="0"/>
+		</sequence>
+	</complexType>
+	<complexType name="NG_TypDokumentPropertyType">
+		<sequence>
+			<element ref="rng:NG_TypDokument"/>
+		</sequence>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="NG_TypOdmianaNazwySwiat" type="rng:NG_TypOdmianaNazwySwiatType" substitutionGroup="gml:AbstractObject"/>
+	<complexType name="NG_TypOdmianaNazwySwiatType">
+		<sequence>
+			<element name="dopelniacz" type="string" minOccurs="0"/>
+			<element name="miejscownik" type="string" minOccurs="0"/>
+			<element name="przymiotnik" type="string" minOccurs="0"/>
+		</sequence>
+	</complexType>
+	<complexType name="NG_TypOdmianaNazwySwiatPropertyType">
+		<sequence>
+			<element ref="rng:NG_TypOdmianaNazwySwiat"/>
+		</sequence>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<simpleType name="NG_TypRodzajObiektuSwType">
+		<restriction base="string">
+			<enumeration value="państwo"/>
+			<enumeration value="terytorium niesamodzielne lub o nieustalonym statusie międzynarodowym"/>
+			<enumeration value="jednostka administracyjna"/>
+			<enumeration value="jednostka administracyjna drugiego rzędu"/>
+			<enumeration value="inna jednostka administracyjna"/>
+			<enumeration value="miejscowość"/>
+			<enumeration value="część miejscowości"/>
+			<enumeration value="oaza"/>
+			<enumeration value="stacja badawcza"/>
+			<enumeration value="region ekonomiczny"/>
+			<enumeration value="kraina, region"/>
+			<enumeration value="ocean"/>
+			<enumeration value="morze"/>
+			<enumeration value="zatoka"/>
+			<enumeration value="cieśnina"/>
+			<enumeration value="inny akwen morski"/>
+			<enumeration value="lodowiec szelfowy"/>
+			<enumeration value="bariera lodowa"/>
+			<enumeration value="jezioro"/>
+			<enumeration value="grupa jezior"/>
+			<enumeration value="zatoka jeziora"/>
+			<enumeration value="rzeka"/>
+			<enumeration value="kanał"/>
+			<enumeration value="wodospad"/>
+			<enumeration value="lodowiec"/>
+			<enumeration value="bagno"/>
+			<enumeration value="solnisko"/>
+			<enumeration value="prąd morski"/>
+			<enumeration value="grzbiet podmorski"/>
+			<enumeration value="góry podmorskie"/>
+			<enumeration value="próg podmorski"/>
+			<enumeration value="krawędź podmorska"/>
+			<enumeration value="wyniesienie podmorskie"/>
+			<enumeration value="płaskowyż podmorski"/>
+			<enumeration value="basen podmorski"/>
+			<enumeration value="równina podmorska"/>
+			<enumeration value="ławica"/>
+			<enumeration value="głębia"/>
+			<enumeration value="rów oceaniczny"/>
+			<enumeration value="rynna"/>
+			<enumeration value="kanion oceaniczny"/>
+			<enumeration value="wyspa"/>
+			<enumeration value="grupa wysp, archipelag"/>
+			<enumeration value="wyspa na jeziorze lub rzece"/>
+			<enumeration value="rafa"/>
+			<enumeration value="półwysep"/>
+			<enumeration value="półwysep na jeziorze"/>
+			<enumeration value="przylądek"/>
+			<enumeration value="wybrzeże"/>
+			<enumeration value="przesmyk"/>
+			<enumeration value="delta"/>
+			<enumeration value="pojezierze"/>
+			<enumeration value="nizina, równina"/>
+			<enumeration value="dolina"/>
+			<enumeration value="kotlina"/>
+			<enumeration value="wysoczyzna"/>
+			<enumeration value="wyżyna, płaskowyż"/>
+			<enumeration value="góry"/>
+			<enumeration value="szczyt"/>
+			<enumeration value="przełęcz"/>
+			<enumeration value="pustynia"/>
+			<enumeration value="step"/>
+			<enumeration value="las, puszcza"/>
+			<enumeration value="basen artezyjski"/>
+			<enumeration value="jaskinia"/>
+			<enumeration value="inny obiekt naturalny"/>
+			<enumeration value="obszar ochrony przyrody"/>
+			<enumeration value="region przemysłowy"/>
+			<enumeration value="miejsce wydobycia lub występowania surowców mineralnych"/>
+			<enumeration value="zapora"/>
+			<enumeration value="droga"/>
+			<enumeration value="kolej"/>
+			<enumeration value="ulica"/>
+			<enumeration value="plac"/>
+			<enumeration value="most"/>
+			<enumeration value="tunel"/>
+			<enumeration value="inny obiekt komunikacyjny"/>
+			<enumeration value="świątynia, klasztor, miejsce kultu"/>
+			<enumeration value="cmentarz, nekropola"/>
+			<enumeration value="grobowiec, mauzoleum"/>
+			<enumeration value="fort, twierdza, zamek"/>
+			<enumeration value="ruiny osiedla"/>
+			<enumeration value="inny zabytek"/>
+			<enumeration value="inny obiekt antropogeniczny"/>
+			<enumeration value="grupa wysp, archipelag na jeziorze lub rzece"/>
+			<enumeration value="dworzec kolejowy"/>
+			<enumeration value="lotnisko"/>
+			<enumeration value="park, ogród"/>
+			<enumeration value="pomnik, posąg, statua"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="NG_TypRodzajObiektuRPType">
+		<restriction base="string">
+			<enumeration value="miasto"/>
+			<enumeration value="część miasta"/>
+			<enumeration value="wieś"/>
+			<enumeration value="część wsi"/>
+			<enumeration value="osiedle wsi"/>
+			<enumeration value="kolonia"/>
+			<enumeration value="część kolonii"/>
+			<enumeration value="kolonia wsi"/>
+			<enumeration value="kolonia kolonii"/>
+			<enumeration value="kolonia osady"/>
+			<enumeration value="osada"/>
+			<enumeration value="osada leśna"/>
+			<enumeration value="część osady"/>
+			<enumeration value="osada wsi"/>
+			<enumeration value="osada kolonii"/>
+			<enumeration value="osada osady"/>
+			<enumeration value="osiedle"/>
+			<enumeration value="przysiółek"/>
+			<enumeration value="przysiółek wsi"/>
+			<enumeration value="przysiółek kolonii"/>
+			<enumeration value="przysiółek osady"/>
+			<enumeration value="osada leśna wsi"/>
+			<enumeration value="leśniczówka"/>
+			<enumeration value="schronisko turystyczne"/>
+			<enumeration value="inny obiekt"/>
+			<enumeration value="nizina"/>
+			<enumeration value="równina"/>
+			<enumeration value="dolina"/>
+			<enumeration value="pradolina"/>
+			<enumeration value="parów"/>
+			<enumeration value="wąwóz"/>
+			<enumeration value="wąwozy"/>
+			<enumeration value="jar"/>
+			<enumeration value="kotlina"/>
+			<enumeration value="zagłębienie"/>
+			<enumeration value="obniżenie"/>
+			<enumeration value="krawędź"/>
+			<enumeration value="urwisko"/>
+			<enumeration value="skarpa"/>
+			<enumeration value="wyżyna"/>
+			<enumeration value="część wyżyny"/>
+			<enumeration value="płaskowyż"/>
+			<enumeration value="kępa morenowa"/>
+			<enumeration value="wysoczyzna"/>
+			<enumeration value="pojezierze"/>
+			<enumeration value="zaklęsłość"/>
+			<enumeration value="garb"/>
+			<enumeration value="pagóry"/>
+			<enumeration value="grzęda"/>
+			<enumeration value="padół"/>
+			<enumeration value="wyniosłość"/>
+			<enumeration value="podgórze"/>
+			<enumeration value="pogórze"/>
+			<enumeration value="brama"/>
+			<enumeration value="próg"/>
+			<enumeration value="niecka"/>
+			<enumeration value="bruzda"/>
+			<enumeration value="region naturalny"/>
+			<enumeration value="pobrzeże"/>
+			<enumeration value="żuławy"/>
+			<enumeration value="wzgórze, wzniesienie"/>
+			<enumeration value="wzgórza, wzniesienia"/>
+			<enumeration value="wydma"/>
+			<enumeration value="wydmy"/>
+			<enumeration value="góra, szczyt"/>
+			<enumeration value="pasmo górskie"/>
+			<enumeration value="grań"/>
+			<enumeration value="masyw"/>
+			<enumeration value="góry"/>
+			<enumeration value="zbocze, stok"/>
+			<enumeration value="żleb"/>
+			<enumeration value="piarg"/>
+			<enumeration value="uwał"/>
+			<enumeration value="skała"/>
+			<enumeration value="skały"/>
+			<enumeration value="głaz"/>
+			<enumeration value="głazy"/>
+			<enumeration value="przełęcz"/>
+			<enumeration value="cyrk lodowcowy"/>
+			<enumeration value="wyspa"/>
+			<enumeration value="wyspy"/>
+			<enumeration value="półwysep"/>
+			<enumeration value="wybrzeże"/>
+			<enumeration value="przylądek"/>
+			<enumeration value="jaskinia, grota"/>
+			<enumeration value="rzeka"/>
+			<enumeration value="potok"/>
+			<enumeration value="struga"/>
+			<enumeration value="strumień"/>
+			<enumeration value="kanał"/>
+			<enumeration value="rów"/>
+			<enumeration value="ramię ujściowe"/>
+			<enumeration value="ramię boczne"/>
+			<enumeration value="stare koryto"/>
+			<enumeration value="starorzecze"/>
+			<enumeration value="jezioro"/>
+			<enumeration value="jeziora"/>
+			<enumeration value="część jeziora"/>
+			<enumeration value="staw"/>
+			<enumeration value="stawy"/>
+			<enumeration value="sztuczny zbiornik wodny"/>
+			<enumeration value="morze"/>
+			<enumeration value="zatoka"/>
+			<enumeration value="zatoka jeziora"/>
+			<enumeration value="zatoka rzeki"/>
+			<enumeration value="zatoka kanału"/>
+			<enumeration value="część zatoki"/>
+			<enumeration value="cieśnina"/>
+			<enumeration value="część cieśniny"/>
+			<enumeration value="bagno, błoto"/>
+			<enumeration value="bagna, błota"/>
+			<enumeration value="wodospad"/>
+			<enumeration value="wodospady"/>
+			<enumeration value="źródło"/>
+			<enumeration value="źródła"/>
+			<enumeration value="wywierzysko"/>
+			<enumeration value="ponor"/>
+			<enumeration value="głębia"/>
+			<enumeration value="mielizna"/>
+			<enumeration value="ławica"/>
+			<enumeration value="rynna"/>
+			<enumeration value="toń"/>
+			<enumeration value="las"/>
+			<enumeration value="lasy"/>
+			<enumeration value="część lasu"/>
+			<enumeration value="uroczysko"/>
+			<enumeration value="uroczysko-dawna miejscowość"/>
+			<enumeration value="polana"/>
+			<enumeration value="łąka"/>
+			<enumeration value="łąki"/>
+			<enumeration value="pole"/>
+			<enumeration value="pola"/>
+			<enumeration value="hala"/>
+			<enumeration value="połonina"/>
+			<enumeration value="torfowisko"/>
+			<enumeration value="torfowiska"/>
+			<enumeration value="obszar piasków"/>
+			<enumeration value="region historyczny"/>
+			<enumeration value="region etnograficzny"/>
+			<enumeration value="droga"/>
+			<enumeration value="linia kolejowa"/>
+			<enumeration value="most"/>
+			<enumeration value="śluza"/>
+			<enumeration value="zapora"/>
+			<enumeration value="basen portowy"/>
+			<enumeration value="okop"/>
+			<enumeration value="okopy"/>
+			<enumeration value="grodzisko"/>
+			<enumeration value="skrzyżowanie dróg"/>
+			<enumeration value="park"/>
+			<enumeration value="szaniec"/>
+			<enumeration value="szańce"/>
+			<enumeration value="wał"/>
+			<enumeration value="wały"/>
+			<enumeration value="nasyp"/>
+			<enumeration value="nasypy"/>
+			<enumeration value="grobla"/>
+			<enumeration value="kopiec"/>
+			<enumeration value="kopce"/>
+			<enumeration value="grzbiet"/>
+			<enumeration value="jary"/>
+			<enumeration value="mosty"/>
+			<enumeration value="parowy"/>
+			<enumeration value="polany"/>
+			<enumeration value="skarpy"/>
+			<enumeration value="turnia"/>
+			<enumeration value="turnie"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="NG_KodJezykaType">
+		<union memberTypes="rng:NG_KodJezykaEnumerationType rng:NG_OtherType"/>
+	</simpleType>
+	<simpleType name="NG_KodJezykaEnumerationType">
+		<restriction base="string">
+			<enumeration value="bel"/>
+			<enumeration value="ces"/>
+			<enumeration value="csb"/>
+			<enumeration value="deu"/>
+			<enumeration value="heb"/>
+			<enumeration value="hye"/>
+			<enumeration value="kdr"/>
+			<enumeration value="lit"/>
+			<enumeration value="pol"/>
+			<enumeration value="qle"/>
+			<enumeration value="rom"/>
+			<enumeration value="rus"/>
+			<enumeration value="slk"/>
+			<enumeration value="tat"/>
+			<enumeration value="ukr"/>
+			<enumeration value="yid"/>
+			<enumeration value="eng"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="NG_TypRodzajPunktuRPType">
+		<union memberTypes="rng:NG_TypRodzajPunktuRPEnumerationType rng:NG_OtherType"/>
+	</simpleType>
+	<simpleType name="NG_TypRodzajPunktuRPEnumerationType">
+		<restriction base="string">
+			<enumeration value="punkt główny"/>
+			<enumeration value="punkt początkowy obiektu"/>
+			<enumeration value="punkt końcowy obiektu"/>
+			<enumeration value="punkt dodatkowy"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="NG_TypRodzajPunktuSwiataType">
+		<union memberTypes="rng:NG_TypRodzajPunktuSwiataEnumerationType rng:NG_OtherType"/>
+	</simpleType>
+	<simpleType name="NG_TypRodzajPunktuSwiataEnumerationType">
+		<restriction base="string">
+			<enumeration value="punkt główny"/>
+			<enumeration value="punkt początkowy obiektu"/>
+			<enumeration value="punkt końcowy obiektu"/>
+			<enumeration value="punkt dodatkowy"/>
+			<enumeration value="punkt transgraniczny"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="NG_TypStatusNazwyRPType">
+		<union memberTypes="rng:NG_TypStatusNazwyRPEnumerationType rng:NG_OtherType"/>
+	</simpleType>
+	<simpleType name="NG_TypStatusNazwyRPEnumerationType">
+		<restriction base="string">
+			<enumeration value="urzędowa"/>
+			<enumeration value="zestandaryzowana"/>
+			<enumeration value="niestandaryzowana"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="NG_TypStatusNazwySwiataType">
+		<union memberTypes="rng:NG_TypStatusNazwySwiataEnumerationType rng:NG_OtherType"/>
+	</simpleType>
+	<simpleType name="NG_TypStatusNazwySwiataEnumerationType">
+		<restriction base="string">
+			<enumeration value="zestandaryzowana"/>
+			<enumeration value="zniesiona"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="NG_TypKategoriaType">
+		<union memberTypes="rng:NG_TypKategoriaEnumerationType rng:NG_OtherType"/>
+	</simpleType>
+	<simpleType name="NG_TypKategoriaEnumerationType">
+		<restriction base="string">
+			<enumeration value="miejscowość"/>
+			<enumeration value="ukształtowanie terenu"/>
+			<enumeration value="hydrografia"/>
+			<enumeration value="pokrycie terenu"/>
+			<enumeration value="budowle"/>
+			<enumeration value="transport"/>
+			<enumeration value="inne"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="NG_OtherType">
+		<restriction base="string">
+			<pattern value="other: \w{2,}"/>
+		</restriction>
+	</simpleType>
+</schema>

@@ -1,0 +1,2332 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--GUGiK 04.07.2022-->
+<schema xmlns="http://www.w3.org/2001/XMLSchema" xmlns:gmd="http://www.isotc211.org/2005/gmd" xmlns:egb="ewidencjaGruntowIBudynkow:1.0" xmlns:gml="http://www.opengis.net/gml/3.2" targetNamespace="ewidencjaGruntowIBudynkow:1.0" elementFormDefault="qualified" attributeFormDefault="unqualified" version="1.6">
+	<import namespace="http://www.opengis.net/gml/3.2" schemaLocation="http://schemas.opengis.net/gml/3.2.1/gml.xsd"/>
+	<import namespace="http://www.isotc211.org/2005/gmd" schemaLocation="http://schemas.opengis.net/iso/19139/20070417/gmd/gmd.xsd"/>
+	<element name="EGB_OgolnyObiekt" type="egb:EGB_OgolnyObiektType" substitutionGroup="gml:AbstractFeature">
+		<annotation>
+			<documentation>Klasa stanowi klasę abstrakcyjną grupującą atrybuty dziedziczone przez klasy obiektów ewidencji gruntów i budynków.</documentation>
+		</annotation>
+	</element>
+	<complexType name="EGB_OgolnyObiektType">
+		<complexContent>
+			<extension base="gml:AbstractFeatureType">
+				<sequence>
+					<element name="idIIP">
+						<complexType>
+							<complexContent>
+								<extension base="gml:AbstractMemberType">
+									<sequence>
+										<element ref="egb:EGB_IdentyfikatorIIP"/>
+									</sequence>
+								</extension>
+							</complexContent>
+						</complexType>
+					</element>
+					<element name="startObiekt" type="dateTime">
+						<annotation>
+							<documentation>Data i czas utworzenia obiektu w bazie danych.</documentation>
+						</annotation>
+					</element>
+					<element name="startWersjaObiekt" type="dateTime">
+						<annotation>
+							<documentation>Data i czas utworzenia wersji obiektu w bazie danych.</documentation>
+						</annotation>
+					</element>
+					<element name="koniecWersjaObiekt" type="dateTime" minOccurs="0" maxOccurs="1">
+						<annotation>
+							<documentation>Data i czas przeniesienia wersji obiektu do archiwum.</documentation>
+						</annotation>
+					</element>
+					<element name="koniecObiekt" type="dateTime" minOccurs="0" maxOccurs="1">
+						<annotation>
+							<documentation>Data i czas przeniesienia obiektu do archiwum.</documentation>
+						</annotation>
+					</element>
+					<element name="dokument2" type="egb:EGB_DokumentPropertyType" minOccurs="0" maxOccurs="unbounded">
+						<annotation>
+							<documentation>Dokument stanowiący podstawę utworzenia obiektu</documentation>
+						</annotation>
+					</element>
+					<element name="operatTechniczny2" type="egb:EGB_OperatTechnicznyPropertyType" minOccurs="0" maxOccurs="unbounded">
+						<annotation>
+							<documentation>Dokument stanowiący podstawę utworzenia obiektu</documentation>
+						</annotation>
+					</element>
+					<element name="podstawaUtworzeniaWersjiObiektu" type="egb:EGB_ZmianaPropertyType" minOccurs="0" maxOccurs="1">
+						<annotation>
+							<documentation>Podstawa prawna utworzenia wersji obiektu</documentation>
+						</annotation>
+					</element>
+					<element name="podstawaUsunieciaObiektu" type="egb:EGB_ZmianaPropertyType" minOccurs="0" maxOccurs="1">
+						<annotation>
+							<documentation>Podstawa prawna usunięcia obiektu.</documentation>
+						</annotation>
+					</element>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="EGB_OgolnyObiektPropertyType">
+		<sequence minOccurs="0">
+			<element ref="egb:EGB_OgolnyObiekt"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="EGB_IdentyfikatorIIP" type="egb:EGB_IdentyfikatorIIPType" substitutionGroup="gml:AbstractObject">
+		<annotation>
+			<documentation>Typ reprezentujący unikalny identyfikator obiektu nadawany przez dostawcę zbioru danych</documentation>
+		</annotation>
+	</element>
+	<complexType name="EGB_IdentyfikatorIIPType">
+		<sequence>
+			<element name="lokalnyId">
+				<annotation>
+					<documentation>Identyfikator lokalny obiektu nadawany przez dostawcę zbioru danych, unikalny w przestrzeni nazw.</documentation>
+				</annotation>
+				<simpleType>
+					<restriction base="string">
+						<pattern value="[A-Za-z0-9]{8}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{12}"/>
+					</restriction>
+				</simpleType>
+			</element>
+			<element name="przestrzenNazw">
+				<annotation>
+					<documentation>Przestrzeń nazw identyfikujaca zbiór danych, z którego pochodzi obiekt.</documentation>
+				</annotation>
+				<simpleType>
+					<restriction base="string">
+						<pattern value="PL\.[A-Za-z]{1,6}\.\d{1,6}\.[A-Za-z0-9]{1,8}"/>
+					</restriction>
+				</simpleType>
+			</element>
+			<element name="wersjaId" type="dateTime" minOccurs="0" maxOccurs="1">
+				<annotation>
+					<documentation>Identyfikator wersji obiektu.</documentation>
+				</annotation>
+			</element>
+		</sequence>
+	</complexType>
+	<complexType name="EGB_IdentyfikatorIIPPropertyType">
+		<sequence>
+			<element ref="egb:EGB_IdentyfikatorIIP"/>
+		</sequence>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="EGB_JednostkaEwidencyjna" type="egb:EGB_JednostkaEwidencyjnaType" substitutionGroup="egb:EGB_OgolnyObiekt"/>
+	<complexType name="EGB_JednostkaEwidencyjnaType">
+		<complexContent>
+			<extension base="egb:EGB_OgolnyObiektType">
+				<sequence>
+					<element name="geometria" type="gml:MultiSurfacePropertyType" minOccurs="0" maxOccurs="1"/>
+					<element name="idJednostkiEwid" type="string"/>
+					<element name="nazwaWlasna" type="string"/>
+					<element name="punktGranicyJednEwid" type="egb:EGB_PunktGranicznyPropertyType" minOccurs="3" maxOccurs="unbounded">
+						<annotation>
+							<documentation>Punkt na granicy jednostki ewidencyjnej.</documentation>
+						</annotation>
+					</element>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="EGB_JednostkaEwidencyjnaPropertyType">
+		<sequence minOccurs="0">
+			<element ref="egb:EGB_JednostkaEwidencyjna"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="EGB_ObrebEwidencyjny" type="egb:EGB_ObrebEwidencyjnyType" substitutionGroup="egb:EGB_OgolnyObiekt"/>
+	<complexType name="EGB_ObrebEwidencyjnyType">
+		<complexContent>
+			<extension base="egb:EGB_OgolnyObiektType">
+				<sequence>
+					<element name="geometria" type="gml:MultiSurfacePropertyType" minOccurs="0" maxOccurs="1"/>
+					<element name="idObrebu" type="string"/>
+					<element name="nazwaWlasna" type="string"/>
+					<element name="punktGranicyObrebu" type="egb:EGB_PunktGranicznyPropertyType" minOccurs="3" maxOccurs="unbounded">
+						<annotation>
+							<documentation>Punkt na granicy obrębu ewidencyjnego.</documentation>
+						</annotation>
+					</element>
+					<element name="lokalizacjaObrebu" type="egb:EGB_JednostkaEwidencyjnaPropertyType">
+						<annotation>
+							<documentation>Jednostka ewidencyjna, w której zlokalizowany jest obręb.</documentation>
+						</annotation>
+					</element>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="EGB_ObrebEwidencyjnyPropertyType">
+		<sequence minOccurs="0">
+			<element ref="egb:EGB_ObrebEwidencyjny"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="EGB_DzialkaEwidencyjna" type="egb:EGB_DzialkaEwidencyjnaType" substitutionGroup="egb:EGB_OgolnyObiekt"/>
+	<complexType name="EGB_DzialkaEwidencyjnaType">
+		<complexContent>
+			<extension base="egb:EGB_OgolnyObiektType">
+				<sequence>
+					<element name="idDzialki" type="string"/>
+					<element name="geometria" type="gml:SurfacePropertyType"/>
+					<element name="dokumentWlasnosci" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="numerKW" type="string" minOccurs="0" maxOccurs="unbounded"/>
+					<element name="poleEwidencyjne" type="gml:AreaType"/>
+					<element name="dokladnoscReprezentacjiPola" type="egb:EGB_ZapisPowDzialkiType"/>
+					<element name="klasouzytek" minOccurs="1" maxOccurs="unbounded">
+						<complexType>
+							<complexContent>
+								<extension base="gml:AbstractMemberType">
+									<sequence>
+										<element ref="egb:EGB_Klasouzytek"/>
+									</sequence>
+								</extension>
+							</complexContent>
+						</complexType>
+					</element>
+					<element name="dodatkoweInformacje" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="JRG2" type="egb:EGB_JednostkaRejestrowaGruntowPropertyType">
+						<annotation>
+							<documentation>Jednostka rejestrowa gruntów, do której należy działka ewidencyjna.</documentation>
+						</annotation>
+					</element>
+					<element name="adresDzialki" type="egb:EGB_AdresNieruchomosciPropertyType" minOccurs="0" maxOccurs="unbounded">
+						<annotation>
+							<documentation>Adres działki</documentation>
+						</annotation>
+					</element>
+					<element name="punktGranicyDzialki" type="egb:EGB_PunktGranicznyPropertyType" minOccurs="3" maxOccurs="unbounded">
+						<annotation>
+							<documentation>Punkt na granicy działki ewidencyjnej.</documentation>
+						</annotation>
+					</element>
+					<element name="lokalizacjaDzialki" type="egb:EGB_ObrebEwidencyjnyPropertyType">
+						<annotation>
+							<documentation>Obręb ewidencyjny w którym leży działka.</documentation>
+						</annotation>
+					</element>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="EGB_DzialkaEwidencyjnaPropertyType">
+		<sequence minOccurs="0">
+			<element ref="egb:EGB_DzialkaEwidencyjna"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="EGB_KonturUzytkuGruntowego" type="egb:EGB_KonturUzytkuGruntowegoType" substitutionGroup="egb:EGB_OgolnyObiekt"/>
+	<complexType name="EGB_KonturUzytkuGruntowegoType">
+		<complexContent>
+			<extension base="egb:EGB_OgolnyObiektType">
+				<sequence>
+					<element name="geometria" type="gml:SurfacePropertyType"/>
+					<element name="idUzytku" type="string"/>
+					<element name="OFU" type="egb:EGB_OFUType"/>
+					<element name="lokalizacjaUzytku" type="egb:EGB_ObrebEwidencyjnyPropertyType">
+						<annotation>
+							<documentation>Obręb ewidencyjny w którym leży użytek gruntowy</documentation>
+						</annotation>
+					</element>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="EGB_KonturUzytkuGruntowegoPropertyType">
+		<sequence minOccurs="0">
+			<element ref="egb:EGB_KonturUzytkuGruntowego"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="EGB_KonturKlasyfikacyjny" type="egb:EGB_KonturKlasyfikacyjnyType" substitutionGroup="egb:EGB_OgolnyObiekt"/>
+	<complexType name="EGB_KonturKlasyfikacyjnyType">
+		<complexContent>
+			<extension base="egb:EGB_OgolnyObiektType">
+				<sequence>
+					<element name="geometria" type="gml:SurfacePropertyType"/>
+					<element name="idKonturu" type="string"/>
+					<element name="OZU" type="egb:EGB_OZUType"/>
+					<element name="OZK" type="egb:EGB_OZKType" minOccurs="0" maxOccurs="1"/>
+					<element name="lokalizacjaKonturu" type="egb:EGB_ObrebEwidencyjnyPropertyType">
+						<annotation>
+							<documentation>Obręb ewidencyjny w którym leży kontur klasyfikacyjny.</documentation>
+						</annotation>
+					</element>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="EGB_KonturKlasyfikacyjnyPropertyType">
+		<sequence minOccurs="0">
+			<element ref="egb:EGB_KonturKlasyfikacyjny"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="EGB_Klasouzytek" type="egb:EGB_KlasouzytekType" substitutionGroup="gml:AbstractObject"/>
+	<complexType name="EGB_KlasouzytekType">
+		<sequence>
+			<element name="OFU" type="egb:EGB_OFUType"/>
+			<element name="OZU" type="egb:EGB_OZUType" minOccurs="0" maxOccurs="1"/>
+			<element name="OZK" type="egb:EGB_OZKType" minOccurs="0" maxOccurs="1"/>
+			<element name="powierzchnia" type="gml:AreaType"/>
+		</sequence>
+	</complexType>
+	<complexType name="EGB_KlasouzytekPropertyType">
+		<sequence>
+			<element ref="egb:EGB_Klasouzytek"/>
+		</sequence>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="EGB_Budynek" type="egb:EGB_BudynekType" substitutionGroup="egb:EGB_OgolnyObiekt"/>
+	<complexType name="EGB_BudynekType">
+		<complexContent>
+			<extension base="egb:EGB_OgolnyObiektType">
+				<sequence>
+					<element name="idBudynku" type="string"/>
+					<element name="geometria" type="gml:MultiSurfacePropertyType" minOccurs="0" maxOccurs="1"/>
+					<element name="rodzajWgKST" type="egb:EGB_RodzajWgKSTType"/>
+					<element name="liczbaKondygnacjiNadziemnych" type="integer"/>
+					<element name="liczbaKondygnacjiPodziemnych" type="integer"/>
+					<element name="powZabudowy" type="gml:AreaType"/>
+					<element name="lacznaPowUzytkowaLokaliWyodrebnionych" type="gml:AreaType" minOccurs="0" maxOccurs="1"/>
+					<element name="lacznaPowUzytkowaLokaliNiewyodrebnionych" type="gml:AreaType" minOccurs="0" maxOccurs="1"/>
+					<element name="lacznaPowUzytkowaPomieszczenPrzynaleznych" type="gml:AreaType" minOccurs="0" maxOccurs="1"/>
+					<element name="dokumentWlasnosci" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="numerKW" type="string" minOccurs="0" maxOccurs="unbounded"/>
+					<element name="dodatkoweInformacje" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="dzialkaZabudowana" type="egb:EGB_DzialkaEwidencyjnaPropertyType" minOccurs="1" maxOccurs="unbounded">
+						<annotation>
+							<documentation>Działka ewidencyjna na której znajduje się budynek</documentation>
+						</annotation>
+					</element>
+					<element name="adresBudynku" type="egb:EGB_AdresNieruchomosciPropertyType" minOccurs="0" maxOccurs="unbounded">
+						<annotation>
+							<documentation>Adres budynku.</documentation>
+						</annotation>
+					</element>
+					<element name="JRBdlaBudynku" type="egb:EGB_JednostkaRejestrowaBudynkowPropertyType" minOccurs="0" maxOccurs="1">
+						<annotation>
+							<documentation>Jednostka rejestrowa budynków, do której należy budynek.</documentation>
+						</annotation>
+					</element>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="EGB_BudynekPropertyType">
+		<sequence minOccurs="0">
+			<element ref="egb:EGB_Budynek"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="EGB_BlokBudynku" type="egb:EGB_BlokBudynkuType" substitutionGroup="egb:EGB_OgolnyObiekt">
+		<annotation>
+			<documentation>Część budynku wyodrębniona ze względu na liczbę kondygnacji.</documentation>
+		</annotation>
+	</element>
+	<complexType name="EGB_BlokBudynkuType">
+		<complexContent>
+			<extension base="egb:EGB_OgolnyObiektType">
+				<sequence>
+					<element name="geometria" type="gml:SurfacePropertyType"/>
+					<element name="rodzajBloku" type="egb:EGB_RodzajBlokuType"/>
+					<element name="oznaczenieBloku" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="numerNajwyzszejKondygnacji" type="integer" minOccurs="0" maxOccurs="1"/>
+					<element name="numerNajnizszejKondygnacji" type="integer" minOccurs="0" maxOccurs="1"/>
+					<element name="budynekZBlokiemBud" type="egb:EGB_BudynekPropertyType">
+						<annotation>
+							<documentation>Budynek w którym blok budynku został wyodrębniony.</documentation>
+						</annotation>
+					</element>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="EGB_BlokBudynkuPropertyType">
+		<sequence minOccurs="0">
+			<element ref="egb:EGB_BlokBudynku"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="EGB_ObiektTrwaleZwiazanyZBudynkiem" type="egb:EGB_ObiektTrwaleZwiazanyZBudynkiemType" substitutionGroup="egb:EGB_OgolnyObiekt"/>
+	<complexType name="EGB_ObiektTrwaleZwiazanyZBudynkiemType">
+		<complexContent>
+			<extension base="egb:EGB_OgolnyObiektType">
+				<sequence>
+					<element name="geometria" type="gml:GeometryPropertyType"/>
+					<element name="poliliniaKierunkowa" type="gml:CurvePropertyType" minOccurs="0" maxOccurs="1"/>
+					<element name="rodzajObiektuZwiazanegoZBudynkiem" type="egb:EGB_RodzajObiektuType"/>
+					<element name="budynekZElementamiZwiazanymi" type="egb:EGB_BudynekPropertyType">
+						<annotation>
+							<documentation>Budynek z którym obiekt jest związany.</documentation>
+						</annotation>
+					</element>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="EGB_ObiektTrwaleZwiazanyZBudynkiemPropertyType">
+		<sequence minOccurs="0">
+			<element ref="egb:EGB_ObiektTrwaleZwiazanyZBudynkiem"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="EGB_LokalSamodzielny" type="egb:EGB_LokalSamodzielnyType" substitutionGroup="egb:EGB_OgolnyObiekt"/>
+	<complexType name="EGB_LokalSamodzielnyType">
+		<complexContent>
+			<extension base="egb:EGB_OgolnyObiektType">
+				<sequence>
+					<element name="idLokalu" type="string"/>
+					<element name="rodzajLokalu" type="egb:EGB_RodzajLokaluType"/>
+					<element name="dokumentWlasnosci" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="numerKW" type="string" minOccurs="0" maxOccurs="unbounded"/>
+					<element name="powUzytkowaLokalu" type="gml:AreaType"/>
+					<element name="liczbaPomieszczenPrzynaleznych" type="integer" minOccurs="0" maxOccurs="1"/>
+					<element name="powPomieszczenPrzynaleznychDoLokalu" type="gml:AreaType" minOccurs="0" maxOccurs="1"/>
+					<element name="nrKondygnacji" type="integer" minOccurs="0" maxOccurs="1"/>
+					<element name="dodatkoweInformacje" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="pomPrzynalezne" type="egb:EGB_PomieszczeniePrzynalezneDoLokaluPropertyType" minOccurs="0" maxOccurs="unbounded">
+						<annotation>
+							<documentation>Pomieszczenie przynależne do lokalu.</documentation>
+						</annotation>
+					</element>
+					<element name="JRdlaLokalu" type="egb:EGB_JednostkaRejestrowaLokaliPropertyType" minOccurs="0" maxOccurs="1">
+						<annotation>
+							<documentation>Jednostka rejestrowa lokali, do której należy lokal.</documentation>
+						</annotation>
+					</element>
+					<element name="budynekZWyodrębnionymLokalem" type="egb:EGB_BudynekPropertyType">
+						<annotation>
+							<documentation>Budynek w którym wyodrębniono lokal.</documentation>
+						</annotation>
+					</element>
+					<element name="adresLokalu" type="egb:EGB_AdresNieruchomosciPropertyType">
+						<annotation>
+							<documentation>Adres lokalu.</documentation>
+						</annotation>
+					</element>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="EGB_LokalSamodzielnyPropertyType">
+		<sequence minOccurs="0">
+			<element ref="egb:EGB_LokalSamodzielny"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="EGB_PomieszczeniePrzynalezneDoLokalu" type="egb:EGB_PomieszczeniePrzynalezneDoLokaluType" substitutionGroup="egb:EGB_OgolnyObiekt"/>
+	<complexType name="EGB_PomieszczeniePrzynalezneDoLokaluType">
+		<complexContent>
+			<extension base="egb:EGB_OgolnyObiektType">
+				<sequence>
+					<element name="rodzajPomieszczeniaPrzynaleznego" type="egb:EGB_RodzajPomieszczeniaType"/>
+					<element name="powierzchniaPomieszczeniaPrzynaleznego" type="gml:AreaType"/>
+					<element name="dodatkoweInformacje" type="string" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="EGB_PomieszczeniePrzynalezneDoLokaluPropertyType">
+		<sequence minOccurs="0">
+			<element ref="egb:EGB_PomieszczeniePrzynalezneDoLokalu"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="EGB_JednostkaRejestrowaGruntow" type="egb:EGB_JednostkaRejestrowaGruntowType" substitutionGroup="egb:EGB_OgolnyObiekt"/>
+	<complexType name="EGB_JednostkaRejestrowaGruntowType">
+		<complexContent>
+			<extension base="egb:EGB_OgolnyObiektType">
+				<sequence>
+					<element name="idJednostkiRejestrowej" type="string"/>
+					<element name="grupaRejestrowa" type="egb:EGB_GrupaRejType"/>
+					<element name="lokalizacjaJRG" type="egb:EGB_ObrebEwidencyjnyPropertyType">
+						<annotation>
+							<documentation>Obręb ewidencyjny związany z JRG.</documentation>
+						</annotation>
+					</element>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="EGB_JednostkaRejestrowaGruntowPropertyType">
+		<sequence minOccurs="0">
+			<element ref="egb:EGB_JednostkaRejestrowaGruntow"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="EGB_JednostkaRejestrowaBudynkow" type="egb:EGB_JednostkaRejestrowaBudynkowType" substitutionGroup="egb:EGB_OgolnyObiekt"/>
+	<complexType name="EGB_JednostkaRejestrowaBudynkowType">
+		<complexContent>
+			<extension base="egb:EGB_OgolnyObiektType">
+				<sequence>
+					<element name="idJednostkiRejestrowej" type="string"/>
+					<element name="grupaRejestrowa" type="egb:EGB_GrupaRejType"/>
+					<element name="JRGZwiazanaZJRB" type="egb:EGB_JednostkaRejestrowaGruntowPropertyType" minOccurs="1" maxOccurs="unbounded">
+						<annotation>
+							<documentation>Jednostka rejestrowa gruntów obejmująca działki ewidencyjne, na których znajdują się budynki stanowiące odrębny przedmiot własności.</documentation>
+						</annotation>
+					</element>
+					<element name="lokalizacjaJRB" type="egb:EGB_ObrebEwidencyjnyPropertyType">
+						<annotation>
+							<documentation>Obręb ewidencyjny związany z JRB.</documentation>
+						</annotation>
+					</element>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="EGB_JednostkaRejestrowaBudynkowPropertyType">
+		<sequence minOccurs="0">
+			<element ref="egb:EGB_JednostkaRejestrowaBudynkow"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="EGB_JednostkaRejestrowaLokali" type="egb:EGB_JednostkaRejestrowaLokaliType" substitutionGroup="egb:EGB_OgolnyObiekt"/>
+	<complexType name="EGB_JednostkaRejestrowaLokaliType">
+		<complexContent>
+			<extension base="egb:EGB_OgolnyObiektType">
+				<sequence>
+					<element name="idJednostkiRejestrowej" type="string"/>
+					<element name="licznikUdzialuWNieruchomWspolnej" type="integer"/>
+					<element name="mianownikUdzialuWNieruchomWspolnej" type="integer"/>
+					<element name="grupaRejestrowa" type="egb:EGB_GrupaRejType"/>
+					<element name="JRGZwiazanaZJRL" type="egb:EGB_JednostkaRejestrowaGruntowPropertyType" minOccurs="1" maxOccurs="unbounded">
+						<annotation>
+							<documentation>Jednostka rejestrowa gruntów stanowiąca nieruchmość wspólną.</documentation>
+						</annotation>
+					</element>
+					<element name="nieruchomoscWspolnaDlaLokalu" type="egb:EGB_JednostkaRejestrowaBudynkowPropertyType" minOccurs="1" maxOccurs="unbounded">
+						<annotation>
+							<documentation>Budynek, którego części należą do nieruchomości wspólnej związanej z własnością lokalu.</documentation>
+						</annotation>
+					</element>
+					<element name="lokalizacjaJRL" type="egb:EGB_ObrebEwidencyjnyPropertyType">
+						<annotation>
+							<documentation>Obręb ewidencyjny związany z JRL.</documentation>
+						</annotation>
+					</element>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="EGB_JednostkaRejestrowaLokaliPropertyType">
+		<sequence minOccurs="0">
+			<element ref="egb:EGB_JednostkaRejestrowaLokali"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="EGB_JednostkaRejestrowa" type="egb:EGB_JednostkaRejestrowaType" substitutionGroup="gml:AbstractFeature"/>
+	<complexType name="EGB_JednostkaRejestrowaType">
+		<complexContent>
+			<extension base="gml:AbstractFeatureType">
+				<sequence>
+					<choice>
+						<element name="JRG" type="egb:EGB_JednostkaRejestrowaGruntowPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+						<element name="JRB" type="egb:EGB_JednostkaRejestrowaBudynkowPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+						<element name="JRL" type="egb:EGB_JednostkaRejestrowaLokaliPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+					</choice>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="EGB_JednostkaRejestrowaPropertyType">
+		<sequence>
+			<element ref="egb:EGB_JednostkaRejestrowa"/>
+		</sequence>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="EGB_OsobaFizyczna" type="egb:EGB_OsobaFizycznaType" substitutionGroup="egb:EGB_OgolnyObiekt"/>
+	<complexType name="EGB_OsobaFizycznaType">
+		<complexContent>
+			<extension base="egb:EGB_OgolnyObiektType">
+				<sequence>
+					<element name="pierwszeImie" type="string"/>
+					<element name="pierwszyCzlonNazwiska" type="string"/>
+					<element name="drugiCzlonNazwiska" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="drugieImie" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="imieOjca" type="string"/>
+					<element name="imieMatki" type="string"/>
+					<element name="pesel" type="string"/>
+					<element name="plec" type="egb:EGB_PlecType"/>
+					<element name="status" type="egb:EGB_StatusPodmiotuEwidType"/>
+					<element name="informacjaOSmierci" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="adresPodmiotu" type="egb:EGB_AdresPodmiotuPropertyType" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="EGB_OsobaFizycznaPropertyType">
+		<sequence minOccurs="0">
+			<element ref="egb:EGB_OsobaFizyczna"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="EGB_Malzenstwo" type="egb:EGB_MalzenstwoType" substitutionGroup="egb:EGB_OgolnyObiekt"/>
+	<complexType name="EGB_MalzenstwoType">
+		<complexContent>
+			<extension base="egb:EGB_OgolnyObiektType">
+				<sequence>
+					<element name="osobaFizyczna2" type="egb:EGB_OsobaFizycznaPropertyType">
+						<annotation>
+							<documentation>Osoba fizyczna płci żeńskiej, wchodząca w skład małżeństwa.</documentation>
+						</annotation>
+					</element>
+					<element name="osobaFizyczna3" type="egb:EGB_OsobaFizycznaPropertyType">
+						<annotation>
+							<documentation>Osoba fizyczna płci męskiej, wchodząca w skład małżeństwa.</documentation>
+						</annotation>
+					</element>
+					<element name="status" type="egb:EGB_StatusPodmiotuEwidType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="EGB_MalzenstwoPropertyType">
+		<sequence minOccurs="0">
+			<element ref="egb:EGB_Malzenstwo"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="EGB_Instytucja" type="egb:EGB_InstytucjaType" substitutionGroup="egb:EGB_OgolnyObiekt">
+		<annotation>
+			<documentation>Wspólne określenie osób prawnych, jednostek organizacyjnych bez osobowości prawnej oraz organów administracji publicznej.</documentation>
+		</annotation>
+	</element>
+	<complexType name="EGB_InstytucjaType">
+		<complexContent>
+			<extension base="egb:EGB_OgolnyObiektType">
+				<sequence>
+					<element name="nazwaPelna" type="string"/>
+					<element name="nazwaSkrocona" type="string" minOccurs="0" maxOccurs="1">
+						<annotation>
+							<documentation>Nazwę skróconą instytucji stosuje się do podmiotów ujawnionych w ewidencji gruntów i budynków przed wejściem niniejszego rozporządzenia</documentation>
+						</annotation>
+					</element>
+					<element name="regon" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="status" type="egb:EGB_StatusPodmiotuEwidType"/>
+					<element name="czlonekZarzaduWspolnoty" type="egb:EGB_OsobaFizycznaPropertyType" minOccurs="0" maxOccurs="unbounded">
+						<annotation>
+							<documentation>Osoba fizyczna będąca członkiem zarządu wspólnoty gruntowej.</documentation>
+						</annotation>
+					</element>
+					<element name="adresPodmiotu" type="egb:EGB_AdresPodmiotuPropertyType" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="EGB_InstytucjaPropertyType">
+		<sequence minOccurs="0">
+			<element ref="egb:EGB_Instytucja"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="EGB_PodmiotGrupowy" type="egb:EGB_PodmiotGrupowyType" substitutionGroup="egb:EGB_OgolnyObiekt">
+		<annotation>
+			<documentation>Grupa osób, z wyłączeniem małżeństwa, posiadająca prawa do nieruchomości na zasadach współwłasności łącznej, a także spółki cywilne.</documentation>
+		</annotation>
+	</element>
+	<complexType name="EGB_PodmiotGrupowyType">
+		<complexContent>
+			<extension base="egb:EGB_OgolnyObiektType">
+				<sequence>
+					<element name="nazwaPelna" type="string"/>
+					<element name="nazwaSkrocona" type="string" minOccurs="0" maxOccurs="1">
+						<annotation>
+							<documentation>Nazwę skróconą instytucji stosuje się do podmiotów ujawnionych w ewidencji gruntów i budynków przed wejściem niniejszego rozporządzenia</documentation>
+						</annotation>
+					</element>
+					<element name="regon" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="status" type="egb:EGB_StatusPodmiotuEwidType"/>
+					<element name="instytucja" type="egb:EGB_InstytucjaPropertyType" minOccurs="0" maxOccurs="unbounded">
+						<annotation>
+							<documentation>Instytucja wchodząca w skład podmiotu grupowego.</documentation>
+						</annotation>
+					</element>
+					<element name="osobaFizyczna4" type="egb:EGB_OsobaFizycznaPropertyType" minOccurs="0" maxOccurs="unbounded">
+						<annotation>
+							<documentation>Osoba fizyczna wchodząca w skład podmiotu grupowego.</documentation>
+						</annotation>
+					</element>
+					<element name="malzenstwo3" type="egb:EGB_MalzenstwoPropertyType" minOccurs="0" maxOccurs="unbounded">
+						<annotation>
+							<documentation>Małżeństwo wchodzące w skład podmiotu grupowego.</documentation>
+						</annotation>
+					</element>
+					<element name="adresPodmiotu" type="egb:EGB_AdresPodmiotuPropertyType" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="EGB_PodmiotGrupowyPropertyType">
+		<sequence minOccurs="0">
+			<element ref="egb:EGB_PodmiotGrupowy"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="EGB_WspolnotaGruntowa" type="egb:EGB_WspolnotaGruntowaType" substitutionGroup="egb:EGB_OgolnyObiekt"/>
+	<complexType name="EGB_WspolnotaGruntowaType">
+		<complexContent>
+			<extension base="egb:EGB_OgolnyObiektType">
+				<sequence>
+					<element name="nazwa" type="string"/>
+					<element name="status" type="egb:EGB_StatusPodmiotuEwidType"/>
+					<element name="SpolkaZarzadajaca" type="egb:EGB_InstytucjaPropertyType" minOccurs="0" maxOccurs="1">
+						<annotation>
+							<documentation>Spółka zarządzająca wspólnotą gruntową.</documentation>
+						</annotation>
+					</element>
+					<element name="osobaUprawniona" type="egb:EGB_OsobaFizycznaPropertyType" minOccurs="1" maxOccurs="unbounded">
+						<annotation>
+							<documentation>Osoba fizyczna uprawniona do udziału w wspólnocie gruntowej.</documentation>
+						</annotation>
+					</element>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="EGB_WspolnotaGruntowaPropertyType">
+		<sequence minOccurs="0">
+			<element ref="egb:EGB_WspolnotaGruntowa"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="EGB_Podmiot" type="egb:EGB_PodmiotType" substitutionGroup="gml:AbstractFeature"/>
+	<complexType name="EGB_PodmiotType">
+		<complexContent>
+			<extension base="gml:AbstractFeatureType">
+				<sequence>
+					<choice>
+						<element name="osobaFizyczna" type="egb:EGB_OsobaFizycznaPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+						<element name="malzenstwo" type="egb:EGB_MalzenstwoPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+						<element name="podmiotGrupowy" type="egb:EGB_PodmiotGrupowyPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+						<element name="instytucja1" type="egb:EGB_InstytucjaPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+						<element name="wspolnotaGruntowa" type="egb:EGB_WspolnotaGruntowaPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+					</choice>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="EGB_PodmiotPropertyType">
+		<sequence>
+			<element ref="egb:EGB_Podmiot"/>
+		</sequence>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="EGB_UdzialWeWlasnosci" type="egb:EGB_UdzialWeWlasnosciType" substitutionGroup="egb:EGB_OgolnyObiekt"/>
+	<complexType name="EGB_UdzialWeWlasnosciType">
+		<complexContent>
+			<extension base="egb:EGB_OgolnyObiektType">
+				<sequence>
+					<element name="rodzajPrawa" type="egb:EGB_RodzajPrawaType"/>
+					<element name="licznikUlamkaOkreslajacegoWartoscUdzialu" type="integer" minOccurs="0" maxOccurs="1"/>
+					<element name="mianownikUlamkaOkreslajacegoWartoscUdzialu" type="integer" minOccurs="0" maxOccurs="1"/>
+					<element name="dataNabycia" type="date" minOccurs="0" maxOccurs="1"/>
+					<element name="podmiotUdzialuWlasnosci" type="egb:EGB_PodmiotPropertyType" minOccurs="0" maxOccurs="unbounded">
+						<annotation>
+							<documentation>Podmiot ewidencyjny, który dysponuje udziałem we własności lub samoistnym posiadaniu.</documentation>
+						</annotation>
+					</element>
+					<element name="przedmiotUdzialuWlasnosci" type="egb:EGB_JednostkaRejestrowaPropertyType" minOccurs="0" maxOccurs="unbounded">
+						<annotation>
+							<documentation>Jednostka rejestrowa, z którą związany jest udział we własności.</documentation>
+						</annotation>
+					</element>
+					<element name="udzialWNieruchomosciWspolnej" type="egb:EGB_UdzialWeWlasnosciPropertyType" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="EGB_UdzialWeWlasnosciPropertyType">
+		<sequence minOccurs="0">
+			<element ref="egb:EGB_UdzialWeWlasnosci"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="EGB_UdzialWeWladaniu" type="egb:EGB_UdzialWeWladaniuType" substitutionGroup="egb:EGB_OgolnyObiekt">
+		<annotation>
+			<documentation>Ułamek właściwy określający wielkość udziału podmiotu w władaniu nieruchomością.</documentation>
+		</annotation>
+	</element>
+	<complexType name="EGB_UdzialWeWladaniuType">
+		<complexContent>
+			<extension base="egb:EGB_OgolnyObiektType">
+				<sequence>
+					<element name="rodzajWladania" type="egb:EGB_RodzajWladaniaType"/>
+					<element name="licznikUlamkaOkreslajacegoWartoscUdzialu" type="integer"/>
+					<element name="mianownikUlamkaOkreslajacegoWartoscUdzialu" type="integer"/>
+					<element name="DataWejsciaWPosiadanie" type="date" minOccurs="0" maxOccurs="1"/>
+					<element name="podmiotUdzialuWeWladaniu" type="egb:EGB_PodmiotPropertyType" minOccurs="0" maxOccurs="unbounded">
+						<annotation>
+							<documentation>Podmiot, który dysponuje udziałem we władaniu nieruchomością.</documentation>
+						</annotation>
+					</element>
+					<element name="przedmiotUdzialuWladania" type="egb:EGB_JednostkaRejestrowaPropertyType" minOccurs="0" maxOccurs="unbounded">
+						<annotation>
+							<documentation>Jednostka rejestrowa, z którą związany jest udział we władaniu.</documentation>
+						</annotation>
+					</element>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="EGB_UdzialWeWladaniuPropertyType">
+		<sequence minOccurs="0">
+			<element ref="egb:EGB_UdzialWeWladaniu"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="EGB_AdresPodmiotu" type="egb:EGB_AdresPodmiotuType" substitutionGroup="egb:EGB_OgolnyObiekt"/>
+	<complexType name="EGB_AdresPodmiotuType">
+		<complexContent>
+			<extension base="egb:EGB_OgolnyObiektType">
+				<sequence>
+					<element name="kraj" type="string"/>
+					<element name="miejscowosc" type="string"/>
+					<element name="kodPocztowy" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="ulica" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="numerPorzadkowy" type="string"/>
+					<element name="numerLokalu" type="string" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="EGB_AdresPodmiotuPropertyType">
+		<sequence minOccurs="0">
+			<element ref="egb:EGB_AdresPodmiotu"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="EGB_AdresNieruchomosci" type="egb:EGB_AdresNieruchomosciType" substitutionGroup="egb:EGB_OgolnyObiekt"/>
+	<complexType name="EGB_AdresNieruchomosciType">
+		<complexContent>
+			<extension base="egb:EGB_OgolnyObiektType">
+				<sequence>
+					<element name="nazwaMiejscowosci" type="string"/>
+					<element name="idMiejscowosci" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="nazwaUlicy" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="idNazwyUlicy" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="numerPorzadkowy" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="numerLokalu" type="string" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="EGB_AdresNieruchomosciPropertyType">
+		<sequence minOccurs="0">
+			<element ref="egb:EGB_AdresNieruchomosci"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="EGB_PunktGraniczny" type="egb:EGB_PunktGranicznyType" substitutionGroup="egb:EGB_OgolnyObiekt"/>
+	<complexType name="EGB_PunktGranicznyType">
+		<complexContent>
+			<extension base="egb:EGB_OgolnyObiektType">
+				<sequence>
+					<element name="geometria" type="gml:PointPropertyType"/>
+					<element name="idPunktu" type="string"/>
+					<element name="sposobPozyskania" type="egb:EGB_SposobPozyskaniaType" minOccurs="0" maxOccurs="1"/>
+					<element name="spelnienieWarunkowDokl" type="egb:EGB_SpelnienieWarunkowDokladnosciowychType"/>
+					<element name="rodzajStabilizacji" type="egb:EGB_KodStabilizacjiType"/>
+					<element name="oznWMaterialeZrodlowym" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="numerOperatuTechnicznego" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="dodatkoweInformacje" type="string" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="EGB_PunktGranicznyPropertyType">
+		<sequence minOccurs="0">
+			<element ref="egb:EGB_PunktGraniczny"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="EGB_Zmiana" type="egb:EGB_ZmianaType" substitutionGroup="gml:AbstractFeature">
+		<annotation>
+			<documentation>Klasa reprezentująca zmianę w ewidencji gruntów i budynków.</documentation>
+		</annotation>
+	</element>
+	<complexType name="EGB_ZmianaType">
+		<complexContent>
+			<extension base="gml:AbstractFeatureType">
+				<sequence>
+					<element name="idIIP">
+						<complexType>
+							<complexContent>
+								<extension base="gml:AbstractMemberType">
+									<sequence>
+										<element ref="egb:EGB_IdentyfikatorIIP"/>
+									</sequence>
+								</extension>
+							</complexContent>
+						</complexType>
+					</element>
+					<element name="startObiekt" type="dateTime"/>
+					<element name="startWersjaObiekt" type="dateTime"/>
+					<element name="koniecWersjaObiekt" type="dateTime" minOccurs="0" maxOccurs="1"/>
+					<element name="koniecObiekt" type="dateTime" minOccurs="0" maxOccurs="1"/>
+					<element name="dataAkceptacjiZmiany" type="dateTime"/>
+					<element name="dataPrzyjeciaZgloszeniaZmiany" type="dateTime"/>
+					<element name="nrZmiany" type="string"/>
+					<element name="opisZmiany" type="string"/>
+					<element name="dokument1" type="egb:EGB_DokumentPropertyType" minOccurs="0" maxOccurs="unbounded">
+						<annotation>
+							<documentation>Dokument lub zasób sieciowy stanowiący podstawę zmiany.</documentation>
+						</annotation>
+					</element>
+					<element name="operatTechniczny1" type="egb:EGB_OperatTechnicznyPropertyType" minOccurs="0" maxOccurs="unbounded">
+						<annotation>
+							<documentation>Operat techniczny stanowiący podstawę zmiany.</documentation>
+						</annotation>
+					</element>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="EGB_ZmianaPropertyType">
+		<sequence minOccurs="0">
+			<element ref="egb:EGB_Zmiana"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="EGB_Dokument" type="egb:EGB_DokumentType" substitutionGroup="gml:AbstractFeature">
+		<annotation>
+			<documentation>Dokument lub zasób sieciowy stanowiący podstawę zmiany w ewidencji gruntów i budynków.</documentation>
+		</annotation>
+	</element>
+	<complexType name="EGB_DokumentType">
+		<complexContent>
+			<extension base="gml:AbstractFeatureType">
+				<sequence>
+					<element name="idIIP">
+						<complexType>
+							<complexContent>
+								<extension base="gml:AbstractMemberType">
+									<sequence>
+										<element ref="egb:EGB_IdentyfikatorIIP"/>
+									</sequence>
+								</extension>
+							</complexContent>
+						</complexType>
+					</element>
+					<element name="startObiekt" type="dateTime"/>
+					<element name="koniecObiekt" type="dateTime" minOccurs="0" maxOccurs="1"/>
+					<element name="tytul" type="string"/>
+					<element name="dataDokumentu" type="date"/>
+					<element name="nazwaTworcyDokumentu" type="string"/>
+					<element name="opisDokumentu" type="string"/>
+					<element name="rodzajDokumentu" type="egb:EGB_RodzajDokumentuType"/>
+					<element name="sygnaturaDokumentu" type="string"/>
+					<element name="oznKancelaryjneDokumentu" type="string"/>
+					<element name="zasobSieciowy" type="gmd:CI_OnlineResource_Type" minOccurs="0" maxOccurs="unbounded"/>
+					<element name="zalacznikDokumentu" type="egb:EGB_DokumentPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="EGB_DokumentPropertyType">
+		<sequence minOccurs="0">
+			<element ref="egb:EGB_Dokument"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="EGB_OperatTechniczny" type="egb:EGB_OperatTechnicznyType" substitutionGroup="gml:AbstractFeature">
+		<annotation>
+			<documentation>Całość dokumentacji, zawierającej rezultaty geodezyjnych pomiarów sytuacyjnych i wysokościowych oraz wyniki opracowania tych pomiarów, przyjętej do państwowego zasobu geodezyjnego i kartograficznego.</documentation>
+		</annotation>
+	</element>
+	<complexType name="EGB_OperatTechnicznyType">
+		<complexContent>
+			<extension base="gml:AbstractFeatureType">
+				<sequence>
+					<element name="idIIP">
+						<complexType>
+							<complexContent>
+								<extension base="gml:AbstractMemberType">
+									<sequence>
+										<element ref="egb:EGB_IdentyfikatorIIP"/>
+									</sequence>
+								</extension>
+							</complexContent>
+						</complexType>
+					</element>
+					<element name="startObiekt" type="dateTime"/>
+					<element name="koniecObiekt" type="dateTime" minOccurs="0" maxOccurs="1"/>
+					<element name="dataPrzyjeciaDoPZGIK" type="date"/>
+					<element name="dataSporzadzenia" type="date"/>
+					<element name="identyfikatorOperatuWgPZGIK" type="string"/>
+					<element name="nazwaTworcy" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="opisOperatu" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="zasobSieciowy" type="gmd:CI_OnlineResource_Type" minOccurs="0" maxOccurs="unbounded"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="EGB_OperatTechnicznyPropertyType">
+		<sequence minOccurs="0">
+			<element ref="egb:EGB_OperatTechniczny"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="PrezentacjaGraficzna" type="egb:PrezentacjaGraficznaType" substitutionGroup="gml:AbstractFeature"/>
+	<complexType name="PrezentacjaGraficznaType">
+		<complexContent>
+			<extension base="gml:AbstractFeatureType">
+				<sequence>
+					<element name="kodObiektu" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="geometria" type="gml:GeometryPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+					<element name="katObrotu" type="double" minOccurs="0" maxOccurs="1"/>
+					<element name="parametrPrzeskalowania" type="double" minOccurs="0" maxOccurs="1"/>
+					<element name="etykieta" minOccurs="0" maxOccurs="unbounded">
+						<complexType>
+							<complexContent>
+								<extension base="gml:AbstractMemberType">
+									<sequence>
+										<element ref="egb:Etykieta"/>
+									</sequence>
+								</extension>
+							</complexContent>
+						</complexType>
+					</element>
+					<element name="obiektPrzedstawiany" type="egb:EGB_OgolnyObiektPropertyType" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="PrezentacjaGraficznaPropertyType">
+		<sequence minOccurs="0">
+			<element ref="egb:PrezentacjaGraficzna"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="Etykieta" type="egb:EtykietaType" substitutionGroup="gml:AbstractObject"/>
+	<complexType name="EtykietaType">
+		<sequence>
+			<element name="geometria" type="gml:PointPropertyType"/>
+			<element name="justyfikacja" type="integer" minOccurs="0" maxOccurs="1"/>
+			<element name="katObrotu" type="double" minOccurs="0" maxOccurs="1"/>
+			<element name="odnosnik" type="gml:PointPropertyType" minOccurs="0" maxOccurs="1"/>
+			<element name="parametrPrzeskalowania" type="double" minOccurs="0" maxOccurs="1"/>
+		</sequence>
+	</complexType>
+	<complexType name="EtykietaPropertyType">
+		<sequence>
+			<element ref="egb:Etykieta"/>
+		</sequence>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<simpleType name="EGB_KodStabilizacjiType">
+		<annotation>
+			<documentation>Lista dopuszczalnych wartości atrybutu kod stabilizacji.</documentation>
+		</annotation>
+		<restriction base="string">
+			<enumeration value="1">
+				<annotation>
+					<appinfo>
+						<gml:description>brakInformacji</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="2">
+				<annotation>
+					<appinfo>
+						<gml:description>niestabilizowany</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="3">
+				<annotation>
+					<appinfo>
+						<gml:description>znakNaziemny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="4">
+				<annotation>
+					<appinfo>
+						<gml:description>znakNaziemnyIPodziemny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="5">
+				<annotation>
+					<appinfo>
+						<gml:description>znakPodziemny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="6">
+				<annotation>
+					<appinfo>
+						<gml:description>szczegolTerenowy</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="EGB_RodzajDokumentuType">
+		<restriction base="string">
+			<enumeration value="1">
+				<annotation>
+					<appinfo>
+						<gml:description>umowaAktNotarialny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="2">
+				<annotation>
+					<appinfo>
+						<gml:description>aktWlasnosciZiemi</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="3">
+				<annotation>
+					<appinfo>
+						<gml:description>decyzjaAdminInnaNizAWZ</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="4">
+				<annotation>
+					<appinfo>
+						<gml:description>orzeczenieSaduPostanowienieWyrok</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="5">
+				<annotation>
+					<appinfo>
+						<gml:description>wyciagOdpisZKsiegiWieczystej</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="6">
+				<annotation>
+					<appinfo>
+						<gml:description>wyciagOdpisZKsiegiHipotecznej</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="7">
+				<annotation>
+					<appinfo>
+						<gml:description>odpisAktKWLubZbioruDokumentu</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="8">
+				<annotation>
+					<appinfo>
+						<gml:description>zawiadomienieZWydzialuKW</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="9">
+				<annotation>
+					<appinfo>
+						<gml:description>wniosekWSprawieZmiany</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="10">
+				<annotation>
+					<appinfo>
+						<gml:description>wyciagZDokumentacjiBudowyBudynku</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="11">
+				<annotation>
+					<appinfo>
+						<gml:description>protokol</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="12">
+				<annotation>
+					<appinfo>
+						<gml:description>ustawa</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="13">
+				<annotation>
+					<appinfo>
+						<gml:description>rozporzadzenie</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="14">
+				<annotation>
+					<appinfo>
+						<gml:description>uchwala</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="15">
+				<annotation>
+					<appinfo>
+						<gml:description>zarzadzenie</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="16">
+				<annotation>
+					<appinfo>
+						<gml:description>odpisWyciagZInnegoRejestruPublicznego</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="17">
+				<annotation>
+					<appinfo>
+						<gml:description>pelnomocnictwo</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="19">
+				<annotation>
+					<appinfo>
+						<gml:description>innyDokument</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="20">
+				<annotation>
+					<appinfo>
+						<gml:description>dokArchitektoniczoBud</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="21">
+				<annotation>
+					<appinfo>
+						<gml:description>dokPlanistyczny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="22">
+				<annotation>
+					<appinfo>
+						<gml:description>aktPoswiadczeniaDziedziczenia</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="23">
+				<annotation>
+					<appinfo>
+						<gml:description>zawiadomienieZPESEL</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="23">
+				<annotation>
+					<appinfo>
+						<gml:description>zgloszenieZmianySposobuUzytkowania</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="EGB_SpelnienieWarunkowDokladnosciowychType">
+		<restriction base="string">
+			<enumeration value="1">
+				<annotation>
+					<appinfo>
+						<gml:description>spelnia</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="2">
+				<annotation>
+					<appinfo>
+						<gml:description>niespelnia</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="EGB_SposobPozyskaniaType">
+		<restriction base="string">
+			<enumeration value="1">
+				<annotation>
+					<appinfo>
+						<gml:description>ustalony</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="2">
+				<annotation>
+					<appinfo>
+						<gml:description>nieustalony</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="EGB_RodzajPrawaType">
+		<restriction base="string">
+			<enumeration value="1">
+				<annotation>
+					<appinfo>
+						<gml:description>wlasnosc</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="2">
+				<annotation>
+					<appinfo>
+						<gml:description>wladanieSamoistne</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="EGB_RodzajWladaniaType">
+		<restriction base="string">
+			<enumeration value="1">
+				<annotation>
+					<appinfo>
+						<gml:description>uzytkowanieWieczyste</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="2">
+				<annotation>
+					<appinfo>
+						<gml:description>trwalyZarzad</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="3">
+				<annotation>
+					<appinfo>
+						<gml:description>zarzad</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="4">
+				<annotation>
+					<appinfo>
+						<gml:description>uzytkowanie</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="5">
+				<annotation>
+					<appinfo>
+						<gml:description>innyRodzajWladania</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="6">
+				<annotation>
+					<appinfo>
+						<gml:description>wykonywaniePrawaWlasnosciSPIInnychPrawRzeczowych</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="7">
+				<annotation>
+					<appinfo>
+						<gml:description>gospodarowanieZasobemNieruchomosciSPLubGmPowWoj</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="8">
+				<annotation>
+					<appinfo>
+						<gml:description>gospodarowanieGruntemSPPokrytymWodamiPowierzchniowymi</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="9">
+				<annotation>
+					<appinfo>
+						<gml:description>wykonywanieZadanZarzadcyDrogPub</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="EGB_PlecType">
+		<annotation>
+			<documentation>Płeć osoby fizycznej.</documentation>
+		</annotation>
+		<restriction base="string">
+			<enumeration value="1">
+				<annotation>
+					<appinfo>
+						<gml:description>meska</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="2">
+				<annotation>
+					<appinfo>
+						<gml:description>zenska</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="EGB_StatusPodmiotuEwidType">
+		<annotation>
+			<documentation>Lista dopuszczalnych wartości atrybutu status podmiotu.</documentation>
+		</annotation>
+		<restriction base="string">
+			<enumeration value="1">
+				<annotation>
+					<appinfo>
+						<gml:description>osobaFizyczna</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="3">
+				<annotation>
+					<appinfo>
+						<gml:description>skarbPanstwa</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="4">
+				<annotation>
+					<appinfo>
+						<gml:description>gminaLubZwiazekMiedzygminny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="5">
+				<annotation>
+					<appinfo>
+						<gml:description>solectwo</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="6">
+				<annotation>
+					<appinfo>
+						<gml:description>panstwowaOsobaPrawnaLubJednoosobowaSpolkaSkarbuPanstwa</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="7">
+				<annotation>
+					<appinfo>
+						<gml:description>panstwoweGospodarstwoLesneLasyPanstwowe</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="8">
+				<annotation>
+					<appinfo>
+						<gml:description>agencjaNieruchomosciRolnych</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="9">
+				<annotation>
+					<appinfo>
+						<gml:description>agencjaMieniaWojskowego</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="11">
+				<annotation>
+					<appinfo>
+						<gml:description>panstwowaJednostkaOrganizacyjnaBezOsobowosciPrawnej</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="12">
+				<annotation>
+					<appinfo>
+						<gml:description>gminnaJednostkaOrganizacyjnaBezOsobowosciPrawnej</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="13">
+				<annotation>
+					<appinfo>
+						<gml:description>powiatowaJednostkaOrganizacyjnaBezOsobowosciPrawnej</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="14">
+				<annotation>
+					<appinfo>
+						<gml:description>wojewodzkaJednostkaOrganizacyjnaBezOsobowosciPrawnej</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="15">
+				<annotation>
+					<appinfo>
+						<gml:description>gminnaOsobaPrawnaLubJednoosobowaSpolkaGminy</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="16">
+				<annotation>
+					<appinfo>
+						<gml:description>powiatowaOsobaPrawnaLubJednoosobowaSpolkaPowiatu</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="17">
+				<annotation>
+					<appinfo>
+						<gml:description>wojewodzkaOsobaPrawnaLubJednoosobowaSpolkaWojewodztwa</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="23">
+				<annotation>
+					<appinfo>
+						<gml:description>spoldzielniaMieszkaniowa</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="24">
+				<annotation>
+					<appinfo>
+						<gml:description>spoldzielniaLubZwiazekSpoldzielni</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="25">
+				<annotation>
+					<appinfo>
+						<gml:description>kosciolyLubZwiazkiWyznaniowe</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="26">
+				<annotation>
+					<appinfo>
+						<gml:description>spolkaHandlowaNieBedacaCudzoziemcem</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="27">
+				<annotation>
+					<appinfo>
+						<gml:description>spolkaHandlowaBedacaCudzoziemcem</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="28">
+				<annotation>
+					<appinfo>
+						<gml:description>osobaPrawnaInnaNizSpolkaHandlowaBedacaCudzoziemcem</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="29">
+				<annotation>
+					<appinfo>
+						<gml:description>partiaPolityczna</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="30">
+				<annotation>
+					<appinfo>
+						<gml:description>stowarzyszenie</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="31">
+				<annotation>
+					<appinfo>
+						<gml:description>jednOrganizacyjnaNieBedacaOsobaPrawnaZeZdolnosciaPrawna</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="32">
+				<annotation>
+					<appinfo>
+						<gml:description>podmiotyPozostajaceWeWspolwlasnosciLacznej</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="33">
+				<annotation>
+					<appinfo>
+						<gml:description>spolkaCywilna</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="34">
+				<annotation>
+					<appinfo>
+						<gml:description>malzenstwoObywateliPolskich</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="35">
+				<annotation>
+					<appinfo>
+						<gml:description>malzenstwoObywatelaPolskiICudzoziemca</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="36">
+				<annotation>
+					<appinfo>
+						<gml:description>wojewodztwo</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="37">
+				<annotation>
+					<appinfo>
+						<gml:description>powiat</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="38">
+				<annotation>
+					<appinfo>
+						<gml:description>spoldzielniaRolnicza</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="40">
+				<annotation>
+					<appinfo>
+						<gml:description>wlascicielNieustalony</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="41">
+				<annotation>
+					<appinfo>
+						<gml:description>wspolnotaGruntowa</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="42">
+				<annotation>
+					<appinfo>
+						<gml:description>ministerGospodarkiMorskiej</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="43">
+				<annotation>
+					<appinfo>
+						<gml:description>prezesPanstwowegoGospodarstwaWodnego</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="44">
+				<annotation>
+					<appinfo>
+						<gml:description>generalnyDyrektorDrogKrajowychIAutostrad</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="45">
+				<annotation>
+					<appinfo>
+						<gml:description>dyrektorParkuNarodowego</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="46">
+				<annotation>
+					<appinfo>
+						<gml:description>marszalekWojewodztwa</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="47">
+				<annotation>
+					<appinfo>
+						<gml:description>inne</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="EGB_GrupaRejType">
+		<annotation>
+			<documentation>Lista dopuszczalnych wartości atrybutu grupa rejestrowa.</documentation>
+		</annotation>
+		<restriction base="string">
+			<enumeration value="1">
+				<annotation>
+					<appinfo>
+						<gml:description>skarbPanstwa</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="2">
+				<annotation>
+					<appinfo>
+						<gml:description>skarbPanstwaZUW</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="3">
+				<annotation>
+					<appinfo>
+						<gml:description>panstwowaOsobaPrawna</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="4">
+				<annotation>
+					<appinfo>
+						<gml:description>gminyIZwiazkiMiędzygminne</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="5">
+				<annotation>
+					<appinfo>
+						<gml:description>gminyIZwiazkiMiędzygminneZUW</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="6">
+				<annotation>
+					<appinfo>
+						<gml:description>JSTOsobaPrawna</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="7">
+				<annotation>
+					<appinfo>
+						<gml:description>osobyFizyczne</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="8">
+				<annotation>
+					<appinfo>
+						<gml:description>spoldzielnie</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="9">
+				<annotation>
+					<appinfo>
+						<gml:description>kosciolyIZwiazkiWyznaniowe</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="10">
+				<annotation>
+					<appinfo>
+						<gml:description>wspolnotaGruntowa</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="11">
+				<annotation>
+					<appinfo>
+						<gml:description>powiatyIZwiązkiPowiatow</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="12">
+				<annotation>
+					<appinfo>
+						<gml:description>powiatyIZwiązkiPowiatowZUW</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="13">
+				<annotation>
+					<appinfo>
+						<gml:description>wojewodztwa</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="14">
+				<annotation>
+					<appinfo>
+						<gml:description>wojewodztwaZUW</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="15">
+				<annotation>
+					<appinfo>
+						<gml:description>spolkiPrawaHandlowego</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="16">
+				<annotation>
+					<appinfo>
+						<gml:description>innePodmioty</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="EGB_OFUType">
+		<annotation>
+			<documentation>Lista dopuszczalnych wartości atrybutu oznaczenie użytku gruntowego.</documentation>
+		</annotation>
+		<restriction base="string">
+			<enumeration value="R">
+				<annotation>
+					<appinfo>
+						<gml:description>gruntOrny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="S">
+				<annotation>
+					<appinfo>
+						<gml:description>sad</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="Ł">
+				<annotation>
+					<appinfo>
+						<gml:description>lakaTrwala</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="Ps">
+				<annotation>
+					<appinfo>
+						<gml:description>pastwiskoTrwale</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="Br">
+				<annotation>
+					<appinfo>
+						<gml:description>gruntRolnyZabudowany</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="Wsr">
+				<annotation>
+					<appinfo>
+						<gml:description>gruntPodStawem</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="W">
+				<annotation>
+					<appinfo>
+						<gml:description>gruntPodRowem</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="Lzr">
+				<annotation>
+					<appinfo>
+						<gml:description>gruntRolnyZadrzewionyIZakrzewiony</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="Ls">
+				<annotation>
+					<appinfo>
+						<gml:description>las</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="Lz">
+				<annotation>
+					<appinfo>
+						<gml:description>gruntZadrzewionyIZakrzewiony</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="B">
+				<annotation>
+					<appinfo>
+						<gml:description>terenMieszkaniowy</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="Ba">
+				<annotation>
+					<appinfo>
+						<gml:description>terenPrzemyslowy</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="Bi">
+				<annotation>
+					<appinfo>
+						<gml:description>innyTerenZabudowany</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="Bp">
+				<annotation>
+					<appinfo>
+						<gml:description>zurbanizowanyTerenNiezabudowanyLubWTrakcieZabudowy</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="Bz">
+				<annotation>
+					<appinfo>
+						<gml:description>terenRekreacyjnoWypoczynkowy</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="K">
+				<annotation>
+					<appinfo>
+						<gml:description>uzytekKopalny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="dr">
+				<annotation>
+					<appinfo>
+						<gml:description>droga</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="Tk">
+				<annotation>
+					<appinfo>
+						<gml:description>terenKolejowy</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="Ti">
+				<annotation>
+					<appinfo>
+						<gml:description>innyTerenKomunikacyjny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="Tp">
+				<annotation>
+					<appinfo>
+						<gml:description>gruntPrzeznaczonyPodBudoweDrogPublLubLiniiKolej</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="N">
+				<annotation>
+					<appinfo>
+						<gml:description>nieuzytek</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="Wp">
+				<annotation>
+					<appinfo>
+						<gml:description>gruntPodWodamiPowierzchniowymiPlynacymi</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="Ws">
+				<annotation>
+					<appinfo>
+						<gml:description>gruntPodWodamiPowierzchniowymiStojacymi</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="Wm">
+				<annotation>
+					<appinfo>
+						<gml:description>gruntPodMorskimiWodamiWewnetrznymi</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="Tr">
+				<annotation>
+					<appinfo>
+						<gml:description>terenRozny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="EGB_OZKType">
+		<annotation>
+			<documentation>Lista dopuszczalnych wartości atrybutu oznaczenie klasy gruntu.</documentation>
+		</annotation>
+		<restriction base="string">
+			<enumeration value="I"/>
+			<enumeration value="II"/>
+			<enumeration value="III"/>
+			<enumeration value="IIIa"/>
+			<enumeration value="IIIb"/>
+			<enumeration value="IV"/>
+			<enumeration value="IVa"/>
+			<enumeration value="IVb"/>
+			<enumeration value="V"/>
+			<enumeration value="VI"/>
+			<enumeration value="VIz"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="EGB_OZUType">
+		<annotation>
+			<documentation>Lista dopuszczalnych wartości atrybutu oznaczenie użytku gruntowego.</documentation>
+		</annotation>
+		<restriction base="string">
+			<enumeration value="R">
+				<annotation>
+					<appinfo>
+						<gml:description>gruntOrny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="Ł">
+				<annotation>
+					<appinfo>
+						<gml:description>lakaTrwale</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="Ps">
+				<annotation>
+					<appinfo>
+						<gml:description>pastwiskoTrwale</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="Ls">
+				<annotation>
+					<appinfo>
+						<gml:description>las</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="Lz">
+				<annotation>
+					<appinfo>
+						<gml:description>gruntZadrzewionyIZakrzewiony</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="N">
+				<annotation>
+					<appinfo>
+						<gml:description>nieuzytek</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="EGB_RodzajBlokuType">
+		<annotation>
+			<documentation>Lista dopuszczalnych wartości atrybutu rodzaj bloku.</documentation>
+		</annotation>
+		<restriction base="string">
+			<enumeration value="n">
+				<annotation>
+					<appinfo>
+						<gml:description>kondygnacjeNadziemne</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="p">
+				<annotation>
+					<appinfo>
+						<gml:description>kondygnacjePodziemne</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="l">
+				<annotation>
+					<appinfo>
+						<gml:description>lacznik</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="a">
+				<annotation>
+					<appinfo>
+						<gml:description>nawis</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="z">
+				<annotation>
+					<appinfo>
+						<gml:description>przejazdPrzezBudynek</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="y">
+				<annotation>
+					<appinfo>
+						<gml:description>inny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="EGB_RodzajLokaluType">
+		<annotation>
+			<documentation>Lista dopuszczalnych wartości atrybutu rodzaj lokalu.</documentation>
+		</annotation>
+		<restriction base="string">
+			<enumeration value="1">
+				<annotation>
+					<appinfo>
+						<gml:description>mieszkalny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="2">
+				<annotation>
+					<appinfo>
+						<gml:description>niemieszkalny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="EGB_RodzajObiektuType">
+		<annotation>
+			<documentation>Lista dopuszczalnych wartości atrybutu rodzaj obiektu związanego z budynkiem.</documentation>
+		</annotation>
+		<restriction base="string">
+			<enumeration value="t">
+				<annotation>
+					<appinfo>
+						<gml:description>taras</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="w">
+				<annotation>
+					<appinfo>
+						<gml:description>werandaGanek</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="i">
+				<annotation>
+					<appinfo>
+						<gml:description>wiatrolap</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="s">
+				<annotation>
+					<appinfo>
+						<gml:description>schody</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="r">
+				<annotation>
+					<appinfo>
+						<gml:description>rampa</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="o">
+				<annotation>
+					<appinfo>
+						<gml:description>podpora</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="j">
+				<annotation>
+					<appinfo>
+						<gml:description>wjazdDoPodziemia</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="d">
+				<annotation>
+					<appinfo>
+						<gml:description>podjazdDlaOsobNiepelnosprawnych</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="EGB_RodzajPomieszczeniaType">
+		<annotation>
+			<documentation>Lista dopuszczalnych wartości atrybutu rodzaj pomieszczenia przynależnego do lokalu.</documentation>
+		</annotation>
+		<restriction base="string">
+			<enumeration value="1">
+				<annotation>
+					<appinfo>
+						<gml:description>piwnica</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="2">
+				<annotation>
+					<appinfo>
+						<gml:description>garaz</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="3">
+				<annotation>
+					<appinfo>
+						<gml:description>miejscePostojoweWGarazu</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="4">
+				<annotation>
+					<appinfo>
+						<gml:description>strych</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="5">
+				<annotation>
+					<appinfo>
+						<gml:description>komorka</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="6">
+				<annotation>
+					<appinfo>
+						<gml:description>inne</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="EGB_RodzajWgKSTType">
+		<annotation>
+			<documentation>Lista dopuszczalnych wartości atrybutu rodzaj wg KŚT.</documentation>
+		</annotation>
+		<restriction base="string">
+			<enumeration value="m">
+				<annotation>
+					<appinfo>
+						<gml:description>mieszkalny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="g">
+				<annotation>
+					<appinfo>
+						<gml:description>produkcyjnyUslugowyIGospodarczy</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="t">
+				<annotation>
+					<appinfo>
+						<gml:description>transportuILacznosci</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="k">
+				<annotation>
+					<appinfo>
+						<gml:description>oswiatyNaukiIKulturyOrazSportu</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="z">
+				<annotation>
+					<appinfo>
+						<gml:description>szpitalaIInneBudynkiOpiekiZdrowotnej</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="b">
+				<annotation>
+					<appinfo>
+						<gml:description>biurowy</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="h">
+				<annotation>
+					<appinfo>
+						<gml:description>handlowoUslugowy</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="p">
+				<annotation>
+					<appinfo>
+						<gml:description>przemyslowy</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="s">
+				<annotation>
+					<appinfo>
+						<gml:description>zbiornikSilosIBudynekMagazynowy</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="i">
+				<annotation>
+					<appinfo>
+						<gml:description>budynekNiemieszkalny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="EGB_ZapisPowDzialkiType">
+		<annotation>
+			<documentation>Lista dopuszczalnych wartości atrybutu informacja o dokładności reprezentacji pola ewiden­cyjnego działki.</documentation>
+		</annotation>
+		<restriction base="string">
+			<enumeration value="1">
+				<annotation>
+					<appinfo>
+						<gml:description>doklDoM</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="2">
+				<annotation>
+					<appinfo>
+						<gml:description>doklDoAra</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+</schema>
