@@ -1,0 +1,818 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--GUGiK 13.12.2022-->
+<schema xmlns="http://www.w3.org/2001/XMLSchema" xmlns:rcn="urn:gugik:specyfikacje:gmlas:rejestrcennieruchomosci:1.0" xmlns:gml="http://www.opengis.net/gml/3.2" targetNamespace="urn:gugik:specyfikacje:gmlas:rejestrcennieruchomosci:1.0" elementFormDefault="qualified" attributeFormDefault="unqualified" version="1.4">
+  <import namespace="http://www.opengis.net/gml/3.2" schemaLocation="http://schemas.opengis.net/gml/3.2.1/gml.xsd"/>	
+  <element name="RCN_Transakcja" type="rcn:RCN_TransakcjaType" substitutionGroup="gml:AbstractFeature">
+    <annotation>
+      <documentation>Klasa dotyczy umowy zobowiązującej do przeniesienia własności nieruchomości lub użytkowania wieczystego. </documentation>
+    </annotation>
+  </element>
+  <complexType name="RCN_TransakcjaType">
+    <complexContent>
+      <extension base="gml:AbstractFeatureType">
+        <sequence>
+          <element name="IdRCN">
+            <annotation>
+              <documentation>Identyfikator Infrastruktury Informacji Przestrzennej</documentation>
+            </annotation>
+            <complexType>
+              <complexContent>
+                <extension base="gml:AbstractMemberType">
+                  <sequence>
+                    <element ref="rcn:RCN_IdentyfikatorIIP"/>
+                  </sequence>
+                </extension>
+              </complexContent>
+            </complexType>
+          </element>
+          <element name="oznaczenieTransakcji" type="string"/>
+          <element name="rodzajTransakcji" type="rcn:RCN_RodzajTransakcjiType"/>
+          <element name="rodzajRynku" type="rcn:RCN_RodzajRynkuType" minOccurs="0" maxOccurs="1"/>
+          <element name="stronaSprzedajaca" type="rcn:RCN_StronaSprzedajacaKupujacaType"/>
+          <element name="stronaKupujaca" type="rcn:RCN_StronaSprzedajacaKupujacaType"/>
+          <element name="cenaTransakcjiBrutto" type="double">
+            <annotation>
+              <documentation>Łączna cena wszystkich nieruchomości objętych transakcją, określona w umowie.</documentation>
+            </annotation>
+          </element>
+          <element name="kwotaPodatkuVAT" type="double" minOccurs="0" maxOccurs="1"/>
+          <element name="podstawaPrawna" type="rcn:RCN_DokumentPropertyType">
+            <annotation>
+              <documentation>Dokument na podstawie którego zawarto transakcję.</documentation>
+            </annotation>
+          </element>
+          <element name="nieruchomosc" type="rcn:RCN_NieruchomoscPropertyType" minOccurs="1" maxOccurs="unbounded"> 
+            <annotation>
+              <documentation>Nieruchomość będąca przedmiotem umowy.</documentation>
+            </annotation>
+          </element>
+        </sequence>
+      </extension>
+    </complexContent>
+  </complexType>
+  <complexType name="RCN_TransakcjaPropertyType">
+    <sequence minOccurs="0">
+      <element ref="rcn:RCN_Transakcja"/>
+    </sequence>
+    <attributeGroup ref="gml:AssociationAttributeGroup"/>
+    <attributeGroup ref="gml:OwnershipAttributeGroup"/>
+  </complexType>
+  <element name="RCN_IdentyfikatorIIP" type="rcn:RCN_IdentyfikatorIIPType" substitutionGroup="gml:AbstractObject"/>
+	<complexType name="RCN_IdentyfikatorIIPType">
+		<sequence>
+			<element name="przestrzenNazw" type="string">
+				<annotation>
+					<documentation>Przestrzeń nazw identyfikujaca zbiór danych, z którego pochodzi obiekt.</documentation>
+				</annotation>
+			</element>
+			<element name="lokalnyId" type="string">
+				<annotation>
+					<documentation>Identyfikator lokalny obiektu nadawany przez dostawcę zbioru danych, unikalny w przestrzeni nazw.</documentation>
+				</annotation>
+			</element>
+			<element name="wersjaId" type="string" minOccurs="0" maxOccurs="1">
+				<annotation>
+					<documentation>Identyfikator wersji obiektu.</documentation>
+				</annotation>
+			</element>
+		</sequence>
+	</complexType>
+	<complexType name="RCN_IdentyfikatorIIPPropertyType">
+		<sequence>
+			<element ref="rcn:RCN_IdentyfikatorIIP"/>
+		</sequence>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="RCN_Dokument" type="rcn:RCN_DokumentType" substitutionGroup="gml:AbstractFeature"/>
+	<complexType name="RCN_DokumentType">
+		<complexContent>
+			<extension base="gml:AbstractFeatureType">
+				<sequence>
+					<element name="oznaczenieDokumentu" type="string"/>
+					<element name="dataSporzadzeniaDokumentu" type="date"/>
+					<element name="tworcaDokumentu" type="string"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="RCN_DokumentPropertyType">
+		<sequence minOccurs="0">
+			<element ref="rcn:RCN_Dokument"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="RCN_Nieruchomosc" type="rcn:RCN_NieruchomoscType" substitutionGroup="gml:AbstractFeature">
+		<annotation>
+			<documentation>Klasa reprezentuje nieruchomość rozumianą zgodnie z art. 46 § 1 Kodeksu cywilnego.</documentation>
+		</annotation>
+	</element>
+	<complexType name="RCN_NieruchomoscType">
+		<complexContent>
+			<extension base="gml:AbstractFeatureType">
+				<sequence>
+					<element name="rodzajNieruchomosci" type="rcn:RCN_RodzajNieruchomosciType"/>
+					<element name="rodzajPrawaDoNieruchomosci" type="rcn:RCN_RodzajPrawaType"/>
+					<element name="udzialWPrawieDoNieruchomosci" type="string"/>
+					<element name="polePowierzchniNieruchomosciGruntowej" type="gml:AreaType" minOccurs="0" maxOccurs="1">
+						<annotation>
+							<documentation>Pole powierzchni nieruchomości gruntowej obliczanej jako suma powierzchni działek ewidencyjnych objętych transakcją.</documentation>
+						</annotation>
+					</element>
+					<element name="opis" type="string" minOccurs="0" maxOccurs="1">
+						<annotation>
+							<documentation>Opis zawiera informacje charakteryzujące nieruchomość, a także informacje o budowlach, urządzeniach i innych elementach wpływających na wartość nieruchomości.</documentation>
+						</annotation>
+					</element>
+					<element name="cenaNieruchomosciBrutto" type="double" minOccurs="0" maxOccurs="1">
+						<annotation>
+							<documentation>Cena nieruchomości określona w umowie.</documentation>
+						</annotation>
+					</element>
+					<element name="kwotaPodatkuVAT" type="double" minOccurs="0" maxOccurs="1"/>
+          <element name="dzialka" type="rcn:RCN_DzialkaPropertyType" minOccurs="0" maxOccurs="unbounded">
+            <annotation>
+              <documentation>Działka ewidencyjna wchodząca w skład nieruchomości.</documentation>
+            </annotation>
+          </element>
+          <element name="budynek" type="rcn:RCN_BudynekPropertyType" minOccurs="0" maxOccurs="unbounded">
+            <annotation>
+              <documentation>Budynek wchodzący w skład nieruchomości.</documentation>
+            </annotation>
+          </element>
+          <element name="lokal" type="rcn:RCN_LokalPropertyType" minOccurs="0" maxOccurs="unbounded">
+            <annotation>
+              <documentation>Lokal wchodzący w skład nieruchomości.</documentation>
+            </annotation>
+          </element>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="RCN_NieruchomoscPropertyType">
+		<sequence minOccurs="0">
+			<element ref="rcn:RCN_Nieruchomosc"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="RCN_Dzialka" type="rcn:RCN_DzialkaType" substitutionGroup="gml:AbstractFeature"/>
+	<complexType name="RCN_DzialkaType">
+		<complexContent>
+			<extension base="gml:AbstractFeatureType">
+				<sequence>
+					<element name="idDzialki" type="string">
+						<annotation>
+							<documentation>Identyfikator działki ewidencyjnej, nadany zgodnie z zasadami określonymi w załączniku nr 1 do rozporządzenia.</documentation>
+						</annotation>
+					</element>
+					<element name="geometria" type="gml:SurfacePropertyType" minOccurs="0" maxOccurs="1"/>
+					<element name="przeznaczenieWMPZP" type="rcn:RCN_PrzeznaczenieWMPZPType" minOccurs="0" maxOccurs="unbounded">
+						<annotation>
+							<documentation>Przeznaczenie działki według miejscowego planu zagospodarowania przestrzennego lub decyzji o warunkach zabudowy i zagospodarowania terenu.</documentation>
+						</annotation>
+					</element>
+					<element name="polePowierzchniEwidencyjnej" type="gml:AreaType"/>
+					<element name="sposobUzytkowania" type="rcn:RCN_SposobUzytkowaniaType">
+						<annotation>
+							<documentation>Sposób użytkowania działki ewidencyjnej.</documentation>
+						</annotation>
+					</element>
+					<element name="cenaDzialkiEwidencyjnejBrutto" type="double" minOccurs="0" maxOccurs="1"/>
+					<element name="kwotaPodatkuVAT" type="double" minOccurs="0" maxOccurs="1"/>
+					<element name="dodatkoweInformacje" type="string" minOccurs="0" maxOccurs="1">
+						<annotation>
+							<documentation>Dodatkowe informacje o działce ewidencyjnej zawarte w umowie, które mogły mieć wpływ na jej cenę.</documentation>
+						</annotation>
+					</element>
+					<element name="adresDzialki" type="rcn:RCN_AdresPropertyType" minOccurs="0" maxOccurs="unbounded">
+						<annotation>
+							<documentation>Adres działki ewidencyjnej.</documentation>
+						</annotation>
+					</element>					
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="RCN_DzialkaPropertyType">
+		<sequence minOccurs="0">
+			<element ref="rcn:RCN_Dzialka"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="RCN_Budynek" type="rcn:RCN_BudynekType" substitutionGroup="gml:AbstractFeature"/>
+	<complexType name="RCN_BudynekType">
+		<complexContent>
+			<extension base="gml:AbstractFeatureType">
+				<sequence>
+					<element name="idBudynku" type="string">
+						<annotation>
+							<documentation>Identyfikator budynku, nadany zgodnie z zasadami określonymi w załączniku nr 1 do rozporządzenia.</documentation>
+						</annotation>
+					</element>
+					<element name="geometria" type="gml:SurfacePropertyType" minOccurs="0" maxOccurs="1"/>
+					<element name="rodzajBudynku" type="rcn:RCN_RodzajBudynkuType"/>
+					<element name="powierzchniaUzytkowaBudynku" type="gml:AreaType" minOccurs="0" maxOccurs="1"/>
+					<element name="cenaBudynkuBrutto" type="double" minOccurs="0" maxOccurs="1"/>
+					<element name="kwotaPodatkuVAT" type="double" minOccurs="0" maxOccurs="1"/>
+					<element name="dodatkoweInformacje" type="string" minOccurs="0" maxOccurs="1">
+						<annotation>
+							<documentation>Dodatkowe informacje o budynku zawarte w umowie, które mogły mieć wpływ na jej cenę.</documentation>
+						</annotation>
+					</element>
+					<element name="adresBudynku" type="rcn:RCN_AdresPropertyType" minOccurs="0" maxOccurs="unbounded">
+						<annotation>
+							<documentation>Adres budynku</documentation>
+						</annotation>
+					</element>						
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="RCN_BudynekPropertyType">
+		<sequence minOccurs="0">
+			<element ref="rcn:RCN_Budynek"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="RCN_Lokal" type="rcn:RCN_LokalType" substitutionGroup="gml:AbstractFeature"/>
+	<complexType name="RCN_LokalType">
+		<complexContent>
+			<extension base="gml:AbstractFeatureType">
+				<sequence>
+					<element name="idLokalu" type="string">
+						<annotation>
+							<documentation>Identyfikatorlokalu, nadany zgodnie z zasadami określonymi w załączniku nr 1 do rozporządzenia.</documentation>
+						</annotation>
+					</element>
+					<element name="georeferencja" type="gml:PointPropertyType" minOccurs="0" maxOccurs="1">
+						<annotation>
+							<documentation>Georeferencja budynku, w którym znajduje się lokal.</documentation>
+						</annotation>
+					</element>
+					<element name="funkcjaLokalu" type="rcn:RCN_FunkcjaLokaluType"/>
+					<element name="liczbaIzb" type="integer" minOccurs="0" maxOccurs="1"/>
+					<element name="nrKondygnacji" type="integer" minOccurs="0" maxOccurs="1">
+						<annotation>
+							<documentation>Numer kondygnacji na której znajduje się lokal.</documentation>
+						</annotation>
+					</element>
+					<element name="powUzytkowaLokalu" type="gml:AreaType">
+						<annotation>
+							<documentation>Powierzchnia użytkowa lokalu.</documentation>
+						</annotation>
+					</element>
+					<element name="powUzytkowaPomieszczenPrzynal" type="gml:AreaType" minOccurs="0" maxOccurs="1">
+            <annotation>
+              <documentation>Powierzchnia użytkowa pomieszczeń przynależnych do lokalu.</documentation>
+            </annotation>
+          </element>
+					<element name="cenaLokaluBrutto" type="double" minOccurs="0" maxOccurs="1"/>
+					<element name="kwotaPodatkuVAT" type="double" minOccurs="0" maxOccurs="1"/>
+					<element name="dodatkoweInformacje" type="string" minOccurs="0" maxOccurs="1">
+						<annotation>
+							<documentation>Dodatkowe informacje o lokalu zawarte w umowie, które mogły mieć wpływ na jej cenę.</documentation>
+						</annotation>
+					</element>
+					<element name="adresBudynkuZLokalem" type="rcn:RCN_AdresPropertyType" minOccurs="0" maxOccurs="1">
+						<annotation>
+							<documentation>Adres budynku w którym znajduje się lokal.</documentation>
+						</annotation>
+					</element>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="RCN_LokalPropertyType">
+		<sequence minOccurs="0">
+			<element ref="rcn:RCN_Lokal"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="RCN_Adres" type="rcn:RCN_AdresType" substitutionGroup="gml:AbstractFeature">
+		<annotation>
+			<documentation>Klasa reprezentuje dane adresowe. </documentation>
+		</annotation>
+	</element>
+	<complexType name="RCN_AdresType">
+		<complexContent>
+			<extension base="gml:AbstractFeatureType">
+				<sequence>
+					<element name="miejscowosc" type="string"/>
+					<element name="ulica" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="numerPorzadkowy" type="string" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="RCN_AdresPropertyType">
+		<sequence minOccurs="0">
+			<element ref="rcn:RCN_Adres"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<simpleType name="RCN_RodzajTransakcjiType">
+		<restriction base="string">
+			<enumeration value="1">
+				<annotation>
+					<appinfo>
+						<gml:description>wolnyRynek</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="2">
+				<annotation>
+					<appinfo>
+						<gml:description>sprzedazBezprzetargowa</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="3">
+				<annotation>
+					<appinfo>
+						<gml:description>sprzedazPrzetargowa</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="4">
+				<annotation>
+					<appinfo>
+						<gml:description>sprzedazWPostepowaniuEgzekucyjnym</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="5">
+				<annotation>
+					<appinfo>
+						<gml:description>sprzedazNaCelPubliczny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="6">
+				<annotation>
+					<appinfo>
+						<gml:description>sprzedazZBonifikata</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="RCN_RodzajRynkuType">
+		<restriction base="string">
+			<enumeration value="1">
+				<annotation>
+					<appinfo>
+						<gml:description>rynekPierwotny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="2">
+				<annotation>
+					<appinfo>
+						<gml:description>rynekWtorny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="RCN_RodzajPrawaType">
+		<restriction base="string">
+			<enumeration value="1">
+				<annotation>
+					<appinfo>
+						<gml:description>wlasnoscNieruchomosciGruntowej</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="2">
+				<annotation>
+					<appinfo>
+						<gml:description>uzytkowanieWieczyste</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="3">
+				<annotation>
+					<appinfo>
+						<gml:description>wlasnoscLokaluWrazZPrawemZwiazanym</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="4">
+				<annotation>
+					<appinfo>
+						<gml:description>wlasnoscBudynkuWrazZPrawemZwiazanym</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="RCN_StronaSprzedajacaKupujacaType">
+		<annotation>
+			<documentation>Lista dopuszczalnych wartości dla atrybutów strona sprzedająca i kupująca nieruchomość.</documentation>
+		</annotation>
+		<restriction base="string">
+			<enumeration value="1">
+				<annotation>
+					<appinfo>
+						<gml:description>skarbPanstwa</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="2">
+				<annotation>
+					<appinfo>
+						<gml:description>jednostkaSamorzaduTerytorialnego</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="3">
+				<annotation>
+					<appinfo>
+						<gml:description>osobaFizyczna</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="4">
+				<annotation>
+					<appinfo>
+						<gml:description>osobaPrawna</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="RCN_RodzajNieruchomosciType">
+		<restriction base="string">
+			<enumeration value="1">
+				<annotation>
+					<appinfo>
+						<gml:description>nieruchomoscGruntowaNiezabudowana</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="2">
+				<annotation>
+					<appinfo>
+						<gml:description>nieruchomoscGruntowaZabudowana</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="3">
+				<annotation>
+					<appinfo>
+						<gml:description>nieruchomoscBudynkowa</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="4">
+				<annotation>
+					<appinfo>
+						<gml:description>nieruchomoscLokalowa</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="RCN_PrzeznaczenieWMPZPType">
+		<annotation>
+			<documentation>Lista dopuszczalnych wartości dla atrybutu przeznaczenie działki według miejscowego planu zagospodarowania przestrzennego lub decyzji o warunkach zabudowy i zagospodarowania terenu.</documentation>
+		</annotation>
+		<restriction base="string">
+			<enumeration value="BP">
+				<annotation>
+					<appinfo>
+						<gml:description>brakMPZPLubWZ</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="MN">
+				<annotation>
+					<appinfo>
+						<gml:description>budownictwoMieszkanioweJednorodzinne</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="MW">
+				<annotation>
+					<appinfo>
+						<gml:description>budownictwoMieszkanioweWielorodzinne</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="U">
+				<annotation>
+					<appinfo>
+						<gml:description>terenZabudowyUslugowej</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="US">
+				<annotation>
+					<appinfo>
+						<gml:description>terenSportuIRekreacji</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="UC">
+				<annotation>
+					<appinfo>
+						<gml:description>terenRozmieszczeniaDuzychObiektowHandlowych</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="R">
+				<annotation>
+					<appinfo>
+						<gml:description>terenRolniczy</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="RU">
+				<annotation>
+					<appinfo>
+						<gml:description>terenObslugiProdukcjiWGospodarstwachRolnych</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="RM">
+				<annotation>
+					<appinfo>
+						<gml:description>terenZabudowyZagrodowejGospodarstwRolnych</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="P">
+				<annotation>
+					<appinfo>
+						<gml:description>terenObiektowProdukcyjnychSkladowIMagazynow</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="PG">
+				<annotation>
+					<appinfo>
+						<gml:description>obszarITerenGorniczy</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="ZN">
+				<annotation>
+					<appinfo>
+						<gml:description>terenZieleniObjetyFormaOchronyPrzyrody</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="ZL">
+				<annotation>
+					<appinfo>
+						<gml:description>las</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="ZP">
+				<annotation>
+					<appinfo>
+						<gml:description>terenZieleniUrzadzonej</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="ZD">
+				<annotation>
+					<appinfo>
+						<gml:description>terenOgrodowDzialkowych</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="ZC">
+				<annotation>
+					<appinfo>
+						<gml:description>cmentarz</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="WM">
+				<annotation>
+					<appinfo>
+						<gml:description>terenWodPowierzchniowychMorskich</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="WS">
+				<annotation>
+					<appinfo>
+						<gml:description>terenWodPowierzchniowychSrodladowych</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="KD">
+				<annotation>
+					<appinfo>
+						<gml:description>terenDrogPublicznych</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="KDW">
+				<annotation>
+					<appinfo>
+						<gml:description>terenDrogWewnetrznych</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="KW">
+				<annotation>
+					<appinfo>
+						<gml:description>terenKomunikacjiWodnejSzlakWodny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="TIT">
+				<annotation>
+					<appinfo>
+						<gml:description>terenInfrastrukturyTechnicznej</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="INN">
+				<annotation>
+					<appinfo>
+						<gml:description>innyNiewymieniony</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="WZ">
+				<annotation>
+					<appinfo>
+						<gml:description>dezycjaWarunkiZabudowy</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="RCN_SposobUzytkowaniaType">
+		<annotation>
+      <documentation>Lista dopuszczalnych wartości dla atrybutu sposób użytkowania.</documentation>
+		</annotation>
+		<restriction base="string">
+			<enumeration value="1">
+				<annotation>
+					<appinfo>
+						<gml:description>gruntyRolne</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="2">
+				<annotation>
+					<appinfo>
+						<gml:description>gruntyLesne</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="3">
+				<annotation>
+					<appinfo>
+						<gml:description>gruntyZabudowaneIZurbanizowane</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="4">
+				<annotation>
+					<appinfo>
+						<gml:description>terenyKomunikacyjne</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="5">
+				<annotation>
+					<appinfo>
+						<gml:description>inne</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="RCN_RodzajBudynkuType">
+		<restriction base="string">
+			<enumeration value="101">
+				<annotation>
+					<appinfo>
+						<gml:description>przemyslowy</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="102">
+				<annotation>
+					<appinfo>
+						<gml:description>transportuILacznosci</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="103">
+				<annotation>
+					<appinfo>
+						<gml:description>handlowoUslugowy</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="104">
+				<annotation>
+					<appinfo>
+						<gml:description>zbiornikiSilosyMagazyny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="105">
+				<annotation>
+					<appinfo>
+						<gml:description>biurowy</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="106">
+				<annotation>
+					<appinfo>
+						<gml:description>szpitale</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="107">
+				<annotation>
+					<appinfo>
+						<gml:description>oswiatyISportu</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="108">
+				<annotation>
+					<appinfo>
+						<gml:description>gospodarczy</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="109">
+				<annotation>
+					<appinfo>
+						<gml:description>pozostaleNiemieszkalne</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="110">
+				<annotation>
+					<appinfo>
+						<gml:description>mieszkalny</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+	<simpleType name="RCN_FunkcjaLokaluType">
+		<restriction base="string">
+			<enumeration value="1">
+				<annotation>
+					<appinfo>
+						<gml:description>mieszkalna</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="2">
+				<annotation>
+					<appinfo>
+						<gml:description>handlowoUslugowa</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="3">
+				<annotation>
+					<appinfo>
+						<gml:description>biurowa</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="4">
+				<annotation>
+					<appinfo>
+						<gml:description>produkcyjna</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="5">
+				<annotation>
+					<appinfo>
+						<gml:description>garaz</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+			<enumeration value="6">
+				<annotation>
+					<appinfo>
+						<gml:description>inna</gml:description>
+					</appinfo>
+				</annotation>
+			</enumeration>
+		</restriction>
+	</simpleType>
+</schema>
