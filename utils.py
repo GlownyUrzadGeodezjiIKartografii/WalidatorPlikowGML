@@ -99,17 +99,17 @@ def czyPrzecinaGranicePowiatuDlugoscPonizej50m(layer):
 
 def czyObiektyWewnatrzPowiatu(layer, teryt):
     obiektyZbledami = []
-    mainPath = pathlib.Path(QgsApplication.qgisSettingsDirPath())/pathlib.Path("python/plugins/Walidator_plikow_gml/")
-    granicePowiatowPath = str(mainPath) + '/Dane/granice_powiatow/powiaty.shp'
-    granicePowiatow_A = QgsVectorLayer(granicePowiatowPath, 'GranicePowiatow', 'ogr')
-    request = QgsFeatureRequest(QgsExpression("jpt_kod_je = \'" + teryt + "\'"))
-    requestFeatures = granicePowiatow_A.getFeatures(request)
-    for requestFeature in requestFeatures:
-        granicaPowiatu = requestFeature
-        break
-    for obj in layer.getFeatures():
-        if not granicaPowiatu.geometry().contains(obj.geometry()):
-            obiektyZbledami.append(obj)
+    # mainPath = pathlib.Path(QgsApplication.qgisSettingsDirPath())/pathlib.Path("python/plugins/Walidator_plikow_gml/")
+    # granicePowiatowPath = str(mainPath) + '/Dane/granice_powiatow/powiaty.shp'
+    # granicePowiatow_A = QgsVectorLayer(granicePowiatowPath, 'GranicePowiatow', 'ogr')
+    # request = QgsFeatureRequest(QgsExpression("jpt_kod_je = \'" + teryt + "\'"))
+    # requestFeatures = granicePowiatow_A.getFeatures(request)
+    # for requestFeature in requestFeatures:
+    #     granicaPowiatu = requestFeature
+    #     break
+    # for obj in layer.getFeatures():
+    #     if not granicaPowiatu.geometry().contains(obj.geometry()):
+    #         obiektyZbledami.append(obj)
     return obiektyZbledami
 
 
