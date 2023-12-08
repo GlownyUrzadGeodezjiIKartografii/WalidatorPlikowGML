@@ -5,12 +5,12 @@
 [general]
 name=Walidator plików GML
 qgisMinimumVersion=3.22
-description=Walidacja i kontrola plików GML baz: BDOO, BDOT10k, RCN, PRNG, GESUT, EGiB, BDOT500
-version=1.0.1.1
+description=Walidacja i kontrola plików GML baz: BDOO, BDOT10k, PRNG, RCN, GESUT, EGiB, BDOT500
+version=1.0.2
 author=Marcin Lebiecki - Główny Urząd Geodezji i Kartografii
 email=marcin.lebiecki@gugik.gov.pl
 
-about=Walidacja ze schematem aplikacyjnym GML - XSD i kontrola plików GML baz: BDOO, BDOT10k, RCN, PRNG, GESUT, EGiB, BDOT500.
+about=Walidacja ze schematem aplikacyjnym GML - XSD i kontrola plików GML baz: BDOO, BDOT10k, PRNG, GESUT, EGiB, BDOT500, RCN.
 
 tracker=https://github.com/GlownyUrzadGeodezjiIKartografii/WalidatorPlikowGML/issues
 repository=https://github.com/GlownyUrzadGeodezjiIKartografii/WalidatorPlikowGML
@@ -20,16 +20,16 @@ repository=https://github.com/GlownyUrzadGeodezjiIKartografii/WalidatorPlikowGML
 
 hasProcessingProvider=no
 # Uncomment the following line and add your changelog:
-changelog= Nowa wersja schematu aplikacyjnego GML (1.8) dla danych EGiB. Dodano XSD dla RCN. Drobne poprawki.
+changelog= 1.0.2 Dodano możliwość kontroli atrybutowych baz BDOT500, GESUT, EGiB.
 
 # Tags are comma separated with spaces allowed
-tags=python, GML, XSD, walidacja, BDOO, BDOT10k, RCN, PRNG, GESUT, EGiB, BDOT500
+tags=python, GML, XSD, walidacja, BDOO, BDOT10k, PRNG, RCN, GESUT, EGiB, BDOT500
 
 homepage=https://www.gov.pl/web/gugik
 category=Plugins
 icon=icon.png
 # experimental flag
-experimental=False
+experimental=True
 
 # deprecated flag (applies to the whole plugin, not just a single version)
 deprecated=False

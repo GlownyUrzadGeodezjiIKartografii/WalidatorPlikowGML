@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SzablonKontroli xmlns="http://www.gugik.gov.pl" id="gesut" version="1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<GrupaKontroli id="gesut_g1" name="Kontrole atrybutowe">
+		<Kontrola id="gesut_g1_k1" name="Kontrola atrybutów wymiarPionowy i wymiarPoziomy dla atrybutu srednica=0" class="GES_UrzadzeniaTowarzyszaceLiniowe" errorPhrase="Liczność atrybutów wymiarPionowy i wymiarPoziomy nie przyjmuje wartości 1 dla srednicy równej 0">
+		<Parametr typ="QgsExpression" sql="srednica=0 and wymiarPionowy&lt;&gt;1 and wymiarPoziomy&lt;&gt;1"/>
+		</Kontrola>
+		<Kontrola id="gesut_g1_k2" name="Kontrola atrybutu średnica dla wymiaru pionowego i wymiaru poziomego=0" class="GES_UrzadzeniaTowarzyszaceLiniowe" errorPhrase="Liczność atrybutu srednica nie przyjmuje wartości 1 dla wymiaru pionowego i wymiaru poziomego równych 0">
+		<Parametr typ="QgsExpression" sql="wymiarPionowy=0 and wymiarPoziomy=0 and srednica&lt;&gt;1"/>
+		</Kontrola>
+		<Kontrola id="gesut_g1_k3" name="Kontrola atrybutów rodzajUrzadzenia i geometria" class="GES_UrzadzeniaTowarzyszaceLiniowe" errorPhrase="Geometria jest innego typu linia/wielolinia dla rodzaju urządzenia równego l/o">
+		<Parametr typ="QgsExpression" sql="(rodzajUrzadzenia='l' or rodzajUrzadzenia='o') and (geometry_type($geometry)='Point' or geometry_type($geometry)='Polygon' or geometry_type($geometry)='MultiPolygon' or geometry_type($geometry)='MultiPoint')"/>
+		</Kontrola>
+		<Kontrola id="gesut_g1_k4" name="Kontrola atrybutów rodzajUrzadzenia i ksztaltUrzadzenia" class="GES_InneUrzadzeniaTowarzyszace" errorPhrase="Atrybut ksztaltUrzadzenia przyjmuje wartość pustą dla rodzaju urządzenia równego k/w">
+		<Parametr typ="QgsExpression" sql="(rodzajUrzadzenia='k' or rodzajUrzadzenia='w') and ksztaltUrzadzenia= 'NULL'"/>
+		</Kontrola>
+		<Kontrola id="gesut_g1_k5" name="Kontrola atrybutu geometria dla rodzaju urzadzenia=p" class="GES_InneUrzadzeniaTowarzyszace" errorPhrase="Geometria jest innego typu niż punkt/wielopunkt dla rodzaju urządzenia równego p">
+		<Parametr typ="QgsExpression" sql="rodzajUrzadzenia='p' and (geometry_type($geometry)='Line' or geometry_type($geometry)='Polygon' or geometry_type($geometry)='MultiPolygon' or geometry_type($geometry)='MultiLine')"/>
+		</Kontrola>
+		<Kontrola id="gesut_g1_k6" name="Kontrola atrybutu geometria dla rodzaju urzadzenia=b" class="GES_InneUrzadzeniaTowarzyszace" errorPhrase="Geometria jest innego typu niż powierzchnia dla rodzaju urządzenia równego b">
+		<Parametr typ="QgsExpression" sql="rodzajUrzadzenia='b' and (geometry_type($geometry)='Line' or geometry_type($geometry)='Point')"/>
+		</Kontrola>
+		<Kontrola id="gesut_g1_k7" name="Kontrola atrybutów wymiarPionowy i wymiarPoziomy dla srednicy=0" class="GES_PrzewodKanalizacyjny" errorPhrase="Liczność atrybutów wymiarPionowy i wymiarPoziomy nie przyjmuje wartości 1 dla srednicy równej 0">
+		<Parametr typ="QgsExpression" sql="srednica=0 and wymiarPionowy&lt;&gt;1 and wymiarPoziomy&lt;&gt;1"/>
+		</Kontrola>
+		<Kontrola id="gesut_g1_k8" name="Kontrola atrybutu srednica dla wymiaru pionowego i wymiaru poziomego=0" class="GES_PrzewodKanalizacyjny" errorPhrase="Liczność atrybutu srednica nie przyjmuje wartości 1 dla wymiaru pionowego i wymiaru poziomego równych 0">
+		<Parametr typ="QgsExpression" sql="wymiarPionowy=0 and wymiarPoziomy=0 and srednica&lt;&gt;1"/>
+		</Kontrola>
+		<Kontrola id="gesut_g1_k9" name="Kontrola atrybutu geometria dla rodzaju urzadzenia=w/h/d/s/g" class="GES_UrzadzeniaSiecWodociagowa" errorPhrase="Geometria jest innego typu niż punkt dla rodzaju urzadzenia równego w/h/d/s/g">
+		<Parametr typ="QgsExpression" sql="(rodzajUrzadzenia='w' or rodzajUrzadzenia='h' or rodzajUrzadzenia='d' or rodzajUrzadzenia='s' or rodzajUrzadzenia='g') and (geometry_type($geometry)='Line' or geometry_type($geometry)='Polygon')"/>
+		</Kontrola>
+		<Kontrola id="gesut_g1_k10" name="Kontrola atrybutu geometria dla rodzaju urzadzenia=r" class="GES_UrzadzeniaSiecWodociagowa" errorPhrase="Geometria jest innego typu niż powierzchnia dla rodzaju urzadzenia równego r">
+		<Parametr typ="QgsExpression" sql="rodzajUrzadzenia='r' and (geometry_type($geometry)='Line' or geometry_type($geometry)='Point')"/>
+		</Kontrola>
+		<Kontrola id="gesut_g1_k11" name="Kontrola atrybutów rodzajUrzadzenia i informacjaDodatkowa GES_UrzadzeniaSiecWodociagowa" class="GES_UrzadzeniaSiecWodociagowa" errorPhrase="Atrybut informacjaDodatkowa przyjmuje wartość pustą dla rodzaju urządzenia równego u">
+		<Parametr typ="QgsExpression" sql="rodzajUrzadzenia='u' and try(informacjaDodatkowa,NULL) is NULL"/>
+		</Kontrola>
+		<Kontrola id="gesut_g1_k12" name="Kontrola atrybutu geometria dla rodzaju urzadzenia=w/e" class="GES_UrzadzeniaSiecKanalizacyjna" errorPhrase="Geometria jest innego typu niż punkt dla rodzaju urzadzenia równego w/e">
+		<Parametr typ="QgsExpression" sql="(rodzajUrzadzenia='w' or rodzajUrzadzenia='e') and (geometry_type($geometry)='Line' or geometry_type($geometry)='Polygon')"/>
+		</Kontrola>
+		<Kontrola id="gesut_g1_k13" name="Kontrola atrybutu geometria dla rodzaju urzadzenia=l" class="GES_UrzadzeniaSiecKanalizacyjna" errorPhrase="Geometria jest innego typu niż linia dla rodzaju urzadzenia równego l">
+		<Parametr typ="QgsExpression" sql="rodzajUrzadzenia='l' and (geometry_type($geometry)='Point' or geometry_type($geometry)='Polygon')"/>
+		</Kontrola>
+		<Kontrola id="gesut_g1_k14" name="Kontrola atrybutu geometria dla rodzaju urzadzenia=d/n" class="GES_UrzadzeniaSiecKanalizacyjna" errorPhrase="Geometria jest innego typu niż powierzchnia dla rodzaju urzadzenia równego d/n">
+		<Parametr typ="QgsExpression" sql="(rodzajUrzadzenia='d' or rodzajUrzadzenia='n') and (geometry_type($geometry)='Point' or geometry_type($geometry)='Line')"/>
+		</Kontrola>
+		<Kontrola id="gesut_g1_k15" name="Kontrola atrybutu geometria dla rodzaju urzadzenia=s/k/o" class="GES_UrzadzeniaSiecKanalizacyjna" errorPhrase="Geometria jest innego typu niż punkt/powierzchnia dla rodzaju urzadzenia równego s/k/o">
+		<Parametr typ="QgsExpression" sql="(rodzajUrzadzenia='s' or rodzajUrzadzenia='k' or rodzajUrzadzenia='o') and geometry_type($geometry)='Line'"/>
+		</Kontrola>
+		<Kontrola id="gesut_g1_k16" name="Kontrola atrybutów rodzajUrzadzenia i informacjaDodatkowa GES_UrzadzeniaSiecKanalizacyjna" class="GES_UrzadzeniaSiecKanalizacyjna" errorPhrase="Atrybut informacjaDodatkowa przyjmuje wartość pustą dla rodzaju urządzenia równego u">
+		<Parametr typ="QgsExpression" sql="rodzajUrzadzenia='u' and try(informacjaDodatkowa,NULL) is NULL"/>
+		</Kontrola>
+		<Kontrola id="gesut_g1_k17" name="Kontrola atrybutu geometria dla rodzaju urzadzenia=t/l" class="GES_UrzadzeniaSiecElektroenergetyczna" errorPhrase="Geometria jest innego typu niż punkt dla rodzaju urzadzenia równego t/l">
+		<Parametr typ="QgsExpression" sql="(rodzajUrzadzenia='t' or rodzajUrzadzenia='l') and (geometry_type($geometry)='Polygon' or geometry_type($geometry)='Line')"/>
+		</Kontrola>
+		<Kontrola id="gesut_g1_k18" name="Kontrola atrybutu geometria dla rodzaju urzadzenia=o/m" class="GES_UrzadzeniaSiecElektroenergetyczna" errorPhrase="Geometria jest innego typu niż punkt/wielopunkt dla rodzaju urzadzenia równego o/m">
+		<Parametr typ="QgsExpression" sql="(rodzajUrzadzenia='o' or rodzajUrzadzenia='m') and (geometry_type($geometry)='Polygon' or geometry_type($geometry)='Line' or geometry_type($geometry)='MultiLine or geometry_type($geometry)='MultiPolygon)"/>
+		</Kontrola>
+		<Kontrola id="gesut_g1_k19" name="Kontrola atrybutu geometria dla rodzaju urzadzenia=s/a" class="GES_UrzadzeniaSiecElektroenergetyczna" errorPhrase="Geometria jest innego typu niż punkt/powierzchnia dla rodzaju urzadzenia równego s/a">
+		<Parametr typ="QgsExpression" sql="(rodzajUrzadzenia='s' or rodzajUrzadzenia='a') and geometry_type($geometry)='Line'"/>
+		</Kontrola>
+		<Kontrola id="gesut_g1_k20" name="Kontrola atrybutów rodzajUrzadzenia i informacjaDodatkowa GES_UrzadzeniaSiecElektroenergetyczna" class="GES_UrzadzeniaSiecElektroenergetyczna" errorPhrase="Atrybut informacjaDodatkowa przyjmuje wartość pustą dla rodzaju urządzenia równego u">
+		<Parametr typ="QgsExpression" sql="rodzajUrzadzenia='u' and try(informacjaDodatkowa,NULL) is NULL"/>
+		</Kontrola>
+		<Kontrola id="gesut_g1_k21" name="Kontrola atrybutu geometria dla rodzaju urzadzenia=w" class="GES_UrzadzeniaSiecGazowa" errorPhrase="Geometria jest innego typu niż punkt dla rodzaju urzadzenia równego w">
+		<Parametr typ="QgsExpression" sql="rodzajUrzadzenia='w' and (geometry_type($geometry)='Polygon' or geometry_type($geometry)='Line')"/>
+		</Kontrola>
+		<Kontrola id="gesut_g1_k22" name="Kontrola atrybutu geometria dla rodzaju urzadzenia=n/v" class="GES_UrzadzeniaSiecGazowa" errorPhrase="Geometria jest innego typu niż powierzchnia dla rodzaju urzadzenia równego n/v">
+		<Parametr typ="QgsExpression" sql="(rodzajUrzadzenia='n' or rodzajUrzadzenia='v') and (geometry_type($geometry)='Point' or geometry_type($geometry)='Line')"/>
+		</Kontrola>
+		<Kontrola id="gesut_g1_k23" name="Kontrola atrybutu geometria dla rodzaju urzadzenia=s" class="GES_UrzadzeniaSiecGazowa" errorPhrase="Geometria jest innego typu niż punkt/powierzchnia dla rodzaju urzadzenia równego s">
+		<Parametr typ="QgsExpression" sql="rodzajUrzadzenia='s' and geometry_type($geometry)='Line'"/>
+		</Kontrola>
+		<Kontrola id="gesut_g1_k24" name="Kontrola atrybutów rodzajUrzadzenia i informacjaDodatkowa GES_UrzadzeniaSiecGazowa" class="GES_UrzadzeniaSiecGazowa" errorPhrase="Atrybut informacjaDodatkowa przyjmuje wartość pustą dla rodzaju urządzenia równego u">
+		<Parametr typ="QgsExpression" sql="rodzajUrzadzenia='u' and try(informacjaDodatkowa,NULL) is NULL"/>
+		</Kontrola>
+		<Kontrola id="gesut_g1_k25" name="Kontrola atrybutów rodzajUrzadzenia i geometria" class="GES_UrzadzeniaSiecCieplownicza" errorPhrase="Geometria jest innego typu niż punkt dla rodzaju urzadzenia równego w">
+		<Parametr typ="QgsExpression" sql="rodzajUrzadzenia='w' and (geometry_type($geometry)='Line' or geometry_type($geometry)='Polygon')"/>
+		</Kontrola>
+		<Kontrola id="gesut_g1_k26" name="Kontrola atrybutów rodzajUrzadzenia i informacjaDodatkowa GES_UrzadzeniaSiecCieplownicza" class="GES_UrzadzeniaSiecCieplownicza" errorPhrase="Atrybut informacjaDodatkowa przyjmuje wartość pustą dla rodzaju urządzenia równego u">
+		<Parametr typ="QgsExpression" sql="rodzajUrzadzenia='u' and try(informacjaDodatkowa,NULL) is NULL"/>
+		</Kontrola>
+		<Kontrola id="gesut_g1_k27" name="Kontrola atrybutu geometria dla rodzaju urzadzenia=k" class="GES_UrzadzeniaSiecTelekomunikacyjna" errorPhrase="Geometria jest innego typu niż punkt dla rodzaju urzadzenia równego k">
+		<Parametr typ="QgsExpression" sql="rodzajUrzadzenia='k' and (geometry_type($geometry)='Line' or geometry_type($geometry)='Polygon')"/>
+		</Kontrola>
+		<Kontrola id="gesut_g1_k28" name="Kontrola atrybutu geometria dla rodzaju urzadzenia=s/w" class="GES_UrzadzeniaSiecTelekomunikacyjna" errorPhrase="Geometria jest innego typu niż punkt/powierzchnia dla rodzaju urzadzenia równego s/w">
+		<Parametr typ="QgsExpression" sql="(rodzajUrzadzenia='s' or rodzajUrzadzenia='w') and geometry_type($geometry)='Line'"/>
+		</Kontrola>
+		<Kontrola id="gesut_g1_k29" name="Kontrola atrybutów rodzajUrzadzenia i informacjaDodatkowa GES_UrzadzeniaSiecTelekomunikacyjna" class="GES_UrzadzeniaSiecTelekomunikacyjna" errorPhrase="Atrybut informacjaDodatkowa przyjmuje wartość pustą dla rodzaju urządzenia równego u">
+		<Parametr typ="QgsExpression" sql="rodzajUrzadzenia='u' and try(informacjaDodatkowa,NULL) is NULL"/>
+		</Kontrola>
+		<Kontrola id="gesut_g1_k30" name="Kontrola atrybutów rodzajUrzadzenia i informacjaDodatkowa GES_UrzadzeniaTechniczneSieciSpecjalnej" class="GES_UrzadzeniaTechniczneSieciSpecjalnej" errorPhrase="Atrybut informacjaDodatkowa przyjmuje wartość pustą dla rodzaju urządzenia równego u">
+		<Parametr typ="QgsExpression" sql="rodzajUrzadzenia='u' and try(informacjaDodatkowa,NULL) is NULL"/>
+		</Kontrola>
+		<Kontrola id="gesut_g1_k31" name="Kontrola atrybutu geometria dla rodzaju urządzenia=k/w" class="GES_InneUrzadzeniaTowarzyszace" errorPhrase="Geometria jest innego typu niż linia dla rodzaju urządzenia równego k/w">
+		<Parametr typ="QgsExpression" sql="(rodzajUrzadzenia='k' or rodzajUrzadzenia='w') and  geometry_type($geometry)='Line'"/>
+		</Kontrola>
+	</GrupaKontroli>
+
+	<!-- ....................................................................................................................................................... -->
+	<GrupaKontroli id="gesut_g2" name="Kontrole geometryczne">
+		<Kontrola id="gesut_g2_k1" name="Kontrola atrybutów ksztaltUrzadzenia i geometria" class="GES_UrzadzenieZwiazaneZPrzewodami" errorPhrase="Atrybut ksztaltUrzadzenia przyjmuje wartość pustą dla obiektu o geometrii punkt">
+		<Parametr typ="QgsExpression" sql="geometry_type($geometry)='Point' and ksztaltUrzadzenia= 'NULL'"/>
+		</Kontrola>
+	</GrupaKontroli>
+</SzablonKontroli>

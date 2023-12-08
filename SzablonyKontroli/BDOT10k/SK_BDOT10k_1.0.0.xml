@@ -1,0 +1,761 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SzablonKontroli xmlns="http://www.gugik.gov.pl" id="bdot10k" version="1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+	<GrupaKontroli id="bdot10k_e1" name="Kontrole atrybutowe">
+		<Kontrola id="bdot10k_e1_k1" name="OT_ADJA_A Kontrola jednostki nadrzędnej dla państwa i województwa" class="OT_ADJA_A" errorPhrase="Państwo i województwo nie mogą mieć jednostki nadrzędnej">
+			<Parametr typ="QgsExpression" sql="rodzaj in ('państwo', 'województwo') and idTERYTjednostkiNadrzednej !=''"/>
+		</Kontrola>
+		<Kontrola id="topo_e1_k1_1" name="OT_BUBD_A Kontrola liczby kondygnacji dla budynków sakralnych, produkcyjnych i magazynów" class="OT_BUBD_A" errorPhrase="Atrybut liczbaKondygnacji musi pozostać niewypełniony">
+			<Parametr typ="QgsExpression" sql="przewazajacaFunkcjaBudynku in ('budynek kontroli ruchu powietrznego','latarnia morska','stacja nadawcza radia i telewizji','wiatrak','zbiornik na gaz','zbiornik na ciecz','cerkiew','dzwonnica','kościół','meczet','synagoga','magazyn') and liczbaKondygnacji !=''"/>
+		</Kontrola>
+		<Kontrola id="bdot10k_e1_k2" name="OT_BUHD_L Kontrola wysokości zapory" class="OT_BUHD_L" errorPhrase="Wysokość  podaje się tylko dla zapory">
+			<Parametr typ="QgsExpression" sql="rodzaj != 'zapora' and wysokoscZapory !=''"/>
+		</Kontrola>
+		<Kontrola id="bdot10k_e1_k3" name="OT_BUIN_L Kontrola konstrukcji mostu" class="OT_BUIN_L" errorPhrase="Konstrukcję podaje się tylko dla mostów">
+			<Parametr typ="QgsExpression" sql="rodzaj != 'most' and konstrukcja !=''"/>
+		</Kontrola>
+		<Kontrola id="topo_e1_k4" name="OT_BUTR_L Kontrola szerokości dla suwnicy" class="OT_BUTR_L" errorPhrase="Szerokość wypełnia się tylko dla suwnicy">
+			<Parametr typ="QgsExpression" sql="rodzaj != 'suwnica' and szerokosc !=''"/>
+		</Kontrola>
+		<Kontrola id="bdot10k_e1_k4_1" name="OT_BUTR_P Kontrola szerokości dla obrotnicy kolejowej" class="OT_BUTR_P" errorPhrase="Szerokości nie wypełnia się dla obrotnicy kolejowej">
+			<Parametr typ="QgsExpression" sql="rodzaj = 'obrotnica kolejowa' and szerokosc !=''"/>
+		</Kontrola>
+		<Kontrola id="topo_e1_k5" name="OT_BUZM_L Kontrola szerokości korony wału przeciwpowodziowego lub grobli, nasypu" class="OT_BUZM_L" errorPhrase="Atrybut szerokoscKorony nie może być wypełniony">
+			<Parametr typ="QgsExpression" sql="rodzaj not in ('wał przeciwpowodziowy lub grobla', 'nasyp') and szerokoscKorony !=''"/>
+		</Kontrola>
+		<Kontrola id="topo_e1_k6" name="OT_BUZM_L Kontrola szerokości podstawy wału przeciwpowodziowego lub grobli, nasypu" class="OT_BUZM_L" errorPhrase="Atrybut szerokoscPodstawy nie może być wypełniony">
+			<Parametr typ="QgsExpression" sql="rodzaj not in ('wał przeciwpowodziowy lub grobla', 'nasyp') and szerokoscPodstawy !=''"/>
+		</Kontrola>
+		<Kontrola id="topo_e1_k7" name="OT_BUZM_L Kontrola wysokości wału przeciwpowodziowego lub grobli" class="OT_BUZM_L" errorPhrase="Wysokość wypełnia się tylko dla wału przeciwpowodziowego lub grobli">
+			<Parametr typ="QgsExpression" sql="rodzaj != 'wał przeciwpowodziowy lub grobla' and wysokosc !=''"/>
+		</Kontrola>
+		<Kontrola id="topo_e1_k8" name="OT_KUKO_A Kontrola typu lotniska lub lądowiska" class="OT_KUKO_A" errorPhrase="Typ lotniska wypełnia się tylko dla lotniska lub lądowiska">
+			<Parametr typ="QgsExpression" sql="rodzaj != 'lotnisko lub lądowisko' and typLotniska !=''"/>
+		</Kontrola>
+		<Kontrola id="topo_e1_k9" name="OT_KUKO_A Kontrola typu portu wodnego lub przystani" class="OT_KUKO_A" errorPhrase="Typ portu wypełnia się tylko dla portu wodnego lub przystani">
+			<Parametr typ="QgsExpression" sql="rodzaj!= 'port wodny lub przystań' and typPortu !=''"/>
+		</Kontrola>
+		<Kontrola id="topo_e1_k10" name="OT_KUKO_P Kontrola typu lotniska lub lądowiska" class="OT_KUKO_P" errorPhrase="Typ lotniska wypełnia się tylko dla lotniska lub lądowiska">
+			<Parametr typ="QgsExpression" sql="rodzaj != 'lotnisko lub lądowisko' and typLotniska !=''"/>
+		</Kontrola>
+		<Kontrola id="topo_e1_k11" name="OT_KUKO_P Kontrola typu portu wodnego lub przystani" class="OT_KUKO_P" errorPhrase="Typ portu wypełnia się tylko dla portu wodnego lub przystani">
+			<Parametr typ="QgsExpression" sql="rodzaj != 'port wodny lub przystań' and typPortu !=''"/>
+		</Kontrola>
+		<Kontrola id="topo_e1_k12" name="OT_KUPG_A Kontrola rodzaju elektrowni" class="OT_KUPG_A" errorPhrase="Rodzaj elektrowni wypełnia się tylko dla elektrowni">
+			<Parametr typ="QgsExpression" sql="rodzaj != 'elektrownia' and rodzajElektrowni !=''"/>
+		</Kontrola>
+		<Kontrola id="topo_e1_k13" name="OT_KUPG_A Kontrola rodzaju kopaliny" class="OT_KUPG_A" errorPhrase="Atrybut kopalina wypełnia się tylko dla kopalni">
+			<Parametr typ="QgsExpression" sql="rodzaj != 'kopalnia' and kopalina !=''"/>
+		</Kontrola>
+		<Kontrola id="topo_e1_k14" name="OT_PTWZ_A Kontrola rodzaju surowca" class="OT_PTWZ_A" errorPhrase="Atrybut surowiec pozyskuje się tylko dla wyrobiska">
+			<Parametr typ="QgsExpression" sql="rodzaj != 'wyrobisko' and surowiec is not NULL"/>
+		</Kontrola>
+		<Kontrola id="topo_e1_k15" name="OT_SKDR_L Kontrola numeracji dróg w klasie SKDR" class="OT_SKDR_L" errorPhrase="Brak numeru drogi bez uzasadnienia">
+			<Parametr typ="QgsExpression" sql="kategoriaZarzadzania in ('krajowa', 'wojewódzka', 'powiatowa', 'gminna') and uwagi is NULL and informacjaDodatkowa is NULL and kategoriaIstnienia in ('eksploatowany') and numerDrogi is NULL"/>
+		</Kontrola>
+		<Kontrola id="topo_e1_k17" name="OT_SKDR_L Kontrola szerokości dla nawierzchni gruntowej w klasie SKDR" class="OT_SKDR_L" errorPhrase="Dla nawierzchni gruntowej nie podaje się szerokości">
+			<Parametr typ="QgsExpression" sql="materialnawierzchni in ('grunt naturalny', 'żwir', NULL) and szerokoscNawierzchni !=''"/>
+		</Kontrola>
+		<Kontrola id="topo_e1_k18" name="OT_SKDR_L Kontrola liczby jezdni w klasie SKDR" class="OT_SKDR_L" errorPhrase="Liczba jezdni nie powinna wynosić 0">
+			<Parametr typ="QgsExpression" sql="liczbaJezdniDrogi = 0"/>
+		</Kontrola>
+		<Kontrola id="topo_e1_k19" name="OT_SKDR_L Kontrola materiału nawierzchni w klasie SKDR" class="OT_SKDR_L" errorPhrase="Materiał nawierzchni dróg wybranych klas nie może być gruntem naturalnym">
+			<Parametr typ="QgsExpression" sql="klasaDrogi in ('autostrada', 'droga ekspresowa', 'droga główna ruchu przyśpieszonego', 'droga główna', 'droga zbiorcza') and materialNawierzchni = 'grunt naturalny'"/>
+		</Kontrola>
+		<Kontrola id="topo_e1_k21" name="OT_SKJZ_L Kontrola szerokości dla nawierzchni gruntowej w klasie SKJZ" class="OT_SKJZ_L" errorPhrase="Dla nawierzchni gruntowej nie podaje się szerokości">
+			<Parametr typ="QgsExpression" sql="materialnawierzchni in ('grunt naturalny', 'żwir', NULL) and szerokoscNawierzchni !=''"/>
+		</Kontrola>
+		<Kontrola id="topo_e1_k22" name="OT_SKJZ_L Kontrola liczby jezdni w klasie SKJZ" class="OT_SKJZ_L" errorPhrase="Liczba jezdni nie powinna wynosić 0">
+			<Parametr typ="QgsExpression" sql="liczbaJezdniDrogi = 0"/>
+		</Kontrola>
+		<Kontrola id="topo_e1_k23" name="OT_SKJZ_L Kontrola materiału nawierzchni w klasie SKJZ" class="OT_SKJZ_L" errorPhrase="Materiał nawierzchni dróg wybranych klas nie może być gruntem naturalnym">
+			<Parametr typ="QgsExpression" sql="klasaDrogi in ('autostrada', 'droga ekspresowa', 'droga główna ruchu przyśpieszonego', 'droga główna', 'droga zbiorcza') and materialNawierzchni = 'grunt naturalny'"/>
+		</Kontrola>
+		<Kontrola id="topo_e1_k31" name="OT_SKJZ_L Kontrola numeracji dróg w klasie SKJZ" class="OT_SKJZ_L" errorPhrase="Brak numeru drogi bez uzasadnienia">
+			<Parametr typ="QgsExpression" sql="kategoriaZarzadzania in ('krajowa', 'wojewódzka', 'powiatowa', 'gminna') and uwagi is NULL and informacjaDodatkowa is NULL and kategoriaIstnienia in ('eksploatowany') and (cechaGeometrii IS NULL or cechaGeometrii != 'linia umowna') and numerDrogi is NULL"/>
+		</Kontrola>
+		<Kontrola id="topo_e1_k24" name="OT_SKRP_L Kontrola szerokości alei lub pasażu" class="OT_SKRP_L" errorPhrase="Szerokość podaje się tylko dla alei lub pasażu">
+			<Parametr typ="QgsExpression" sql="rodzaj != 'aleja lub pasaż' and szerokosc !=''"/>
+		</Kontrola>
+		<Kontrola id="topo_e1_k25" name="OT_SKRW_P Kontrola numeru węzła drogowego" class="OT_SKRW_P" errorPhrase="Numer węzła podaje się tylko dla węzłów drogowych">
+			<Parametr typ="QgsExpression" sql="rodzaj != 'węzeł drogowy' and numerWezlaDrogowego !=''"/>
+		</Kontrola>
+		<Kontrola id="topo_e1_k26" name="OT_SKTR_L Kontrola numeru linii kolejowej" class="OT_SKTR_L" errorPhrase="Brak numeru linii kolejowej">
+			<Parametr typ="QgsExpression" sql="funkcjaToru in ('tor szlakowy', 'tor szlakowy stacyjny') and numerLinii =''"/>
+		</Kontrola>
+		<Kontrola id="topo_e1_k27" name="OT_SKTR_L Kontrola nadmiarowej numeracji linii kolejowej" class="OT_SKTR_L" errorPhrase="Nadmiarowy numer linii kolejowej">
+			<Parametr typ="QgsExpression" sql="funkcjaToru in ('tor zwykły', 'tor zwykły stacyjny', 'bocznica') and numerLinii !=''"/>	
+		</Kontrola>
+		<Kontrola id="topo_e1_k28" name="OT_SKTR_L Kontrola funkcji toru" class="OT_SKTR_L" errorPhrase="Atrybutu funkcjaToru nie pozyskuje się dla linii tramwajowych i metra">
+			<Parametr typ="QgsExpression" sql="rodzajPojazduSzynowego in ('tramwaj', 'metro') and funkcjaToru !=''"/>
+		</Kontrola>
+		<Kontrola id="topo_e1_k29" name="OT_SKTR_L Kontrola liczby torów" class="OT_SKTR_L" errorPhrase="Liczba torów dla toru stacyjnego przyjmuje wartość 1">
+			<Parametr typ="QgsExpression" sql="funkcjaToru in ('tor zwykły stacyjny', 'tor szlakowy stacyjny') and liczbaTorow != 1"/>
+		</Kontrola>
+		<Kontrola id="topo_e1_k30" name="OT_SWRS_L Kontrola statusu eksploatacji rzeki" class="OT_SWRS_L" errorPhrase="Status eksploatacji pozyskuje się tylko rzek">
+			<Parametr typ="QgsExpression" sql="rodzaj != 'rzeka' and statusEksploatacji !=''"/>
+		</Kontrola>
+	</GrupaKontroli>
+	<!-- ....................................................................................................................................................... -->
+	
+	<GrupaKontroli id="topo_e2" name="Kody kartograficzne">
+	<Kontrola id="topo_e2_k1" name="Kontrola kodu kartograficznego 0010_102 w klasie OT_SKJZ_L" class="OT_SKJZ_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_102' and not (klasaDrogi in ('autostrada') and kategoriaIstnienia in ('eksploatowany') and (cechaGeometrii is NULL or cechaGeometrii != 'linia umowna'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k2" name="Kontrola kodu kartograficznego 0010_103 w klasie OT_SKDR_L" class="OT_SKDR_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_103' and not (klasaDrogi in ('autostrada') and kategoriaIstnienia in ('w budowie'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k3" name="Kontrola kodu kartograficznego 0010_107 w klasie OT_SKJZ_L" class="OT_SKJZ_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_107' and not (klasaDrogi in ('droga ekspresowa', 'droga główna ruchu przyśpieszonego') and kategoriaIstnienia in ('eksploatowany') and (cechaGeometrii is NULL or cechaGeometrii != 'linia umowna'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k4" name="Kontrola kodu kartograficznego 0010_108 w klasie OT_SKDR_L" class="OT_SKDR_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_108' and not (klasaDrogi in ('droga ekspresowa', 'droga główna ruchu przyśpieszonego') and kategoriaIstnienia in ('w budowie'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k5" name="Kontrola kodu kartograficznego 0010_116_1 w klasie OT_SKJZ_L" class="OT_SKJZ_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_116_1' and not (klasaDrogi in ('droga główna') and szerokoscNawierzchni &gt;= 5 and kategoriaIstnienia in ('eksploatowany') and (cechaGeometrii is NULL or cechaGeometrii != 'linia umowna'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k6" name="Kontrola kodu kartograficznego 0010_116_2 w klasie OT_SKJZ_L" class="OT_SKJZ_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_116_2' and not (klasaDrogi in ('droga główna') and szerokoscNawierzchni &lt; 5 and kategoriaIstnienia in ('eksploatowany') and (cechaGeometrii is NULL or cechaGeometrii != 'linia umowna'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k7" name="Kontrola kodu kartograficznego 0010_120_1 w klasie OT_SKJZ_L" class="OT_SKJZ_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_120_1' and not (klasaDrogi in ('droga zbiorcza') and materialNawierzchni in ('beton', 'bruk', 'inny', 'kostka kamienna', 'kostka prefabrykowana', 'masa bitumiczna') and szerokoscNawierzchni &gt;= 5 and kategoriaIstnienia in ('eksploatowany') and (cechaGeometrii IS NULL or cechaGeometrii != 'linia umowna'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k8" name="Kontrola kodu kartograficznego 0010_120_2 w klasie OT_SKJZ_L" class="OT_SKJZ_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_120_2' and not (klasaDrogi in ('droga zbiorcza') and materialNawierzchni in ('beton', 'bruk', 'inny', 'kostka kamienna', 'kostka prefabrykowana', 'masa bitumiczna') and szerokoscNawierzchni &lt; 5 and kategoriaIstnienia in ('eksploatowany') and (cechaGeometrii is NULL or cechaGeometrii != 'linia umowna'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k9" name="Kontrola kodu kartograficznego 0010_122_1 w klasie OT_SKJZ_L" class="OT_SKJZ_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_122_1' and not (klasaDrogi in ('droga lokalna', 'droga dojazdowa', 'droga wewnętrzna') and materialNawierzchni in ('beton', 'bruk', 'inny', 'kostka kamienna', 'kostka prefabrykowana', 'masa bitumiczna') and szerokoscNawierzchni &gt;= 5 and kategoriaIstnienia in ('eksploatowany') and (cechaGeometrii IS NULL or cechaGeometrii != 'linia umowna'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k10" name="Kontrola kodu kartograficznego 0010_122_2 w klasie OT_SKJZ_L" class="OT_SKJZ_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_122_2' and not (klasaDrogi in ('droga lokalna', 'droga dojazdowa', 'droga wewnętrzna') and materialNawierzchni in ('beton', 'bruk', 'inny', 'kostka kamienna', 'kostka prefabrykowana', 'masa bitumiczna') and szerokoscNawierzchni &lt; 5 and kategoriaIstnienia in ('eksploatowany') and (cechaGeometrii IS NULL or cechaGeometrii != 'linia umowna'))"/>
+		</Kontrola>
+		
+		<Kontrola id="topo_e2_k11" name="Kontrola kodu kartograficznego 0010_124 w klasie OT_SKJZ_L" class="OT_SKJZ_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_124' and not (klasaDrogi in ('droga lokalna', 'droga dojazdowa', 'droga wewnętrzna') and materialNawierzchni in ('płyty betonowe', 'tłuczeń', 'żwir') and kategoriaIstnienia in ('eksploatowany') and (cechaGeometrii IS NULL or cechaGeometrii != 'linia umowna'))"/>
+		</Kontrola>
+		
+		<Kontrola id="topo_e2_k12" name="Kontrola kodu kartograficznego 0010_126 w klasie OT_SKJZ_L" class="OT_SKJZ_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_126' and not (klasaDrogi in ('droga lokalna') and materialNawierzchni in ('grunt naturalny') and kategoriaIstnienia in ('eksploatowany') and (cechaGeometrii IS NULL or cechaGeometrii != 'linia umowna'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k13" name="Kontrola kodu kartograficznego 0010_127 w klasie OT_SKJZ_L" class="OT_SKJZ_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_127' and not (klasaDrogi in ('droga dojazdowa', 'droga wewnętrzna') and materialNawierzchni in ('grunt naturalny') and kategoriaIstnienia in ('eksploatowany') and (cechaGeometrii IS NULL or cechaGeometrii != 'linia umowna'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k14" name="Kontrola kodu kartograficznego 0010_128_1 w klasie OT_SKRP_L" class="OT_SKRP_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_128_1' and not (rodzaj in ('aleja lub pasaż') and szerokosc &gt;= 5)"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k15" name="Kontrola kodu kartograficznego 0010_128_2 w klasie OT_SKRP_L" class="OT_SKRP_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_128_2' and not (rodzaj in ('aleja lub pasaż') and szerokosc &lt; 5 and szerokosc &gt;=3)"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k16" name="Kontrola kodu kartograficznego 0010_129 w klasie OT_SKRP_L" class="OT_SKRP_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_129' and not (rodzaj in ('ścieżka', 'droga dla rowerów') or (rodzaj in ('aleja lub pasaż') and szerokosc &lt; 3))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k24" name="Kontrola kodu kartograficznego 0010_136 w klasie OT_BUIN_L" class="OT_BUIN_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_136' and not (rodzaj in ('przejście podziemne dla pieszych'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k25" name="Kontrola kodu kartograficznego 0010_137 w klasie OT_SKPP_L" class="OT_SKPP_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_137' and not (rodzaj in ('bród', 'łódź', 'prom'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k26" name="Kontrola kodu kartograficznego 0010_140 w klasie OT_PTZB_A" class="OT_PTZB_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_140' and not (roslinnosc in ('brak – plac twardy'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k27" name="Kontrola kodu kartograficznego 0010_140 w klasie OT_PTPL_A" class="OT_PTPL_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_140' and not (materialNawierzchni not in ('grunt naturalny'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k29" name="Kontrola kodu kartograficznego 0010_142 w klasie OT_KUKO_A" class="OT_KUKO_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_142' and not (rodzaj in ('dworzec autobusowy'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k30" name="Kontrola kodu kartograficznego 0010_143 w klasie OT_OIKM_P" class="OT_OIKM_P" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_143' and not (rodzaj in ('przystanek autobusowy lub tramwajowy'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k31" name="Kontrola kodu kartograficznego 0010_145 w klasie OT_OIKM_L" class="OT_OIKM_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_145' and not (rodzaj in ('miejsce poboru opłat'))"/>
+		</Kontrola>
+		
+		<Kontrola id="topo_e2_k32" name="Kontrola kodu kartograficznego 0010_151_1 w klasie OT_BUIN_L" class="OT_BUIN_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_151_1' and not (rodzaj in ('przejście dla zwierząt'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k33" name="Kontrola kodu kartograficznego 0010_202 w klasie OT_SKTR_L" class="OT_SKTR_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_202' and not (rodzajPojazduSzynowego not in ('tramwaj') and rodzajTrakcji in ('zelektryfikowana') and liczbaTorow &gt;= 3 and rodzajTorow in ('tor normalny', 'tor szeroki') and polozenie not in ('pod powierzchnią gruntu') and funkcjaToru in ('tor szlakowy', 'tor szlakowy stacyjny') and kategoriaIstnienia in ('eksploatowany', 'nieczynny'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k34" name="Kontrola kodu kartograficznego 0010_203 w klasie OT_SKTR_L" class="OT_SKTR_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_203' and not (rodzajPojazduSzynowego not in ('tramwaj') and rodzajTrakcji in ('zelektryfikowana') and liczbaTorow = 2 and rodzajTorow in ('tor normalny', 'tor szeroki') and polozenie not in ('pod powierzchnią gruntu') and funkcjaToru in ('tor szlakowy', 'tor szlakowy stacyjny') and kategoriaIstnienia in ('eksploatowany', 'nieczynny'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k35" name="Kontrola kodu kartograficznego 0010_204 w klasie OT_SKTR_L" class="OT_SKTR_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_204' and not (rodzajPojazduSzynowego not in ('tramwaj') and rodzajTrakcji in ('zelektryfikowana') and liczbaTorow = 1 and rodzajTorow in ('tor normalny', 'tor szeroki') and polozenie not in ('pod powierzchnią gruntu') and funkcjaToru in ('tor szlakowy', 'tor szlakowy stacyjny') and kategoriaIstnienia in ('eksploatowany', 'nieczynny'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k36" name="Kontrola kodu kartograficznego 0010_206 w klasie OT_SKTR_L" class="OT_SKTR_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_206' and not (rodzajPojazduSzynowego not in ('tramwaj') and rodzajTrakcji in ('niezelektryfikowana') and liczbaTorow &gt;= 3 and rodzajTorow in ('tor normalny', 'tor szeroki') and polozenie not in ('pod powierzchnią gruntu') and funkcjaToru in ('tor szlakowy', 'tor szlakowy stacyjny') and kategoriaIstnienia in ('eksploatowany', 'nieczynny'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k37" name="Kontrola kodu kartograficznego 0010_207 w klasie OT_SKTR_L" class="OT_SKTR_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_207' and not (rodzajPojazduSzynowego not in ('tramwaj') and rodzajTrakcji in ('niezelektryfikowana') and liczbaTorow = 2 and rodzajTorow in ('tor normalny', 'tor szeroki') and polozenie not in ('pod powierzchnią gruntu') and funkcjaToru in ('tor szlakowy', 'tor szlakowy stacyjny') and kategoriaIstnienia in ('eksploatowany', 'nieczynny'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k38" name="Kontrola kodu kartograficznego 0010_208 w klasie OT_SKTR_L" class="OT_SKTR_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_208' and not (rodzajPojazduSzynowego not in ('tramwaj') and rodzajTrakcji in ('niezelektryfikowana') and liczbaTorow = 1 and rodzajTorow in ('tor normalny', 'tor szeroki') and polozenie not in ('pod powierzchnią gruntu') and funkcjaToru in ('tor szlakowy', 'tor szlakowy stacyjny') and kategoriaIstnienia in ('eksploatowany', 'nieczynny'))"/>
+		</Kontrola>
+		
+		<Kontrola id="topo_e2_k39" name="Kontrola kodu kartograficznego 0010_209 w klasie OT_SKTR_L" class="OT_SKTR_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_209' and not (rodzajPojazduSzynowego not in ('tramwaj') and polozenie not in ('pod powierzchnią gruntu') and funkcjaToru in ('tor szlakowy', 'tor szlakowy stacyjny') and kategoriaIstnienia in ('w budowie'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k40" name="Kontrola kodu kartograficznego 0010_211 w klasie OT_SKTR_L" class="OT_SKTR_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_211' and not (rodzajPojazduSzynowego in ('kolej') and rodzajTorow in ('tor wąski') and polozenie not in ('pod powierzchnią gruntu') and funkcjaToru in ('tor szlakowy', 'tor szlakowy stacyjny') and kategoriaIstnienia in ('eksploatowany', 'nieczynny'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k41" name="Kontrola kodu kartograficznego 0010_213 w klasie OT_SKTR_L" class="OT_SKTR_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_213' and not (rodzajPojazduSzynowego in ('kolej') and liczbaTorow = 1 and polozenie not in ('pod powierzchnią gruntu') and funkcjaToru in ('bocznica', 'tor zwykły stacyjny', 'tor zwykły'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k42" name="Kontrola kodu kartograficznego 0010_215 w klasie OT_BUTR_P" class="OT_BUTR_P" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_215' and not (rodzaj in ('obrotnica kolejowa'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k43" name="Kontrola kodu kartograficznego 0010_217 w klasie OT_SKTR_L" class="OT_SKTR_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_217' and not (rodzajPojazduSzynowego in ('tramwaj') and liczbaTorow = 2)"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k44" name="Kontrola kodu kartograficznego 0010_218 w klasie OT_SKTR_L" class="OT_SKTR_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_218' and not (rodzajPojazduSzynowego in ('tramwaj') and liczbaTorow = 1)"/>
+		</Kontrola>
+
+		<Kontrola id="topo_e2_k49" name="Kontrola kodu kartograficznego 0010_225 w klasie OT_OIKM_P" class="OT_OIKM_P" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_225' and not (rodzaj in ('wejście do stacji metra'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k50" name="Kontrola kodu kartograficznego 0010_226 w klasie OT_BUIB_A" class="OT_BUIB_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_226' and not (rodzaj in ('peron kolejowy', 'rampa kolejowa'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k51" name="Kontrola kodu kartograficznego 0010_226 w klasie OT_BUIB_L" class="OT_BUIB_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_226' and not (rodzaj in ('peron kolejowy', 'rampa kolejowa'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k52" name="Kontrola kodu kartograficznego 0010_227 w klasie OT_BUTR_L" class="OT_BUTR_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_227' and not (rodzaj in ('kolej linowa') and kategoriaIstnienia in ('eksploatowany'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k53" name="Kontrola kodu kartograficznego 0010_228 w klasie OT_BUTR_L" class="OT_BUTR_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_228' and not (rodzaj in ('wyciąg narciarski'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k54" name="Kontrola kodu kartograficznego 0010_229 w klasie OT_BUTR_L" class="OT_BUTR_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_229' and not (rodzaj in ('pochylnia'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k55" name="Kontrola kodu kartograficznego 0010_317_1 w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_317_1' and not (przewazajacaFunkcjaBudynku in ('budynek wielorodzinny', 'dom zakonny', 'klasztor', 'koszary') and liczbaKondygnacji &lt;= 10 and kategoriaIstnienia not in ('zniszczony'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k56" name="Kontrola kodu kartograficznego 0010_318_1 w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_318_1' and not (przewazajacaFunkcjaBudynku in ('budynek jednorodzinny', 'dom letniskowy') and kategoriaIstnienia not in ('zniszczony'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k57" name="Kontrola kodu kartograficznego 0010_319 w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_319' and not (przewazajacaFunkcjaBudynku in ('budynek wielorodzinny', 'dom zakonny', 'klasztor', 'koszary') and liczbaKondygnacji &gt; 10 and kategoriaIstnienia not in ('zniszczony'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k58" name="Kontrola kodu kartograficznego 0010_320_1 w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_320_1' and not ((funkcjaOgolnaBudynku in ('budynki oświaty, nauki i kultury oraz budynki sportowe', 'budynki szpitali i inne budynki opieki zdrowotnej', 'budynki biurowe', 'budynki handlowo - usługowe') or przewazajacaFunkcjaBudynku in ('dworzec autobusowy', 'dworzec kolejowy', 'dworzec lotniczy', 'stacja kolejki górskiej lub wyciągu krzesełkowego', 'terminal portowy', 'parking wielopoziomowy', 'dom weselny', 'hotel', 'motel', 'pensjonat', 'restauracja', 'zajazd', 'domek kempingowy', 'dom rekolekcyjny', 'dom wypoczynkowy', 'ośrodek szkoleniowo - wypoczynkowy', 'schronisko turystyczne', 'budynki cmentarne', 'dom pogrzebowy', 'krematorium', 'areszt śledczy', 'schronisko dla nieletnich', 'toaleta publiczna', 'leśniczówka', 'dom dla bezdomnych', 'dom dziecka' , 'dom opieki społecznej', 'dom parafialny', 'dom studencki', 'hotel robotniczy', 'internat lub bursa szkolna', 'placówka opiekuńczo-wychowawcza', 'rezydencja ambasadora', 'rezydencja biskupia', 'rezydencja prezydencka', 'zakład karny', 'zakład poprawczy')) and liczbaKondygnacji &lt;= 10 and kategoriaIstnienia not in ('zniszczony'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k59" name="Kontrola kodu kartograficznego 0010_321 w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_321' and not ((funkcjaOgolnaBudynku in ('budynki oświaty, nauki i kultury oraz budynki sportowe', 'budynki szpitali i inne budynki opieki zdrowotnej', 'budynki biurowe', 'budynki handlowo - usługowe') or przewazajacaFunkcjaBudynku in ('dworzec autobusowy', 'dworzec kolejowy', 'dworzec lotniczy', 'stacja kolejki górskiej lub wyciągu krzesełkowego', 'terminal portowy', 'parking wielopoziomowy', 'dom weselny', 'hotel', 'motel', 'pensjonat', 'restauracja', 'zajazd', 'domek kempingowy', 'dom rekolekcyjny', 'dom wypoczynkowy', 'ośrodek szkoleniowo - wypoczynkowy', 'schronisko turystyczne', 'budynki cmentarne', 'dom pogrzebowy', 'krematorium', 'areszt śledczy', 'schronisko dla nieletnich', 'toaleta publiczna', 'leśniczówka', 'dom dla bezdomnych', 'dom dziecka' , 'dom opieki społecznej', 'dom parafialny', 'dom studencki', 'hotel robotniczy', 'internat lub bursa szkolna', 'placówka opiekuńczo-wychowawcza', 'rezydencja ambasadora', 'rezydencja biskupia', 'rezydencja prezydencka', 'zakład karny', 'zakład poprawczy')) and liczbaKondygnacji &gt; 10 and kategoriaIstnienia not in ('zniszczony'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k60" name="Kontrola kodu kartograficznego 0010_323_1 w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_323_1' and not (funkcjaOgolnaBudynku in ('budynki przemysłowe') and liczbaKondygnacji &lt;= 10 and kategoriaIstnienia not in ('zniszczony'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k61" name="Kontrola kodu kartograficznego 0010_324 w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_324' and not (funkcjaOgolnaBudynku in ('budynki przemysłowe') and liczbaKondygnacji &gt; 10 and kategoriaIstnienia not in ('zniszczony'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k62" name="Kontrola kodu kartograficznego 0010_325_1 w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_325_1' and not ((funkcjaOgolnaBudynku in ('zbiorniki, silosy i budynki magazynowe') or przewazajacaFunkcjaBudynku in ('budynek kontroli ruchu kolejowego', 'budynek kontroli ruchu powietrznego', 'centrum telekomunikacyjne', 'hangar', 'lokomotywownia lub wagonownia', 'stacja nadawcza radia i telewizji', 'stacja nautyczna', 'zajezdnia autobusowa', 'zajezdnia tramwajowa', 'zajezdnia trolejbusowa', 'garaż', 'budynek gospodarczy', 'budynek produkcyjny zwierząt hodowlanych', 'stajnia', 'dzwonnica', 'zabytek niepełniący żadnej funkcji użytkowej', 'bacówka', 'stacja gazowa', 'stacja pomp', 'stacja transformatorowa', 'zabudowania koszarowe', 'zakład karny lub poprawczy', 'kapitanat lub bosmanat portu')) and kategoriaIstnienia not in ('zniszczony'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k63" name="Kontrola kodu kartograficznego 0010_325_1 w klasie OT_OIOR_A" class="OT_OIOR_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_325_1' and not (rodzaj in ('bunkier lub schron'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k65" name="Kontrola kodu kartograficznego 0010_326_1 w klasie OT_OIOR_A" class="OT_OIOR_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_326_1' and not (rodzaj in ('ruina zabytkowa'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k72" name="Kontrola kodu kartograficznego 0010_330 w klasie OT_OIOR_P" class="OT_OIOR_P" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_330' and not (rodzaj in ('figura, kapliczka lub krzyż'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k73" name="Kontrola kodu kartograficznego 0010_331 w klasie OT_OIOR_P" class="OT_OIOR_P" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_331' and not (rodzaj in ('pomnik'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k74" name="Kontrola kodu kartograficznego 0010_332 w klasie OT_OIOR_P" class="OT_OIOR_P" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_332' and not (rodzaj in ('odosobniona mogiła'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k75" name="Kontrola kodu kartograficznego 0010_333 w klasie OT_OIOR_P" class="OT_OIOR_P" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_333' and not (rodzaj in ('bunkier lub schron'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k76" name="Kontrola kodu kartograficznego 0010_334 w klasie OT_BUWT_P" class="OT_BUWT_P" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_334' and not (rodzaj in ('wieża ciśnień','wieża przeciwpożarowa','wieża widokowa','wieża obserwacyjna'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k77" name="Kontrola kodu kartograficznego 0010_335 w klasie OT_OIOR_P" class="OT_OIOR_P" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_335' and not (rodzaj in ('wiatrak niebędący budynkiem'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k78" name="Kontrola kodu kartograficznego 0010_335 w klasie OT_OIOR_A" class="OT_OIOR_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_335' and not (rodzaj in ('wiatrak niebędący budynkiem'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k80" name="Kontrola kodu kartograficznego 0010_336 w klasie OT_OIOR_A" class="OT_OIOR_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_336' and not (rodzaj in ('wiata lub altana'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k81" name="Kontrola kodu kartograficznego 0010_337 w klasie OT_BUBD_A" class="OT_BUBD_A " errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_337' and not (przewazajacaFunkcjaBudynku in ('szklarnia lub cieplarnia', 'pawilon ogrodowy lub oranżeria') and kategoriaIstnienia not in ('zniszczony'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k82" name="Kontrola kodu kartograficznego 0010_337 w klasie OT_OIOR_A" class="OT_OIOR_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_337' and not (rodzaj in ('szklarnia niebędąca budynkiem'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k83" name="Kontrola kodu kartograficznego 0010_338 w klasie OT_BUSP_A" class="OT_BUSP_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_338' and not (rodzaj in ('kort tenisowy', 'plac sportowy', 'stadion', 'tor sportowy'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k84" name="Kontrola kodu kartograficznego 0010_339 w klasie OT_BUSP_L" class="OT_BUSP_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_339' and not (rodzaj in ('bieżnia', 'tor sportowy'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k85" name="Kontrola kodu kartograficznego 0010_341_1 w klasie OT_BUSP_A" class="OT_BUSP_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="odKarto10k = '0010_341_1' and not (rodzaj in ('skocznia narciarska'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k86" name="Kontrola kodu kartograficznego 0010_343_1 w klasie OT_KUSC_A" class="OT_KUSC_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_343_1' and not (rodzaj in ('cmentarz wyznaniowy') and wyznanie in ('chrześcijańskie'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k87" name="Kontrola kodu kartograficznego 0010_344_1 w klasie OT_KUSC_A" class="OT_KUSC_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_344_1' and not (rodzaj in ('cmentarz wyznaniowy') and wyznanie in ('inne'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k88" name="Kontrola kodu kartograficznego 0010_345_1 w klasie OT_KUSC_A" class="OT_KUSC_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_345_1' and not (rodzaj in ('cmentarz komunalny'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k89" name="Kontrola kodu kartograficznego 0010_346_1 w klasie OT_KUSC_A" class="OT_KUSC_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_346_1' and not (rodzaj in ('cmentarz wojenny'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k90" name="Kontrola kodu kartograficznego 0010_347_1 w klasie OT_KUSC_A" class="OT_KUSC_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_347_1' and not (rodzaj in ('cmentarz dla zwierząt'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k91" name="Kontrola kodu kartograficznego 0010_348 w klasie OT_OIOR_L" class="OT_OIOR_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_348' and not (rodzaj in ('mur historyczny'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k92" name="Kontrola kodu kartograficznego 0010_349 w klasie OT_BUUO_L" class="OT_BUUO_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_349' and not (rodzaj in ('ściana oporowa'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k93" name="Kontrola kodu kartograficznego 0010_350 w klasie OT_BUIB_A" class="OT_BUIB_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_350' and not (rodzaj in ('amfiteatr'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k94" name="Kontrola kodu kartograficznego 0010_351_1 w klasie OT_BUIB_A" class="OT_BUIB_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_351_1' and not (rodzaj in ('tężnia'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k95" name="Kontrola kodu kartograficznego 0010_351_2 w klasie OT_BUIB_L" class="OT_BUIB_P" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_351_2' and not (rodzaj in ('tężnia'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k96" name="Kontrola kodu kartograficznego 0010_401 w klasie OT_KUPG_A" class="OT_KUPG_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_401' and not (rodzaj in ('elektrociepłownia', 'elektrownia', 'gazownia', 'huta', 'kopalnia', 'oczyszczalnia cieków', 'rafineria', 'zakład metalurgiczny', 'zakład produkcyjny, usługowy lub remontowy', 'zakład utylizacji', 'zakład wodociągowy'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k97" name="Kontrola kodu kartograficznego 0010_401 w klasie OT_PTNZ_A" class="OT_PTNZ_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_401' and not (rodzaj in ('teren przemysłowo-składowy'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k98" name="Kontrola kodu kartograficznego 0010_411 w klasie OT_BUWT_P" class="OT_BUWT_P" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_411' and not (rodzaj in ('wieża szybu kopalnianego'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k99" name="Kontrola kodu kartograficznego 0010_412 w klasie OT_BUIT_P" class="OT_BUIT_P" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_412' and not (rodzaj in ('szyb naftowy lub gazowy') and kategoriaIstnienia in ('eksploatowany'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k100" name="Kontrola kodu kartograficznego 0010_413 w klasie OT_BUIT_A" class="OT_BUIT_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_413' and not (rodzaj in ('zespół dystrybutorów paliwa'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k101" name="Kontrola kodu kartograficznego 0010_413 w klasie OT_BUIT_P" class="OT_BUIT_P" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_413' and not (rodzaj in ('zespół dystrybutorów paliwa'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k102" name="Kontrola kodu kartograficznego 0010_414_1 w klasie OT_BUZT_A" class="OT_BUZT_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_414_1' and not (rodzaj in ('zbiornik'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k103" name="Kontrola kodu kartograficznego 0010_414_2 w klasie OT_BUZT_P" class="OT_BUZT_P" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_414_2' and not (rodzaj in ('zbiornik'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k104" name="Kontrola kodu kartograficznego 0010_421_1 w klasie OT_BUIT_A" class="OT_BUIT_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_421_1' and not (rodzaj in ('zespół transformatorów'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k105" name="Kontrola kodu kartograficznego 0010_422 w klasie OT_BUIT_P" class="OT_BUIT_P" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_422' and not (rodzaj in ('transformator'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k106" name="Kontrola kodu kartograficznego 0010_423 w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_423' and not (przewazajacaFunkcjaBudynku in ('stacja transformatorowa') and kategoriaIstnienia not in ('zniszczony'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k107" name="Kontrola kodu kartograficznego 0010_424 w klasie OT_BUWT_P" class="OT_BUWT_P" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_424' and not (rodzaj in ('komin'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k108" name="Kontrola kodu kartograficznego 0010_425 w klasie OT_BUWT_P" class="OT_BUWT_P" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_425' and not (rodzaj in ('turbina wiatrowa'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k109" name="Kontrola kodu kartograficznego 0010_426 w klasie OT_BUWT_P" class="OT_BUWT_P" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_426' and not (rodzaj in ('maszt lub wieża telekomunikacyjna'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k110" name="Kontrola kodu kartograficznego 0010_427 w klasie OT_BUIT_P" class="OT_BUIT_P" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_427' and not (rodzaj in ('zespół urządzeń stacji meteorologicznej'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k111" name="Kontrola kodu kartograficznego 0010_428 w klasie OT_BUWT_P" class="OT_BUWT_P" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_428' and not (rodzaj in ('słup energetyczny', 'podpora kolei linowej'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k112" name="Kontrola kodu kartograficznego 0010_430 w klasie OT_PTSO_A" class="OT_PTSO_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_430' and not (rodzaj in ('odpady komunalne', 'odpady przemysłowe'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k113" name="Kontrola kodu kartograficznego 0010_430 w klasie OT_PTWZ_A" class="OT_PTWZ_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_430' and not (rodzaj in ('zwałowisko'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k116" name="Kontrola kodu kartograficznego 0010_433_1 w klasie OT_BUTR_L" class="OT_BUTR_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_433_1' and not (rodzaj in ('suwnica') and szerokosc &gt;= 10)"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k117" name="Kontrola kodu kartograficznego 0010_433_2 w klasie OT_BUTR_L" class="OT_BUTR_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_433_2' and not (rodzaj in ('suwnica') and szerokosc &lt; 10)"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k118" name="Kontrola kodu kartograficznego 0010_434 w klasie OT_BUTR_L" class="OT_BUTR_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_434' and not (rodzaj in ('taśmociąg'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k119" name="Kontrola kodu kartograficznego 0010_437 w klasie OT_SUPR_L" class="OT_SUPR_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_437' and not (rodzaj in ('naftowy'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k120" name="Kontrola kodu kartograficznego 0010_438 w klasie OT_SUPR_L" class="OT_SUPR_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_438' and not (rodzaj in ('benzynowy'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k121" name="Kontrola kodu kartograficznego 0010_440 w klasie OT_SUPR_L" class="OT_SUPR_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_440' and not (rodzaj in ('gazowy'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k122" name="Kontrola kodu kartograficznego 0010_441 w klasie OT_SUPR_L" class="OT_SUPR_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_441' and not (rodzaj in ('wodociągowy'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k123" name="Kontrola kodu kartograficznego 0010_442 w klasie OT_SUPR_L" class="OT_SUPR_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_442' and not (rodzaj in ('ciepłowniczy'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k124" name="Kontrola kodu kartograficznego 0010_443 w klasie OT_SUPR_L" class="OT_SUPR_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_443' and not (rodzaj in ('kanalizacji'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k127" name="Kontrola kodu kartograficznego 0010_447 w klasie OT_BUIT_P" class="OT_BUIT_P" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_447' and not (rodzaj in ('myjnia samochodowa'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k128" name="Kontrola kodu kartograficznego 0010_448 w klasie OT_BUIT_P" class="OT_BUIT_P" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_448' and not (rodzaj in ('radar lub radiolatarnia'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k129" name="Kontrola kodu kartograficznego 0010_501 w klasie OT_ADJA_A" class="OT_ADJA_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_501' and not (rodzaj in ('państwo'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k130" name="Kontrola kodu kartograficznego 0010_503 w klasie OT_ADJA_A" class="OT_ADJA_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_503' and not (rodzaj in ('województwo'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k131" name="Kontrola kodu kartograficznego 0010_504 w klasie OT_ADJA_A" class="OT_ADJA_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_504' and not (rodzaj in ('powiat'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k132" name="Kontrola kodu kartograficznego 0010_505 w klasie OT_ADJA_A" class="OT_ADJA_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_505' and not (rodzaj in ('gmina'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k133" name="Kontrola kodu kartograficznego 0010_506 w klasie OT_ADJA_A" class="OT_ADJA_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_506' and not (rodzaj in ('miasto w gminie miejsko-wiejskiej', 'dzielnica lub delegatura'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k134" name="Kontrola kodu kartograficznego 0010_507 w klasie OT_TCPN_A" class="OT_TCPN_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k != '0010_507'"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k135" name="Kontrola kodu kartograficznego 0010_508_1 w klasie OT_TCRZ_A" class="OT_TCRZ_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k != '0010_508_1'"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k136" name="Kontrola kodu kartograficznego 0010_509 w klasie OT_TCPK_A" class="OT_TCPK_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k != '0010_509'"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k137" name="Kontrola kodu kartograficznego 0010_510 w klasie OT_KUPW_A" class="OT_KUPW_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k != '0010_510'"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k138" name="Kontrola kodu kartograficznego 0010_601 w klasie OT_PTWP_A" class="OT_PTWP_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k != '0010_601'"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k140" name="Kontrola kodu kartograficznego 0010_606 w klasie OT_SWRS_L" class="OT_SWRS_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_606' and not (szerokosc &lt;= 5 and polozenie not in ('pod powierzchnią') and (cechaGeometrii IS NULL or cechaGeometrii != 'sztuczny łącznik'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k141" name="Kontrola kodu kartograficznego 0010_606 w klasie OT_SWKN_L" class="OT_SWKN_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_606' and not (szerokosc &lt;= 5 and polozenie not in ('pod powierzchnią') and (cechaGeometrii IS NULL or cechaGeometrii != 'sztuczny łącznik'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k142" name="Kontrola kodu kartograficznego 0010_606 w klasie OT_SWRM_L" class="OT_SWRM_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_606' and not (szerokosc &lt;= 5 and polozenie not in ('pod powierzchnią'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k143" name="Kontrola kodu kartograficznego 0010_611 w klasie OT_BUSP_A" class="OT_BUSP_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_611' and not (rodzaj in ('basen'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k144" name="Kontrola kodu kartograficznego 0010_612 w klasie OT_OIPR_P" class="OT_OIPR_P" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_612' and not (rodzaj in ('źródło'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k145" name="Kontrola kodu kartograficznego 0010_613 w klasie OT_OIPR_P" class="OT_OIOR_P" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_613' and not (rodzaj in ('studnia głębinowa'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k146" name="Kontrola kodu kartograficznego 0010_614 w klasie OT_OIPR_L" class="OT_OIPR_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_614' and not (rodzaj in ('wodospad'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k147" name="Kontrola kodu kartograficznego 0010_615 w klasie OT_OIPR_L" class="OT_OIPR_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_615' and not (rodzaj in ('próg skalny'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k148" name="Kontrola kodu kartograficznego 0010_616 w klasie OT_BUHD_A" class="OT_BUHD_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_616' and not (rodzaj in ('zapora'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k149" name="Kontrola kodu kartograficznego 0010_616 w klasie OT_BUHD_L" class="OT_BUHD_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_616' and not (rodzaj in ('zapora'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k150" name="Kontrola kodu kartograficznego 0010_617_1 w klasie OT_BUHD_A" class="OT_BUHD_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_617_1' and not (rodzaj in ('śluza'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k151" name="Kontrola kodu kartograficznego 0010_620 w klasie OT_BUHD_L" class="OT_BUHD_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_620' and not (rodzaj in ('jaz'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k152" name="Kontrola kodu kartograficznego 0010_626 w klasie OT_BUUO_L" class="OT_BUUO_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_626' and not (rodzaj in ('umocnienie brzegu'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k153" name="Kontrola kodu kartograficznego 0010_627 w klasie OT_BUUO_L" class="OT_BUUO_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_627' and not (rodzaj in ('ostroga'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k154" name="Kontrola kodu kartograficznego 0010_628 w klasie OT_BUUO_L" class="OT_BUUO_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_628' and not (rodzaj in ('falochron'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k155" name="Kontrola kodu kartograficznego 0010_629_1 w klasie OT_OIOR_L" class="OT_OIOR_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_629_1' and not (rodzaj in ('pomost lub molo')"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k156" name="Kontrola kodu kartograficznego 0010_629_2 w klasie OT_OIOR_L" class="OT_OIOR_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_629_2' and not (rodzaj in ('pomost lub molo')"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k157" name="Kontrola kodu kartograficznego 0010_630 w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_630' and not (przewazajacaFunkcjaBudynku in ('latarnia morska') and kategoriaIstnienia not in ('zniszczony'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k158" name="Kontrola kodu kartograficznego 0010_631 w klasie OT_OIKM_P" class="OT_OIKM_P" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_631' and not (rodzaj in ('sygnalizator świetlny'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k161" name="Kontrola kodu kartograficznego 0010_703 w klasie OT_PTLZ_A" class="OT_PTLZ_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_703' and not (rodzaj in ('las') and kategoria in ('liściasty'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k162" name="Kontrola kodu kartograficznego 0010_704 w klasie OT_PTLZ_A" class="OT_PTLZ_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_704' and not (rodzaj in ('las') and kategoria in ('iglasty'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k163" name="Kontrola kodu kartograficznego 0010_705 w klasie OT_PTLZ_A" class="OT_PTLZ_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_705' and not (rodzaj in ('las') and kategoria in ('mieszany'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k164" name="Kontrola kodu kartograficznego 0010_706 w klasie OT_PTZB_A" class="OT_PTZB_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_706' and not (roslinnosc in ('drzewa'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k165" name="Kontrola kodu kartograficznego 0010_706 w klasie OT_PTLZ_A" class="OT_PTLZ_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_706' and not (rodzaj in ('zadrzewienie'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k166" name="Kontrola kodu kartograficznego 0010_708 w klasie OT_PTLZ_A" class="OT_PTLZ_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_708' and not (rodzaj in ('zagajnik') and kategoria in ('liściasty'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k167" name="Kontrola kodu kartograficznego 0010_709 w klasie OT_PTLZ_A" class="OT_PTLZ_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_709' and not (rodzaj in ('zagajnik') and kategoria in ('iglasty'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k168" name="Kontrola kodu kartograficznego 0010_710 w klasie OT_PTLZ_A" class="OT_PTLZ_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_710' and not (rodzaj in ('zagajnik') and kategoria in ('mieszany'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k169" name="Kontrola kodu kartograficznego 0010_711 w klasie OT_OIPR_L" class="OT_OIPR_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_711' and not (rodzaj in ('linia oddziałowa'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k170" name="Kontrola kodu kartograficznego 0010_713 w klasie OT_PTRK_A" class="OT_PTRK_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_713' and not (rodzaj in ('krzewy'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k171" name="Kontrola kodu kartograficznego 0010_714 w klasie OT_PTRK_A" class="OT_PTRK_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_714' and not (rodzaj in ('kosodrzewina'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k172" name="Kontrola kodu kartograficznego 0010_718 w klasie OT_PTUT_A" class="OT_PTUT_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_718' and not (rodzaj in ('ogródki działkowe'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k173" name="Kontrola kodu kartograficznego 0010_719 w klasie OT_PTUT_A" class="OT_PTUT_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_719' and not (rodzaj in ('sad'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k174" name="Kontrola kodu kartograficznego 0010_720 w klasie OT_PTUT_A" class="OT_PTUT_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_720' and not (rodzaj in ('plantacja', 'szkółka roślin'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k175" name="Kontrola kodu kartograficznego 0010_723 w klasie OT_PTZB_A" class="OT_PTZB_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_723' and not (roslinnosc in ('trawa') and rodzaj not in ('jednorodzinna'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k176" name="Kontrola kodu kartograficznego 0010_723 w klasie OT_PTTR_A" class="OT_PTTR_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_723' and not (rodzaj in ('roślinność trawiasta'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k177" name="Kontrola kodu kartograficznego 0010_725 w klasie OT_OIMK_A" class="OT_OIMK_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_725' and not (rodzaj in ('bagno'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k178" name="Kontrola kodu kartograficznego 0010_726 w klasie OT_OIMK_A" class="OT_OIMK_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_726' and not (rodzaj in ('teren podmokły'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k179" name="Kontrola kodu kartograficznego 0010_727 w klasie OT_OISZ_A" class="OT_OISZ_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k != '0010_727'"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k180" name="Kontrola kodu kartograficznego 0010_728 w klasie OT_OIPR_P" class="OT_OIPR_P" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_728' and not (rodzaj in ('mały las'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k181" name="Kontrola kodu kartograficznego 0010_729 w klasie OT_OIPR_L" class="OT_OIPR_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_729' and not (rodzaj in ('rząd drzew'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k182" name="Kontrola kodu kartograficznego 0010_731 w klasie OT_OIPR_P" class="OT_OIPR_P" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_731' and not (rodzaj in ('drzewo lub grupa drzew') and pomnikPrzyrody in ('obiekt niebędący pomnikiem przyrody'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k183" name="Kontrola kodu kartograficznego 0010_732 w klasie OT_OIPR_P" class="OT_OIPR_P" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_732' and not (rodzaj in ('drzewo lub grupa drzew') and pomnikPrzyrody in ('pomnik przyrody'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k184" name="Kontrola kodu kartograficznego 0010_733 w klasie OT_OIPR_L" class="OT_OIPR_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_733' and not (rodzaj in ('pas krzewów lub żywopłot'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k185" name="Kontrola kodu kartograficznego 0010_734 w klasie OT_OIPR_P" class="OT_OIPR_P" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_734' and not (rodzaj in ('kępa krzewów lub kosodrzewiny'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k186" name="Kontrola kodu kartograficznego 0010_736 w klasie OT_PTGN_A" class="OT_PTGN_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_736' and not (rodzaj in ('pozostałe grunty nieużytkowane'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k187" name="Kontrola kodu kartograficznego 0010_736 w klasie OT_PTWZ_A" class="OT_PTWZ_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_736' and not (rodzaj in ('wyrobisko') and surowiec in ('glina', 'ruda cynku i ołowiu', 'siarka', 'torf', 'węgiel brunatny', 'inny'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k188" name="Kontrola kodu kartograficznego 0010_737 w klasie OT_PTGN_A" class="OT_PTGN_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_737' and not (rodzaj in ('teren piaszczysty lub żwirowy'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k189" name="Kontrola kodu kartograficznego 0010_737 w klasie OT_PTWZ_A" class="OT_PTWZ_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_737' and not (rodzaj in ('wyrobisko') and surowiec in ('piasek', 'żwir'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k190" name="Kontrola kodu kartograficznego 0010_738 w klasie OT_PTGN_A" class="OT_PTGN_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_738' and not (rodzaj in ('piarg, usypisko lub rumowisko skalne', 'teren kamienisty'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k191" name="Kontrola kodu kartograficznego 0010_738 w klasie OT_PTWZ_A" class="OT_PTWZ_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_738' and not (rodzaj in ('wyrobisko') and surowiec in ('kamień'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k192" name="Kontrola kodu kartograficznego 0010_739 w klasie OT_PTZB_A" class="OT_PTZB_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_739' and not (roslinnosc in ('drzewa', 'trawa'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k193" name="Kontrola kodu kartograficznego 0010_739 w klasie OT_PTLZ_A" class="OT_PTLZ_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k != '0010_739' and kodKarto10k is not NULL"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k194" name="Kontrola kodu kartograficznego 0010_739 w klasie OT_PTRK_A" class="OT_PTRK_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k != '0010_739' and kodKarto10k is not NULL"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k195" name="Kontrola kodu kartograficznego 0010_739 w klasie OT_PTUT_A" class="OT_PTUT_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_739' and not (rodzaj in ('ogródki działkowe', 'sad', 'plantacja'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k196" name="Kontrola kodu kartograficznego 0010_739 w klasie OT_PTTR_A" class="OT_PTTR_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_739' and not (rodzaj in ('roślinność trawiasta'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k197" name="Kontrola kodu kartograficznego 0010_739 w klasie OT_PTGN_A" class="OT_PTGN_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_739' and not (rodzaj in ('pozostałe grunty nieużytkowane'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k198" name="Kontrola kodu kartograficznego 0010_739 w klasie OT_PTWZ_A" class="OT_PTWZ_A" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_739' and not (rodzaj in ('wyrobisko') and surowiec in ('glina', 'ruda cynku i ołowiu', 'siarka', 'torf', 'węgiel brunatny', 'inny'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k199" name="Kontrola kodu kartograficznego 0010_807_1 w klasie OT_RTLW_L do weryfikacji" class="OT_RTLW_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_807_1' and not (rodzaj in ('skarpa', 'wąwóz'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k200" name="Kontrola kodu kartograficznego 0010_807_2 w klasie OT_RTLW_L do weryfikacji" class="OT_RTLW_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_807_2' and not (rodzaj in ('skarpa', 'wąwóz'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k201" name="Kontrola kodu kartograficznego 0010_808 w klasie OT_BUZM_L" class="OT_BUZM_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_808' and not (rodzaj in ('fosa sucha i wykop'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k202" name="Kontrola kodu kartograficznego 0010_809_1 w klasie OT_BUZM_L" class="OT_BUZM_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_809_1' and not (rodzaj in ('nasyp', 'wał przeciwpowodziowy lub grobla') and szerokoscKorony &gt;= 5 and (szerokoscPodstawy - szerokoscKorony) &gt;= 14 and wysokosc &gt;= 1)"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k203" name="Kontrola kodu kartograficznego 0010_809_2 w klasie OT_BUZM_L" class="OT_BUZM_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_809_2' and not (rodzaj in ('nasyp', 'wał przeciwpowodziowy lub grobla') and szerokoscKorony &gt;= 5 and (szerokoscPodstawy - szerokoscKorony) &lt; 14 and wysokosc &gt;= 1)"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k204" name="Kontrola kodu kartograficznego 0010_810_1 w klasie OT_BUZM_L" class="OT_BUZM_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_810_1' and not (rodzaj in ('nasyp', 'wał przeciwpowodziowy lub grobla') and szerokoscKorony &lt; 5 and szerokoscKorony &gt;= 3 and (szerokoscPodstawy - szerokoscKorony) &gt;= 14 and wysokosc &gt;= 1)"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k205" name="Kontrola kodu kartograficznego 0010_810_2 w klasie OT_BUZM_L" class="OT_BUZM_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_810_2' and not (rodzaj in ('nasyp', 'wał przeciwpowodziowy lub grobla') and szerokoscKorony &lt; 5 and szerokoscKorony &gt;= 3 and (szerokoscPodstawy - szerokoscKorony) &lt; 14 and wysokosc &gt;= 1)"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k206" name="Kontrola kodu kartograficznego 0010_811_1 w klasie OT_BUZM_L" class="OT_BUZM_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '010_811_1' and not (rodzaj in ('nasyp', 'wał przeciwpowodziowy lub grobla') and szerokoscKorony &lt; 3 and (szerokoscPodstawy - szerokoscKorony) &gt;= 14 and wysokosc &gt;= 1)"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k207" name="Kontrola kodu kartograficznego 0010_811_2 w klasie OT_BUZM_L" class="OT_BUZM_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '010_811_2' and not (rodzaj in ('nasyp', 'wał przeciwpowodziowy lub grobla') and szerokoscKorony &lt; 3 and (szerokoscPodstawy - szerokoscKorony) &lt; 14 and wysokosc &gt;= 1)"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k208" name="Kontrola kodu kartograficznego 0010_812 w klasie OT_RTPW_P" class="OT_RTPW_P" errorPhrase="Błędny kod kartograficzny">     
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_812' and not (rodzaj in ('kopiec lub hałda'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k209" name="Kontrola kodu kartograficznego 0010_813 w klasie OT_RTPW_P" class="OT_RTPW_P" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_813' and not (rodzaj in ('dół'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k210" name="Kontrola kodu kartograficznego 0010_814 w klasie OT_RTLW_L" class="OT_RTLW_L" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_814' and not (rodzaj in ('wąwóz'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k211" name="Kontrola kodu kartograficznego 0010_815 w klasie OT_OIPR_P" class="OT_OIPR_P" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_815' and not (rodzaj in ('odosobniona skała'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k212" name="Kontrola kodu kartograficznego 0010_816 w klasie OT_OIPR_P" class="OT_OIPR_P" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_816' and not (rodzaj in ('głaz narzutowy lub grupa głazów'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k213" name="Kontrola kodu kartograficznego 0010_817 w klasie OT_OIPR_P" class="OT_OIPR_P" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_817' and not (rodzaj in ('wejście do jaskini lub groty'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e2_k214" name="Kontrola kodu kartograficznego 0010_819 w klasie OT_RTPW_P" class="OT_RTPW_P" errorPhrase="Błędny kod kartograficzny">
+			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_819' and not (rodzaj in ('punkt wysokościowy w terenie'))"/>
+		</Kontrola>
+	</GrupaKontroli>
+	
+	<!-- ....................................................................................................................................................... -->
+	
+	<GrupaKontroli id="topo_e3" name="Kontrole rzeźby RT">
+		<Kontrola id="topo_e3_k1" name="OT_RTLW_L Kontrola atrybutu zrodloDanychGeometrycznych linii wysokościowej" class="OT_RTLW_L" errorPhrase="topo_e3_k1 Błędnie wypełnoiony atrybut zrodloDanychGeometrycznych">
+			<Parametr typ="QgsExpression" sql="zrodloDanychGeometrycznych != 'NMT'"/>
+		</Kontrola>
+		<Kontrola id="topo_e3_k2" name="OT_RTLW_L Kontrola atrybutu rodzaj linii wysokościowej" class="OT_RTLW_L" errorPhrase="topo_e3_k2 Błędna wartość atrybutu rodzaj (linia wysokościowa)">
+			<Parametr typ="QgsExpression" sql="rodzaj not in ('poziomica', 'skarpa', 'wąwóz')"/>  
+		</Kontrola>
+		<Kontrola id="topo_e3_k3" name="OT_RTPW_P Kontrola atrybutu zrodloDanychGeometrycznych punktu wysokościowego" class="OT_RTPW_P" errorPhrase="topo_e3_k3 Błędnie wypełnoiony atrybut zrodloDanychGeometrycznych">
+			<Parametr typ="QgsExpression" sql="zrodloDanychGeometrycznych != 'NMT'"/>
+		</Kontrola>
+		<Kontrola id="topo_e3_k4" name="OT_RTPW_P Kontrola atrybutu rodzaj punktu wysokościowego" class="OT_RTPW_P" errorPhrase="topo_e3_k4 Błędna wartość atrybutu rodzaj (punkt wysokościowy)">
+			<Parametr typ="QgsExpression" sql="rodzaj not in ('dół', 'kopiec lub hałda', 'punkt wysokościowy w terenie')"/>
+		</Kontrola>
+		<Kontrola id="topo_e3_k5" name="OT_RTPW_P Kontrola wypełnienia atrybutu lokalnyId" class="OT_RTPW_P" errorPhrase="topo_e3_k5 Błąd formatu atrybutu lokalnyId">
+			<Parametr typ="QgsExpression" sql="if(regexp_match(lokalnyId,'^[A-Za-z0-9]{8}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{12}$|^$')=1,0,1)"/>
+		</Kontrola>
+		<Kontrola id="topo_e3_k6" name="OT_RTLW_L Kontrola wypełnienia atrybutu lokalnyId" class="OT_RTLW_L" errorPhrase="topo_e3_k6 Błąd formatu atrybutu lokalnyId">
+			<Parametr typ="QgsExpression" sql="if(regexp_match(lokalnyId,'^[A-Za-z0-9]{8}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{12}$|^$')=1,0,1)"/>
+		</Kontrola>
+		<Kontrola id="topo_e3_k7" name="OT_RTPW_P Kontrola wypełnienia atrybutu wersja OT_RTPW_P" class="OT_RTPW_P" errorPhrase="topo_e3_k7 Błąd formatu atrybutu wersja OT_RTPW_P">
+			<Parametr typ="QgsExpression" sql="if(regexp_match(wersja,'[0-9]{4}-[01][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]|^$')=1,0,1)"/>
+		</Kontrola>
+		<Kontrola id="topo_e3_k8" name="OT_RTLW_L Kontrola wypełnienia atrybutu wersja OT_RTLW_L" class="OT_RTLW_L" errorPhrase="topo_e3_k8 Błąd formatu atrybutu wersja OT_RTLW_L">
+			<Parametr typ="QgsExpression" sql="if(regexp_match(wersja,'[0-9]{4}-[01][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]|^$')=1,0,1)"/>
+		</Kontrola>
+		<Kontrola id="topo_e3_k9" name="OT_RTPW_P Kontrola wypełnienia atrybutu poczatekWersjiObiektu OT_RTPW_P" class="OT_RTPW_P" errorPhrase="topo_e3_k9 Błąd formatu atrybutu poczatekWersjiObiektu OT_RTPW_P">
+			<Parametr typ="QgsExpression" sql="if(wersja!= poczatekWersjiObiektu,1,0)"/>
+		</Kontrola>
+		<Kontrola id="topo_e3_k10" name="OT_RTLW_L Kontrola wypełnienia atrybutu poczatekWersjiObiektu OT_RTLW_L" class="OT_RTLW_L" errorPhrase="topo_e3_k10 Błąd formatu atrybutu poczatekWersjiObiektu OT_RTLW_L">
+			<Parametr typ="QgsExpression" sql="if(wersja!= poczatekWersjiObiektu,1,0)"/>
+		</Kontrola>
+		<Kontrola id="topo_e3_k11" name="OT_RTPW_P Kontrola wypełnienia atrybutu wysokość OT_RTPW_P" class="OT_RTPW_P" errorPhrase="topo_e3_k11 Błąd formatu atrybutu wysokość OT_RTPW_P">
+			<Parametr typ="QgsExpression" sql="if(round(wysokosc,1)= wysokosc and rodzaj in ('punkt wysokościowy w terenie'),0,1)"/>
+		</Kontrola>
+		<Kontrola id="topo_e3_k12" name="OT_RTLW_L Kontrola wypełnienia atrybutu wysokość dla poziomic OT_RTLW_L" class="OT_RTLW_L" errorPhrase="topo_e3_k12 Błąd formatu atrybutu wysokość OT_RTLW_L - poziomica">
+			<Parametr typ="QgsExpression" sql="if(not regexp_match(wysokosc,'^\\d*(\\.(25|5|75))?$') and rodzaj in ('poziomica'),1,0)"/>
+		</Kontrola>
+		<Kontrola id="topo_e3_k13" name="OT_RTLW_L Kontrola wypełnienia atrybutu wysokość dla skarp i wąwozów" class="OT_RTLW_L" errorPhrase="topo_e3_k13 Błąd formatu atrybutu wysokość OT_RTLW_L">
+			<Parametr typ="QgsExpression" sql="if(not regexp_match(wysokosc,'^[2-9]\\d*\\.(0|5)$') and rodzaj in ('skarpa','wąwóz'),1,0)"/>
+		</Kontrola>
+		<Kontrola id="topo_e3_k14" name="Kontrola występowania błędnych geometrii w klasie OT_RTLW_L" class="OT_RTLW_L" errorPhrase="topo_e3_k14 Błędna geometria (np. zdublowane werteksy lub samoprzecięcia) w klasie OT_RTLW_L">
+			<Parametr typ="pythonFunction" sql="validateGeometry"/>
+		</Kontrola>
+		<Kontrola id="topo_e3_k15" name="Kontrola występowania zduplikowanych obiektów w klasie OT_RTPW_P" class="OT_RTPW_P" errorPhrase="topo_e3_k15 Błąd zduplikowanych obiektów OT_RTPW_P">
+			<Parametr typ="pythonFunction" sql="findDuplicates"/>
+		</Kontrola>
+		<Kontrola id="topo_e3_k16" name="Kontrola występowania zduplikowanych obiektów w klasie OT_RTLW_L" class="OT_RTLW_L" errorPhrase="topo_e3_k16 Błąd zduplikowanych obiektów OT_RTLW_L">
+			<Parametr typ="pythonFunction" sql="findDuplicates"/>
+		</Kontrola>
+		<Kontrola id="topo_e3_k17" name="Kontrola minimalnej powierzchni zarysowanej poziomicą OT_RTLW_L" class="OT_RTLW_L" errorPhrase="topo_e3_k17 Błąd minimalnej powierzchni zarysowanej poziomicą (200m^2)">
+			<Parametr typ="QgsExpression" sql="if(is_closed($geometry) and area(make_polygon($geometry))&lt;200,1,0)"/>
+		</Kontrola>
+		<Kontrola id="topo_e3_k18" name="Kontrola przecinania się wody stojącej OT_PTWP_A z poziomicą OT_RTLW_L" class="OT_RTLW_L" errorPhrase="topo_e3_k18 Błąd przecinania się poziomic z wodą stojącą/wodą morską OT_PTWP_A">
+			<Parametr typ="QgsExpression" sql="rodzaj in ('poziomica') and (overlay_intersects(layer:='OT_PTWP_A',filter:= rodzaj in ('woda stojąca','woda morska')))"/>
+		</Kontrola>
+		<Kontrola id="topo_e3_k19" name="Kontrola przecinania się wody OT_PTWP_A ze skarpą/wąwozem RTLW_L" class="OT_RTLW_L" errorPhrase="topo_e3_k19 Błąd przecinania się skarpy/wąwozu z wodą OT_PTWP_A">
+			<Parametr typ="QgsExpression" sql="rodzaj in ('skarpa','wąwóz') and overlay_intersects(layer:='OT_PTWP_A')"/>
+		</Kontrola>
+		<Kontrola id="topo_e3_k20" name="Kontrola przecinania się SWRS_L ze skarpą/wąwozem RTLW_L" class="OT_RTLW_L" errorPhrase="topo_e3_k20 Błąd przecinania się skarpy/wąwozu z ciekiem SW">
+			<Parametr typ="QgsExpression" sql="rodzaj in ('skarpa','wąwóz') and (overlay_intersects(layer:='OT_SWRS_L') or overlay_intersects(layer:='OT_SWKN_L') or overlay_intersects(layer:='OT_SWRM_L'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e3_k21" name="Kontrola przecinania się obiektów klas SKJZ/SKTR(na powierzchni) ze skarpą/wąwozem OT_RTLW_L" class="OT_RTLW_L" errorPhrase="topo_e3_k21 Błąd przecinania się skarpy/wąwozu z obiektem klasy SKJZ/SKTR na powierzchni gruntu">
+			<Parametr typ="QgsExpression" sql="rodzaj in ('skarpa','wąwóz') and (overlay_intersects(layer:='OT_SKJZ_L',filter:= polozenie='na powierzchni gruntu') or overlay_intersects(layer:='OT_SKTR_L',filter:= polozenie='na powierzchni gruntu'))"/>
+		</Kontrola>
+		<Kontrola id="topo_e3_k22" name="Kontrola przecinania się zbiorników i osadników OT_BUZT_A z obiektami klasy OT_RTLW_L" class="OT_RTLW_L" errorPhrase="topo_e3_k22 Błąd przecinania się obiektów klasy OT_RTLW_L z obszarem zbiorników/osadników OT_BUZT_A">
+			<Parametr typ="QgsExpression" sql="overlay_intersects(layer:='OT_BUZT_A')"/>
+		</Kontrola>
+		<Kontrola id="topo_e3_k23" name="Kontrola przecinani się obiektów liniowych OT_RTLW_L z obietkami klasy OT_BUZM_L" class="OT_RTLW_L" errorPhrase="topo_e3_k23 Błąd przecinania się obiektów liniowych klasy OT_RTLW_L z budowlami ziemnymi OT_BUZM_L">
+			<Parametr typ="QgsExpression" sql="rodzaj in ('skarpa','wąwóz') and overlay_intersects(layer:='OT_BUZM_L')"/>
+		</Kontrola>
+		<Kontrola id="topo_e3_k24" name="Kontrola minimalnej długośsi obiektów liniowych OT_RTLW_L (50 m)" class="OT_RTLW_L" errorPhrase="topo_e3_k24 Błąd minimalnej długośsi obiektów liniowych OT_RTLW (50 m)">
+			<Parametr typ="pythonFunction" sql="czyPrzecinaGranicePowiatuDlugoscPonizej50m"/>
+		</Kontrola>
+		<Kontrola id="topo_e3_k25" name="Kontrola zasięgu przestrzennego OT_RTLW_L w granicy powiatu" class="OT_RTLW_L" errorPhrase="topo_e3_k25 Błąd zasięgu przestrzennego OT_RTLW_L w granicy powiatu">
+			<Parametr typ="pythonFunction" sql="czyObiektyWewnatrzPowiatu(teryt)"/>
+		</Kontrola>
+		<Kontrola id="topo_e3_k26" name="Kontrola odległości między sąsiednimi poziomicami OT_RTLW_L - nie mniejsza niż 2m" class="OT_RTLW_L" errorPhrase="topo_e3_k26 Odległość między sąsiednimi poziomicami jest mniejsza niż 2m">
+			<Parametr typ="pythonFunction" sql="czyOdleglosciMiedzyPoziomicami2m"/>
+		</Kontrola>
+		<Kontrola id="topo_e3_k27" name="Kontrola nadmiernej segmentacji OT_RTLW_L" class="OT_RTLW_L" errorPhrase="topo_e3_k27 Obiekt ma takie same atrybuty co obiekt sąsiadujący">
+			<Parametr typ="pythonFunction" sql="nadmiernaSegmentacja"/>
+		</Kontrola>
+		<Kontrola id="topo_e3_k28" name="Kontrola przewerteksowania w OT_RTLW_L" class="OT_RTLW_L" errorPhrase="topo_e3_k28 Istnieją obiekty, które mają nadmierną liczbę werteksów">
+			<Parametr typ="pythonFunction" sql="przewerteksowanie"/>
+		</Kontrola>		
+	</GrupaKontroli>
+	<!--
+
+	-->
+</SzablonKontroli>

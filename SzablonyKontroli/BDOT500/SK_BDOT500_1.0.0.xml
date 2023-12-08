@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SzablonKontroli xmlns="http://www.gugik.gov.pl" id="bdot500" version="1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<GrupaKontroli id="bdot500_b1" name="Kontrole atrybutowe">
+		<Kontrola id="bdot500_b1_k1" name="Kontrola atrybutów rodzajNawierzchni i rodzajObiektu" class="OT_Komunikacja" errorPhrase="Atrybut rodzajNawierzchni przyjmuje wartość pustą dla rodzaju obiektu równego j/c">
+			<Parametr typ="QgsExpression" sql="(rodzajObiektu='j' or rodzajObiektu='c') and rodzajNawierzchni='NULL'"/>
+		</Kontrola>
+		<Kontrola id="bdot500_b1_k2" name="Kontrola atrybutów polozenie i rodzajObiektu" class="OT_Komunikacja" errorPhrase="Atrybut polozenie przyjmuje wartość pustą dla rodzaju obiektu równego j">
+			<Parametr typ="QgsExpression" sql="rodzajObiektu='j' and polozenie='NULL'"/>
+		</Kontrola>	
+		<Kontrola id="bdot500_b1_k3" name="Kontrola atrybutu geometria dla rodzaju obiektu równego t/w/i/s/r/j/d" class="OT_RodzajObiektuZwiazanegoZBudynkiem" errorPhrase="Geometria jest innego typu niż powierzchnia dla rodzaju obiektu równego t/w/i/s/r/j/d">
+			<Parametr typ="QgsExpression" sql="(rodzajObiektu='t' or rodzajObiektu='w' or rodzajObiektu= 'i' or rodzajObiektu='s' or rodzajObiektu='r' or rodzajObiektu='j' or rodzajObiektu='d') and (geometry_type($geometry)='Line' or geometry_type($geometry)='Point')"/>
+		</Kontrola>		
+		<Kontrola id="bdot500_b1_k4" name="Kontrola atrybutu geometria dla rodzaju budowli=f" class="OT_Budowle" errorPhrase="Geometria nie jest typu punkt dla rodzaju budowli równego f">
+			<Parametr typ="QgsExpression" sql="rodzajBudowli='f' and (geometry_type($geometry)='Line' or geometry_type($geometry)='Polygon')"/>
+		</Kontrola>	
+		<Kontrola id="bdot500_b1_k5" name="Kontrola atrybutu geometria dla rodzaju budowli=d" class="OT_Budowle" errorPhrase="Geometria jest innego typu niż punkt/wielopunkt/powierzchnia dla rodzaju budowli równego d">
+			<Parametr typ="QgsExpression" sql="rodzajBudowli='d' and (geometry_type($geometry)='Line' or geometry_type($geometry)='MultiLine' or geometry_type($geometry)='MultiPolygon'"/>
+		</Kontrola>	
+		<Kontrola id="bdot500_b1_k6" name="Kontrola atrybutu geometria dla rodzaju budowli=n" class="OT_Budowle" errorPhrase="Geometria jest innego typu niż linia/powierzchnia dla rodzaju budowli równego n">
+			<Parametr typ="QgsExpression" sql="rodzajBudowli='n' and geometry_type($geometry)='Point'"/>
+		</Kontrola>		
+		<Kontrola id="bdot500_b1_k7" name="Kontrola atrybutu geometria dla rodzaju budowli=t/p" class="OT_Budowle" errorPhrase="Geometria jest innego typu niż punkt/powierzchnia dla rodzaju budowli równego t/p">
+			<Parametr typ="QgsExpression" sql="(rodzajBudowli='t' or rodzajBudowli='p') and geometry_type($geometry)='Line'"/>
+		</Kontrola>			
+		<Kontrola id="bdot500_b1_k8" name="Kontrola atrybutu geometria dla rodzaju budowli równego r" class="OT_Budowle" errorPhrase="Geometria jest innego typu niż powierzchnia/wielopowierzchnia dla rodzaju budowli równego r">
+			<Parametr typ="QgsExpression" sql="rodzajBudowli='r' and (geometry_type($geometry)='Point' or geometry_type($geometry)='Line' or geometry_type($geometry)='MultiLine' or geometry_type($geometry)='MultiPoint')"/>
+		</Kontrola>			
+		<Kontrola id="bdot500_b1_k9" name="Kontrola atrybutu geometria dla rodzaju budowli=k/o/c/z/s/w/b/a/m" class="OT_Budowle" errorPhrase="Geometria jest innego typu niż powierzchnia dla rodzaju budowli równego k/o/c/z/s/w/b/a/m">
+			<Parametr typ="QgsExpression" sql="(rodzajBudowli='k' or rodzajBudowli='o' or rodzajBudowli='c' or rodzajBudowli='z' or rodzajBudowli='s' or rodzajBudowli='w' or rodzajBudowli='b' or rodzajBudowli= 'a' or rodzajBudowli='m') and (geometry_type($geometry)='Line' or geometry_type($geometry)='Point')"/>
+		</Kontrola>
+		<Kontrola id="bdot500_b1_k10" name="Kontrola atrybutu geometria dla rodzaju obiektu=k/b/y/t/l" class="OT_Komunikacja" errorPhrase="Geometria jest innego typu niż linia dla rodzaju obiektu równego k/b/y/t/l">
+			<Parametr typ="QgsExpression" sql="(rodzajObiektu='k'or rodzajObiektu='b'or rodzajObiektu='y'or rodzajObiektu='t'or rodzajObiektu='l') and (geometry_type($geometry)='Point' or geometry_type($geometry)='Polygon')"/>
+		</Kontrola>
+		<Kontrola id="bdot500_b1_k11" name="Kontrola atrybutu geometria dla rodzaju obiektu=z/i" class="OT_Komunikacja" errorPhrase="Geometria jest innego typu niż linia/powierzchnia dla rodzaju obiektu równego z/i">
+			<Parametr typ="QgsExpression" sql="(rodzajObiektu='z'or rodzajObiektu='i') and geometry_type($geometry)='Point'"/>
+		</Kontrola>
+		<Kontrola id="bdot500_b1_k12" name="Kontrola atrybutu geometria dla rodzaju obiektu=j/c/g/u/r/s/m/z/w/e/n/a" class="OT_Komunikacja" errorPhrase="Geometria jest innego typu niż powierzchnia dla rodzaju obiektu równego j/c/g/u/r/s/m/z/w/e/n/a">
+			<Parametr typ="QgsExpression" sql="(rodzajObiektu='j' or rodzajObiektu='c' or rodzajObiektu='g' or rodzajObiektu='u' or rodzajObiektu='r' or rodzajObiektu='s' or rodzajObiektu='m' or rodzajObiektu='z' or rodzajObiektu='w' or rodzajObiektu='e' or rodzajObiektu='n' or rodzajObiektu='a') and (geometry_type($geometry)='Line' or geometry_type($geometry)='Point')"/>
+		</Kontrola>
+		<Kontrola id="bdot500_b1_k13" name="Kontrola atrybutu geometria dla rodzaju obiektu=m OT_Komunikacja" class="OT_Komunikacja" errorPhrase="Geometria jest innego typu niż linia/wielolinia/powierzchnia dla rodzaju obiektu równego m">
+			<Parametr typ="QgsExpression" sql="rodzajObiektu='m' and (geometry_type($geometry)='Point' or geometry_type($geometry)='MultiPoint' or geometry_type($geometry)='MultiPolygon')"/>
+		</Kontrola>
+		<Kontrola id="bdot500_b1_k14" name="Kontrola atrybutów rodzajObiektu i geometria" class="OT_ZagospodarowanieTerenu" errorPhrase="Geometria jest innego typu niż powierzchnia dla rodzaju obiektu równego l/k/c/t">
+			<Parametr typ="QgsExpression" sql="(rodzajObiektu='l' or rodzajObiektu='k' or rodzajObiektu='c' or rodzajObiektu='t') and (geometry_type($geometry)='Point' or geometry_type($geometry)='Line')"/>
+		</Kontrola>	
+		<Kontrola id="bdot500_b1_k15" name="Kontrola atrybutu geometria dla rodzaju obiektu=w" class="OT_SportIRekreacja" errorPhrase="Geometria jest innego typu niż linia dla rodzaju obiektu równego w">
+			<Parametr typ="QgsExpression" sql="rodzajObiektu='w' and (geometry_type($geometry)='Point' or geometry_type($geometry)='Polygon')"/>
+		</Kontrola>		
+		<Kontrola id="bdot500_b1_k16" name="Kontrola atrybutu geometria dla rodzaju obiektu=b/p/z/i" class="OT_SportIRekreacja" errorPhrase="Geometria jest innego typu niż powierzchnia dla rodzaju obiektu równego b/p/z/i">
+			<Parametr typ="QgsExpression" sql="(rodzajObiektu='b' or rodzajObiektu='p' or rodzajObiektu='z' or rodzajObiektu='i') and (geometry_type($geometry)='Point' or geometry_type($geometry)='Line')"/>
+		</Kontrola>	
+		<Kontrola id="bdot500_b1_k17" name="Kontrola atrybutu geometria dla rodzaju obiektu=p/s/w/j/l/g/z/t/o" class="OT_Wody" errorPhrase="Geometria jest innego typu niż powierzchnia dla rodzaju obiektu równego p/s/w/j/l/g/z/t/o">
+			<Parametr typ="QgsExpression" sql="(rodzajObiektu='p' or rodzajObiektu='s' or rodzajObiektu='w' or rodzajObiektu='j' or rodzajObiektu='l' or rodzajObiektu='g' or rodzajObiektu='z' or rodzajObiektu='t' or rodzajObiektu='o') and (geometry_type($geometry)='Point' or geometry_type($geometry)='Line')"/>
+		</Kontrola>		
+		<Kontrola id="bdot500_b1_k18" name="Kontrola atrybutu geometria dla rodzaju obiektu=w/g" class="OT_Wody" errorPhrase="Geometria jest innego typu niż powierzchnia/wielopowierzchnia dla rodzaju obiektu równego w/g">
+			<Parametr typ="QgsExpression" sql="(rodzajObiektu='w' or rodzajObiektu='g') and (geometry_type($geometry)='Point' or geometry_type($geometry)='Line' or geometry_type($geometry)='MultiLine' or geometry_type($geometry)='MultiPoint')"/>
+		</Kontrola>	
+		<Kontrola id="bdot500_b1_k19" name="Kontrola atrybutu geometria dla rodzaju obiektu=m OT_Wody" class="OT_Wody" errorPhrase="Geometria jest innego typu niż linia/wielolinia/powierzchnia dla rodzaju obiektu równego m">
+			<Parametr typ="QgsExpression" sql="rodzajObiektu='m' and (geometry_type($geometry)='Point' or geometry_type($geometry)='MultiPoint' or geometry_type($geometry)='MultiPolygon')"/>
+		</Kontrola>	
+		<Kontrola id="bdot500_b1_k20" name="Kontrola atrybutu geometria dla rodzaju obiektu=o" class="OT_RodzajObiektuZwiazanegoZBudynkiem" errorPhrase="Geometria jest innego typu niż powierzchnia/multipowierzchnia/punkt/multipunkt dla rodzaju obiektu równego o">
+			<Parametr typ="QgsExpression" sql="rodzajObiektu='o' and (geometry_type($geometry)='Line' or geometry_type($geometry)='MultiLine')"/>
+		</Kontrola>		
+	</GrupaKontroli>
+	
+	<!-- ....................................................................................................................................................... -->
+
+</SzablonKontroli>

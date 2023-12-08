@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SzablonKontroli xmlns="http://www.gugik.gov.pl" id="egib" version="1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+	<GrupaKontroli id="egib_e1" name="Kontrole atrybutowe">
+		<Kontrola id="egib_e1_k1" name="Kontrola atrybutu idDzialki z paternem" class="EGB_DzialkaEwidencyjna" errorPhrase="Atrybut idDzialki jest niepoprawny">
+			<Parametr typ="QgsExpression" sql="not regexp_match(idDzialki ,'(([012][2468])|([123][02]))[0-9]{4}_[1-9]{1}\\.[0-9]{4}((.AR_[0-9]+)?)\\.[0-9]*([0-9]*\\/[0-9]*)?')"/>
+		</Kontrola>
+		<Kontrola id="egib_e1_k2" name="Kontrola atrybutów startWersjaObiekt i dataAkceptacjiZmiany" class="EGB_Zmiana" errorPhrase="Atrybut startWersjaObiekt jest różny od dataAkceptacjiZmiany">
+			<Parametr typ="QgsExpression" sql="startWersjaObiekt&lt;&gt;dataAkceptacjiZmiany"/>
+		</Kontrola>
+		<Kontrola id="egib_e1_k3" name="Kontrola atrybutu geometria dla rodzaju obiektu związanego z budynkiem=o" class="EGB_ObiektTrwaleZwiazanyZBudynkiem" errorPhrase="Geometria jest innego typu niż powierzchnia/punkt dla rodzaju obiektu związanego z budynkiem równego o">
+			<Parametr typ="QgsExpression" sql="(rodzajObiektuZwiazanegoZBudynkiem='o') and (geometry_type($geometry)='Line')"/>
+		</Kontrola>	
+		<Kontrola id="egib_e1_k4" name="Kontrola atrybutów OZU i OZK dla błędów w OZK" class="EGB_KonturKlasyfikacyjny" errorPhrase="OZK przyjmuje błędną wartość dla OZU równego Ł/Ps/Ls/Lz">
+			<Parametr typ="QgsExpression" sql="(OZU='Ł' or OZU='Ps' or OZU='Ls' or OZU='Lz') and (OZK='IIIa' or OZK='IIIb' or OZK='IVa' or OZK='IVb')"/>
+		</Kontrola>	
+		<Kontrola id="egib_e1_k5" name="Kontrola atrybutu status EGB_OsobaFizyczna " class="EGB_OsobaFizyczna" errorPhrase="Atrybut status jest różny od 1">
+			<Parametr typ="QgsExpression" sql="status&lt;&gt;1"/>
+		</Kontrola>	
+		<Kontrola id="egib_e1_k6" name="Kontrola atrybutu geometria dla rodzaju obiektu związanego z budynkiem=t/w/i/s/r/j/d" class="EGB_ObiektTrwaleZwiazanyZBudynkiem" errorPhrase="Geometria jest innego typu niż powierzchnia dla rodzaju obiektu związanego z budynkiem równego t/w/i/s/r/j/d">
+			<Parametr typ="QgsExpression" sql="(rodzajObiektuZwiazanegoZBudynkiem='t' or rodzajObiektuZwiazanegoZBudynkiem='w' or rodzajObiektuZwiazanegoZBudynkiem='i' or rodzajObiektuZwiazanegoZBudynkiem='s' or rodzajObiektuZwiazanegoZBudynkiem='r' and rodzajObiektuZwiazanegoZBudynkiem='j' and rodzajObiektuZwiazanegoZBudynkiem='d') and (geometry_type($geometry)='Point' or geometry_type($geometry)='Line')"/>
+		</Kontrola>
+		<Kontrola id="egib_e1_k7" name="Kontrola atrybutu status EGB_Instytucja" class="EGB_Instytucja" errorPhrase="Atrybut status nie przyjmuje wartości pomiędzy 3 i 47, z wyłączeniem wartości 32,33,34,35">
+			<Parametr typ="QgsExpression" sql="status&lt;3 or status&gt;47 or status=32 or status=33 or status=34 or status=35"/>
+		</Kontrola>
+		<Kontrola id="egib_e1_k8" name="Kontrola atrybutu status EGB_Malzenstwo" class="EGB_Malzenstwo" errorPhrase="Atrybut status przyjmuje wartość różną od 34 i 35">
+			<Parametr typ="QgsExpression" sql="status&lt;&gt;34 and status&lt;&gt;35"/>
+		</Kontrola>
+		<Kontrola id="egib_e1_k9" name="Kontrola atrybutu status EGB_PodmiotGrupowy" class="EGB_PodmiotGrupowy" errorPhrase="Atrybut status przyjmuje wartość różną od 32 i 33">
+			<Parametr typ="QgsExpression" sql="status&lt;&gt;32 and status&lt;&gt;33"/>
+		</Kontrola>
+		<Kontrola id="egib_e1_k10" name="Kontrola atrybutu status EGB_WspolnotaGruntowa" class="EGB_WspolnotaGruntowa" errorPhrase="Atrybut status przyjmuje wartość różną od 41">
+			<Parametr typ="QgsExpression" sql="status&lt;&gt;41"/>
+		</Kontrola>
+		<Kontrola id="egib_e1_k11" name="Kontrola atrybutów licznikUlamkaOkreslajacegoWartoscUdzialu i mianownikUlamkaOkreslajacegoWartoscUdzialu dla rodzaju prawa=1" class="EGB_UdzialWeWlasnosci" errorPhrase="Atrybut rodzajPrawa nie przyjmuje wartości 1, więc licznikUlamkaOkreslajacegoWartoscUdzialu oraz mianownikUlamkaOkreslajacegoWartoscUdzialu nie są wymagane">
+			<Parametr typ="QgsExpression" sql="rodzajPrawa&lt;&gt;1"/>
+		</Kontrola>
+		<Kontrola id="egib_e1_k12" name="Kontrola atrybutu klasouzytek (OFU, OZU i OZK) dla OZU=R i błędów w OZK" class="EGB_DzialkaEwidencyjna" errorPhrase="OZK przyjmuje błędną wartość dla OFU równego R,S,Br,Wsr,W lub Lzr i OZU równego R">
+			<Parametr typ="QgsExpression" sql="(try(array_contains(OFU,'R'),OFU='R') or try(array_contains(OFU,'S'),OFU='S') or try(array_contains(OFU,'Br'),OFU='Br') or try(array_contains(OFU,'Wsr'),OFU='Wsr') or try(array_contains(OFU,'W'),OFU='W') or try(array_contains(OFU,'Lzr'),OFU='Lzr')) and try(array_contains(OZU,'R'),OZU='R') and (try(array_contains(OZK,'III'),OZK='III') or try(array_contains(OZK,'IV'),OZK='IV'))"/>
+		</Kontrola>
+		<Kontrola id="egib_e1_k13" name="Kontrola atrybutu klasouzytek(OFU, OZU i OZK) dla OZU=Ł i błędów w OZK" class="EGB_DzialkaEwidencyjna" errorPhrase="OZK przyjmuje błędną wartość dla OFU równego Ł/S/Br/Wsr/W/Lzr i OZU równego Ł">
+			<Parametr typ="QgsExpression" sql="(try(array_contains(OFU,'Ł'),OFU='Ł') or try(array_contains(OFU,'S'),OFU='S') or try(array_contains(OFU,'Br'),OFU='Br') or try(array_contains(OFU,'Wsr'),OFU='Wsr') or try(array_contains(OFU,'W'),OFU='W') or try(array_contains(OFU,'Lzr'),OFU='Lzr')) and try(array_contains(OZU,'Ł'),OZU='Ł') and (try(array_contains(OZK,'IIIa'),OZK='IIIa') or try(array_contains(OZK,'IIIb'),OZK='IIIb') or try(array_contains(OZK,'IVa'),OZK='IVa') or try(array_contains(OZK,'IVb'),OZK='IVb'))"/>
+		</Kontrola>
+		<Kontrola id="egib_e1_k14" name="Kontrola atrybutu klasouzytek(OFU, OZU i OZK) dla OZU=Ps i błędów w OZK" class="EGB_DzialkaEwidencyjna" errorPhrase="OZK przyjmuje błędną wartość dla OFU równego Ps/S/Br/Wsr/W/Lzr i OZU równego Ps">
+			<Parametr typ="QgsExpression" sql="(try(array_contains(OFU,'Ps'),OFU='Ps') or try(array_contains(OFU,'S'),OFU='S') or try(array_contains(OFU,'Br'),OFU='Br') or try(array_contains(OFU,'Wsr'),OFU='Wsr') or try(array_contains(OFU,'W'),OFU='W') or try(array_contains(OFU,'Lzr'),OFU='Lzr')) and try(array_contains(OZU,'Ps'),OZU='Ps') and (try(array_contains(OZK,'IIIa'),OZK='IIIa') or try(array_contains(OZK,'IIIb'),OZK='IIIb') or try(array_contains(OZK,'IVa'),OZK='IVa') or try(array_contains(OZK,'IVb'),OZK='IVb'))"/>
+		</Kontrola>
+		<Kontrola id="egib_e1_k15" name="Kontrola atrybutu klasouzytek(OFU, OZU i OZK) dla OZU=Ls i błędów w OZK" class="EGB_DzialkaEwidencyjna" errorPhrase="OZK przyjmuje błędną wartość dla OFU równego Ls/W i OZU równego Ls">
+			<Parametr typ="QgsExpression" sql="(try(array_contains(OFU,'Ls'),OFU='Ls') or try(array_contains(OFU,'W'),OFU='W')) and try(array_contains(OZU,'Ls'),OZU='Ls') and (try(array_contains(OZK,'IIIa'),OZK='IIIa') or try(array_contains(OZK,'IIIb'),OZK='IIIb') or try(array_contains(OZK,'IVa'),OZK='IVa') or try(array_contains(OZK,'IVb'),OZK='IVb'))"/>
+		</Kontrola>
+		<Kontrola id="egib_e1_k16" name="Kontrola atrybutu klasouzytek(OFU, OZU i OZK) dla OZU=Lz i błędów w OZK" class="EGB_DzialkaEwidencyjna" errorPhrase="OZK przyjmuje błędną wartość dla OFU równego Lz/W i OZU równego Lz">
+			<Parametr typ="QgsExpression" sql="(try(array_contains(OFU,'Lz'),OFU='Lz') or try(array_contains(OFU,'W'),OFU='W')) and try(array_contains(OZU,'Lz'),OZU='Lz') and (try(array_contains(OZK,'IIIa'),OZK='IIIa') or try(array_contains(OZK,'IIIb'),OZK='IIIb') or try(array_contains(OZK,'IVa'),OZK='IVa') or try(array_contains(OZK,'IVb'),OZK='IVb'))"/>
+		</Kontrola>
+		
+		<Kontrola id="egib_e1_k17" name="Kontrola relacji EGB_DzialkaEwidencyjna do EGB_PunktGraniczny" class="EGB_DzialkaEwidencyjna" class2="EGB_PunktGraniczny" joinFieldName="punktGranicyDzialki_href" targetFieldName="gml_id" joinFieldNamesSubset="lokalnyId,gml_id" errorPhrase="Brak min. 3 punktów granicznych przypisanych do działki ewidencyjnej">
+			<Parametr typ="QgsExpression" sql="if (array_length(EGB_PunktGraniczny_lokalnyId)&lt;3,True,False)"/>
+		</Kontrola>
+		<Kontrola id="egib_e1_k18" name="Kontrola atrybutu idBudynku z paternem" class="EGB_Budynek" errorPhrase="Atrybut idBudynku jest niepoprawny">
+			<Parametr typ="QgsExpression" sql="not regexp_match(idBudynku ,'(([012][2468])|([123][02]))[0-9]{4}_[1-9]{1}\\.[0-9]{4}\\.([1-9][0-9]*_BUD|AR_[1-9][0-9]*\\.[1-9][0-9]*\\.[1-9][0-9]*_BUD|[1-9][0-9]*\\.[1-9][0-9]*_BUD)')"/>
+		</Kontrola>
+		<Kontrola id="egib_e1_k19" name="Kontrola atrybutu idLokalu z paternem" class="EGB_LokalSamodzielny" errorPhrase="Atrybut idLokalu jest niepoprawny">
+			<Parametr typ="QgsExpression" sql="not regexp_match(idLokalu ,'(([012][2468])|([123][02]))[0-9]{4}_[1-9]{1}\\.[0-9]{4}\\.([1-9][0-9]*_BUD\\.[1-9][0-9]*_LOK|AR_[1-9][0-9]*\\.[1-9][0-9]*\\.[1-9][0-9]*_BUD\\.[1-9][0-9]*_LOK|[1-9][0-9]*\\.[1-9][0-9]*_BUD\\.[1-9][0-9]*_LOK)')"/>
+		</Kontrola>
+	</GrupaKontroli>
+
+	<!-- ....................................................................................................................................................... -->
+</SzablonKontroli>
