@@ -139,7 +139,7 @@ class walidatorPlikowGML:
                    }
         
         szablonKontroliPaths = {'BDOO':"/SzablonyKontroli/BDOO/SK_BDOO_1.0.0.xml",
-                                'BDOT10k':"/SzablonyKontroli/BDOT10k/SK_BDOT10k_1.0.0.xml",
+                                'BDOT10k':"/SzablonyKontroli/BDOT10k/SK_BDOT10k_1.0.1.xml",
                                 'PRNG':"/SzablonyKontroli/PRNG/SK_PRNG_1.0.0.xml",
                                 'BDOT500':"/SzablonyKontroli/BDOT500/SK_BDOT500_1.0.0.xml",
                                 'GESUT':"/SzablonyKontroli/GESUT/SK_GESUT_1.0.0.xml",
@@ -539,8 +539,13 @@ class walidatorPlikowGML:
         group.setExpanded(False)
         
         for warstwa, feature_geom in zip(warstwy, typGeometriiWarstw):
+            if str(pathlib.Path(zparsowanyPlik).name)[:-4].find(warstwa) != -1:
+                nazwaWarstwy = str(pathlib.Path(zparsowanyPlik).name)[:-4]
+            else:
+                nazwaWarstwy = str(pathlib.Path(zparsowanyPlik).name)[:-4] + '_' + warstwa
+                
             if feature_geom == 100: # brak geometrii
-                qgis_layer = QgsVectorLayer(zparsowanyPlik + "|layername=" + warstwa, str(pathlib.Path(zparsowanyPlik).name)[:-4] + '_' + warstwa, 'ogr')
+                qgis_layer = QgsVectorLayer(zparsowanyPlik + "|layername=" + warstwa, nazwaWarstwy, 'ogr')
                 QgsProject.instance().addMapLayer(qgis_layer, False)
                 group.addLayer(qgis_layer)
                 qgis_layer = None
@@ -554,13 +559,13 @@ class walidatorPlikowGML:
                     tablica_typow_geometrii = [4,5,6]
                     
                 for typGeometryPropertyType in tablica_typow_geometrii:
-                    qgis_layer = QgsVectorLayer(zparsowanyPlik + "|layername=" + warstwa + "|geometrytype=" + typyGeometrii[typGeometryPropertyType], str(pathlib.Path(zparsowanyPlik).name)[:-4] + '_' + warstwa, 'ogr')
+                    qgis_layer = QgsVectorLayer(zparsowanyPlik + "|layername=" + warstwa + "|geometrytype=" + typyGeometrii[typGeometryPropertyType], nazwaWarstwy, 'ogr')
                     if qgis_layer.featureCount() > 0:
                         QgsProject.instance().addMapLayer(qgis_layer, False)
                         group.addLayer(qgis_layer)
                         qgis_layer = None
             else:
-                qgis_layer = QgsVectorLayer(zparsowanyPlik + "|layername=" + warstwa + "|geometrytype=" + typyGeometrii[feature_geom], str(pathlib.Path(zparsowanyPlik).name)[:-4] + '_' + warstwa, 'ogr')
+                qgis_layer = QgsVectorLayer(zparsowanyPlik + "|layername=" + warstwa + "|geometrytype=" + typyGeometrii[feature_geom], nazwaWarstwy, 'ogr')
                 if qgis_layer.featureCount() > 0:
                     QgsProject.instance().addMapLayer(qgis_layer, False)
                     group.addLayer(qgis_layer)
@@ -677,7 +682,12 @@ class walidatorPlikowGML:
                         sqltxt = sqltxt.replace("&lt;","<")
                         klasa = parent.child(j).data(3)
                         teryt = str(pathlib.Path(zparsowanyPlik).name)[:-15][-4:]
-                        nazwaWarstwyJ1 = str(pathlib.Path(zparsowanyPlik).name)[:-4] + '_' + klasa
+                        
+                        if str(pathlib.Path(zparsowanyPlik).name)[:-4].find(klasa) != -1:
+                            nazwaWarstwyJ1 = str(pathlib.Path(zparsowanyPlik).name)[:-4]
+                        else:
+                            nazwaWarstwyJ1 = str(pathlib.Path(zparsowanyPlik).name)[:-4] + '_' + klasa
+                        
                         try:
                             for warstwaWsqltext in re.findall(r"layer:='(.*?)'", sqltxt):
                                 sqltxt = sqltxt.replace("layer:='" + warstwaWsqltext,"layer:='" + str(pathlib.Path(zparsowanyPlik).name)[:-13] + warstwaWsqltext + '_' + warstwaWsqltext)
@@ -688,6 +698,8 @@ class walidatorPlikowGML:
                             layerL1 = QgsProject().instance().mapLayersByName(nazwaWarstwyJ1)[0]
                         except:
                             pass
+                        if parent.child(j).data(3) == 'PT' or parent.child(j).data(3) == 'AD':
+                            requestFeatures = globals().get(sqltxt)(nazwaWarstwyJ1)
                         if parent.child(j).data(5) in ('QgsExpression','QgsExpressionWithJoin','pythonFunction') and layerL1 != None:
                                request = QgsFeatureRequest(QgsExpression(sqltxt))
                                
@@ -698,7 +710,10 @@ class walidatorPlikowGML:
                                    
                                    #czy jest warstwa złączonych warstw
                                    if len(QgsProject().instance().mapLayersByName(warstwa_w_memory_nazwa)) == 0:
-                                       nazwaWarstwyJ2 = str(pathlib.Path(zparsowanyPlik).name)[:-4] + '_' + klasa2
+                                       if str(pathlib.Path(zparsowanyPlik).name)[:-4].find(klasa2) != -1:
+                                           nazwaWarstwyJ2 = str(pathlib.Path(zparsowanyPlik).name)[:-4]
+                                       else:
+                                           nazwaWarstwyJ2 = str(pathlib.Path(zparsowanyPlik).name)[:-4] + '_' + klasa2
                                        layerL2 = QgsProject().instance().mapLayersByName(nazwaWarstwyJ2)[0]
                                        joinFieldName = parent.child(j).data(8)
                                        targetFieldName = parent.child(j).data(9)
@@ -748,10 +763,14 @@ class walidatorPlikowGML:
                                    # zmiana nazwy klasy
                                    klasa = klasa + "_" + klasa2
                                try:
-                                   nazwaWarstwy = str(pathlib.Path(zparsowanyPlik).name)[:-4] + '_' + klasa
+                                   if str(pathlib.Path(zparsowanyPlik).name)[:-4].find(klasa) != -1:
+                                       nazwaWarstwy = str(pathlib.Path(zparsowanyPlik).name)[:-4]
+                                   else:
+                                       nazwaWarstwy = str(pathlib.Path(zparsowanyPlik).name)[:-4] + '_' + klasa
                                    for i in range(len(QgsProject().instance().mapLayersByName(nazwaWarstwy))):
                                        layer = QgsProject().instance().mapLayersByName(nazwaWarstwy)[i]
-                                       
+                                       if parent.child(j).data(3) == 'PT' or parent.child(j).data(3) == 'AD':
+                                           requestFeatures = globals().get(sqltxt)
                                        if parent.child(j).data(5) in ('QgsExpression','QgsExpressionWithJoin'):
                                            requestFeatures = layer.getFeatures(request)
                                        else:

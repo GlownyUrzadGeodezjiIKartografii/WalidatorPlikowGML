@@ -24,6 +24,7 @@
 from qgis.core import *
 from qgis import processing
 import pathlib
+import configparser
 
 
 def findDuplicates(layer):
@@ -63,9 +64,11 @@ def validateGeometry(layer):
     return obiektyZbledami
 
 
-def grniacePowiatow():
-    mainPath = pathlib.Path(QgsApplication.qgisSettingsDirPath())/pathlib.Path("python/plugins/Walidator_plikow_gml/")
-    granicePowiatowPath = str(mainPath) + '/Dane/granice_powiatow/powiaty.shp'
+def granicePowiatow():
+    config = configparser.ConfigParser()
+    mainPath = pathlib.Path(QgsApplication.qgisSettingsDirPath())/pathlib.Path(r"python/plugins/Walidator_plikow_gml/")
+    config.read(str(mainPath)+'/Walidator_plikow_gml.ini')
+    granicePowiatowPath = config['sciezkaPowiaty']['shpPowiaty']
     granicePowiatow_A = QgsVectorLayer(granicePowiatowPath, 'GranicePowiatow', 'ogr')
     
     # rozbicie multipoligon na poligony
@@ -83,33 +86,68 @@ def grniacePowiatow():
 
 
 def czyPrzecinaGranicePowiatuDlugoscPonizej50m(layer):
-    obiektyZbledami = []
-    granicePowiatow_L = grniacePowiatow()
+    try:
+        obiektyZbledami = []
+        granicePowiatow_L = granicePowiatow()
+        # Dodaj wynikową warstwę liniową do projektu
+        alg_params = {
+            'INPUT': granicePowiatow_L['OUTPUT'],
+            'DISTANCE': 7.5,  # Odległość bufora
+            'SEGMENTS': 8,  # Ilość segmentów na kwadrant, większa wartość = bardziej okrągły bufor
+            'END_CAP_STYLE': 0,  
+            'JOIN_STYLE': 0,
+            'MITER_LIMIT': 2,
+            'DISSOLVE': False,  # Ustawienie na True spowoduje scalenie wszystkich buforów w jeden obiekt
+            'OUTPUT': 'memory:'
+        }
+        # Tworzenie bufora
+        buforGranicy = processing.run('qgis:buffer', alg_params)['OUTPUT']
+        QgsProject.instance().addMapLayer(buforGranicy)
     
-    for obj in layer.getFeatures():
-        if obj.geometry().length() < 50:
-            czyPrzecina = False
-            for granica in granicePowiatow_L['OUTPUT'].getFeatures():
-                if obj.geometry().intersects(granica.geometry()) or obj.geometry().touch(granica.geometry()):
-                    czyPrzecina = True
-            if not czyPrzecina:
-                obiektyZbledami.append(obj)
-    return obiektyZbledami
+        for obj in layer.getFeatures():
+            if obj.geometry().length() < 50:
+                czyPrzecina = False
+                for granica in buforGranicy.getFeatures():
+                    if obj.geometry().intersects(granica.geometry()): 
+                        czyPrzecina = True
+                if czyPrzecina:
+                    obiektyZbledami.append(obj)          
+        return obiektyZbledami
+    except:
+        QMessageBox.critical(QMessageBox(),'Brak warstwy referencyjnej','Sprawdź ścieżkę do pliku z granicami powiatów w Walidator_plikow_gml.ini', QMessageBox.Ok)
 
 
 def czyObiektyWewnatrzPowiatu(layer, teryt):
     obiektyZbledami = []
-    # mainPath = pathlib.Path(QgsApplication.qgisSettingsDirPath())/pathlib.Path("python/plugins/Walidator_plikow_gml/")
-    # granicePowiatowPath = str(mainPath) + '/Dane/granice_powiatow/powiaty.shp'
-    # granicePowiatow_A = QgsVectorLayer(granicePowiatowPath, 'GranicePowiatow', 'ogr')
-    # request = QgsFeatureRequest(QgsExpression("jpt_kod_je = \'" + teryt + "\'"))
-    # requestFeatures = granicePowiatow_A.getFeatures(request)
-    # for requestFeature in requestFeatures:
-    #     granicaPowiatu = requestFeature
-    #     break
-    # for obj in layer.getFeatures():
-    #     if not granicaPowiatu.geometry().contains(obj.geometry()):
-    #         obiektyZbledami.append(obj)
+    config = configparser.ConfigParser()
+    mainPath = pathlib.Path(QgsApplication.qgisSettingsDirPath())/pathlib.Path("python/plugins/Walidator_plikow_gml/")
+    config.read(str(mainPath)+'/Walidator_plikow_gml.ini')
+    granicePowiatowPath = config['sciezkaPowiaty']['shpPowiaty']
+    granicePowiatow_A = QgsVectorLayer(granicePowiatowPath, 'GranicePowiatow', 'ogr')
+    request = QgsFeatureRequest(QgsExpression("jpt_kod_je = \'" + teryt + "\'"))
+    requestFeatures = granicePowiatow_A.getFeatures(request)
+    for requestFeature in requestFeatures:
+        granicaPowiatu = requestFeature
+        break
+    if granicaPowiatu is not None:
+        geom = granicaPowiatu.geometry()
+        granica = geom.convertToType(QgsWkbTypes.LineGeometry) # konwersja poligona na linię, w celu wydobycia granicy
+        
+    for obj in layer.getFeatures():
+        objGeom = obj.geometry()
+        vertices = list(objGeom.vertices())
+        numVertices = len(vertices)  # Liczba wierzchołków
+        p1 = QgsPointXY(vertices[0])
+        p2 = QgsPointXY(vertices[-1])
+        # Konwersja na QgsGeometry
+        geomP1 = QgsGeometry.fromPointXY(p1)
+        geomP2 = QgsGeometry.fromPointXY(p2)
+        # Konwersja QgsPointXY na QgsGeometry przed użyciem distance()
+        d1 = granica.distance(geomP1)
+        d2 = granica.distance(geomP2)
+        if d1 > 0.01 and d2 > 0.01:
+            if not geom.contains(obj.geometry()):
+                obiektyZbledami.append(obj)
     return obiektyZbledami
 
 
@@ -141,19 +179,20 @@ def czyOdleglosciMiedzyPoziomicami2m(layer):
 
 
 def nadmiernaSegmentacja(layer):
+    id_to_feature = {feature.id(): feature for feature in layer.getFeatures()} # Tworzenie słownika mapującego ID obiektu na obiekt
     obiekty_z_bledami = []
     spatial_index = QgsSpatialIndex(layer.getFeatures(), flags=QgsSpatialIndex.FlagStoreFeatureGeometries)
     for obj1 in layer.getFeatures():
         nearestNeighbors = spatial_index.nearestNeighbor(obj1.geometry(), 2, 0)
         for nn in nearestNeighbors:
-            if obj1.id() != nn:
-                for obj2 in layer.getFeatures():
-                    atrybuty1 = obj1.attributes()[2:]
-                    atrybuty2 = obj2.attributes()[2:]
-                    if nn == obj2.id() and not obj1 in obiekty_z_bledami and obj1.geometry().distance(obj2.geometry()) < 0.01 and \
-                        atrybuty1 == atrybuty2 and not obj1.geometry().equals(obj2.geometry()):
-                        obiekty_z_bledami.append(obj1)
-                        break
+            if obj1.id() == nn:
+                continue
+            obj2 = id_to_feature[nn]
+            atrybuty1 = obj1.attributes()[2:]
+            atrybuty2 = obj2.attributes()[2:]
+            if not obj1 in obiekty_z_bledami and obj1.geometry().distance(obj2.geometry()) < 0.01 and atrybuty1 == atrybuty2 and not obj1.geometry().equals(obj2.geometry()):
+                obiekty_z_bledami.append(obj1)
+                break
     return obiekty_z_bledami
 
 
@@ -174,3 +213,451 @@ def przewerteksowanie(layer):
                         obiekty_z_bledami.append(obj1)
                         return obiekty_z_bledami
     return obiekty_z_bledami
+
+
+def kontrola_OT_ADMS_P_z_OT_ADMS_A(layer): #topo_e3_k5
+    obiekty_z_bledami = []
+    # OT_ADMS_A_layer = QgsProject().instance().mapLayersByName(layer.name().replace("OT_ADMS_P","OT_ADMS_A"))[0]
+    # OT_ADMS_P_layer = layer
+    OT_ADMS_A_layer = None
+    OT_ADMS_P_layer = None   
+    root = QgsProject.instance().layerTreeRoot()
+    for child in root.children():
+        if isinstance(child, QgsLayerTreeGroup): 
+            layerIds = child.findLayerIds()
+            for layerId in child.findLayerIds():
+                la = QgsProject.instance().mapLayer(layerId)
+                if isinstance(la, QgsVectorLayer) and 'OT_ADMS_A' in layerId:
+                    OT_ADMS_A_layer = la
+                if isinstance(la, QgsVectorLayer) and 'OT_ADMS_P' in layerId:
+                    OT_ADMS_P_layer = la     
+    dalszeWarstwy = ['BU','KU','OI','PT','RT','SK','SW','SU','TC']          
+    if OT_ADMS_A_layer and OT_ADMS_P_layer and all(z not in layer for z in dalszeWarstwy):
+        identyfikatory_bledow = set()  # Zbiór do śledzenia identyfikatorów błędnych obiektów
+        nazwy_adms_p = set([feature['nazwa'] for feature in OT_ADMS_P_layer.getFeatures()])
+        nazwy_adms_a = set([feature['nazwa'] for feature in OT_ADMS_A_layer.getFeatures()])
+        # Sprawdzenie przecięcia i nazw dla obiektów z OT_ADMS_A
+        for OT_ADMS_A_feature in OT_ADMS_A_layer.getFeatures():
+            is_intersected = False
+            nazwa_adms_a = OT_ADMS_A_feature['nazwa']
+            # Sprawdzenie przecięcia dla każdego obiektu z OT_ADMS_P
+            for OT_ADMS_P_feature in OT_ADMS_P_layer.getFeatures():
+                nazwa_adms_p = OT_ADMS_P_feature['nazwa']
+                if OT_ADMS_P_feature.geometry().intersects(OT_ADMS_A_feature.geometry()) or OT_ADMS_A_feature.geometry().contains(OT_ADMS_P_feature.geometry()):
+                    is_intersected = True
+                    break
+            if not is_intersected or nazwa_adms_a not in nazwy_adms_p: #.. oraz czy nazwy z OT_ADMS_A występują w OT_ADMS_P
+                if OT_ADMS_A_feature.id() not in identyfikatory_bledow:
+                    obiekty_z_bledami.append(OT_ADMS_A_feature)
+                    identyfikatory_bledow.add(OT_ADMS_A_feature.id())
+                
+            # Sprawdzenie, czy nazwy z OT_ADMS_P występują w OT_ADMS_A
+            if OT_ADMS_P_feature['nazwa'] not in nazwy_adms_a and OT_ADMS_P_feature.id() not in identyfikatory_bledow:
+                obiekty_z_bledami.append(OT_ADMS_P_feature)
+                identyfikatory_bledow.add(OT_ADMS_P_feature.id())
+        
+        return obiekty_z_bledami
+
+
+def kontrolaTERCpunkt(layer):
+    tercADMSP = []
+    adms = None
+    root = QgsProject.instance().layerTreeRoot()
+    for child in root.children():
+        if isinstance(child, QgsLayerTreeGroup):
+            layerIds = child.findLayerIds()
+            if layerIds:
+                # Iteracja przez wszystkie warstwy w grupie
+                if layerIds:  # Sprawdzenie, czy layerIds nie jest None
+                   for layerId in layerIds:
+                       la = QgsProject.instance().mapLayer(layerId)
+                       if isinstance(la, QgsVectorLayer) and 'OT_ADJA_A' in layerId:
+                           adja= la
+                       if isinstance(la, QgsVectorLayer) and 'OT_ADMS_P' in layerId:
+                           adms = la
+    print ("2",layer, adja, adms)
+    # Zestaw do śledzenia już dodanych identyfikatorów TERYT
+    przetworzone_teryt = set()
+    dalszeWarstwy = ['BU','KU','OI','PT','RT','SK','SW','SU','TC']
+    
+    # Sprawdzenie, czy jest warstwa "ADMS_A"
+    if adms != None and all(z not in layer for z in dalszeWarstwy):
+        expression = """ "rodzaj" IN ('miasto', 'miasto w gminie miejsko-wiejskiej', 'gmina') """
+        # Wykonaj selekcję
+        adja.selectByExpression(expression, QgsVectorLayer.SetSelection)
+        selected = adja.selectedFeatures()
+        # Przygotuj listę identyfikatorów TERYT z warstwy ADJA jako tekst
+        identyfikatory_teryt = {str(feature["identyfikatorTerytJednostki"]).zfill(7): feature["nazwa"] for feature in selected}
+        # Przygotuj słownik dla ADMS_P: klucz to IdentyfikatorTERC, wartość to lista nazw
+        identyfikatory_terc_adms = {}
+        for feature in adms.getFeatures():
+           teryt_adms = str(feature["IdentyfikatorTERC"]).zfill(7)
+           if teryt_adms in identyfikatory_terc_adms:
+               identyfikatory_terc_adms[teryt_adms].append(feature["nazwa"])
+           else:
+               identyfikatory_terc_adms[teryt_adms] = [feature["nazwa"]]
+               
+        # Dla każdego identyfikatora TERYT/TERC
+        for teryt, nazwa_adja in identyfikatory_teryt.items():
+            if teryt in identyfikatory_terc_adms and len(teryt) == 7:
+                # Filtrowanie obszaru na podstawie zapytania
+                source_features = adja.getFeatures(QgsFeatureRequest().setFilterExpression(f'"identyfikatorTerytJednostki" = \'{teryt}\''))
+                # Stwórz zapytanie dla warstwy ADMS_P, aby filtrować tylko te punkty, które mają odpowiedni identyfikator
+                query_adms = f'"IdentyfikatorTERC" = \'{teryt}\''
+                # Filtrowanie punktów na podstawie zapytania
+                adms_p = adms.getFeatures(QgsFeatureRequest().setFilterExpression(query_adms))
+                source_geometries = [feature.geometry() for feature in source_features]
+                nazwa_adms = identyfikatory_terc_adms[teryt]
+                if nazwa_adja not in nazwa_adms: # sprawdza czy dana nazwa występuje w miejscu
+                   blad = f'Dla obszaru o kodzie: {teryt}, nie znaleziono nazwy {nazwa_adja} w ADMS_A'
+                   tercADMSP.append(blad)
+                # Dla każdego punktu sprawdź, czy znajduje się w obrębie któregokolwiek obszaru z tej samej jednostki TERYT
+                
+                for adms_p_feature in adms_p:
+                    point_geometry = adms_p_feature.geometry()
+                    is_inside = any(point_geometry.within(geometry) for geometry in source_geometries)
+                    if not is_inside and teryt not in przetworzone_teryt:
+                        blad1 = f"Punkt o identyfikatorze TERYT {teryt} z warstwy ADMS_P nie znajduje się w obrębie odpowiedniego obszaru w warstwie źródłowej."
+                        tercADMSP.append(blad1)
+                        przetworzone_teryt.add(teryt)
+            
+            else:
+                blad2 = f"Identyfikator TERYT {teryt} nie znaleziony w warstwie ADMS_A."
+                tercADMSP.append(blad2)
+        
+        # Dodatkowe sprawdzenie: kod TERYT w ADMS_A, ale nie w ADJA
+        for teryt_adms in identyfikatory_terc_adms.keys():
+           if teryt_adms not in identyfikatory_teryt:
+               blad3 = f"Identyfikator TERYT {teryt_adms} jest w ADMS_A, ale nie ma go w ADJA."
+               tercADMSP.append(blad3) 
+               
+    adja.removeSelection()
+    return tercADMSP
+
+
+def kontrolaTERCpowierzchnia(layer):
+    tercADJA = []
+    adms = None
+    root = QgsProject.instance().layerTreeRoot()
+    for child in root.children():
+        if isinstance(child, QgsLayerTreeGroup):
+            layerIds = child.findLayerIds()
+            if layerIds:
+                # Iteracja przez wszystkie warstwy w grupie
+                if layerIds:  # Sprawdzenie, czy layerIds nie jest None
+                   for layerId in layerIds:
+                       la = QgsProject.instance().mapLayer(layerId)
+                       if isinstance(la, QgsVectorLayer) and 'OT_ADJA_A' in layerId:
+                           adja = la
+                       if isinstance(la, QgsVectorLayer) and 'OT_ADMS_A' in layerId:
+                           adms = la
+    print ("1",layer, adja, adms)
+    # Zestaw do śledzenia już dodanych identyfikatorów TERYT
+    przetworzone_teryt = set()
+    dalszeWarstwy = ['MS_P','BU','KU','OI','PT','RT','SK','SW','SU','TC']
+    
+    # Sprawdzenie, czy jest warstwa "ADMS_A"
+    if adms != None and all(z not in layer for z in dalszeWarstwy):
+        # Iteruj przez warstwy
+        expression = """ "rodzaj" IN ('miasto', 'miasto w gminie miejsko-wiejskiej', 'gmina') """
+        # Wykonaj selekcję na ADJA_A
+        adja.selectByExpression(expression, QgsVectorLayer.SetSelection)
+        selected = adja.selectedFeatures()
+        print (selected)
+        # Przygotuj listę identyfikatorów TERYT z warstwy ADJA jako tekst
+        identyfikatory_teryt = {str(feature["identyfikatorTerytJednostki"]).zfill(7): feature["nazwa"] for feature in selected}
+        # Przygotuj słownik dla ADMS_A: klucz to IdentyfikatorTERC, wartość to lista nazw
+        identyfikatory_terc_adms = {}
+        for feature in adms.getFeatures():
+            teryt_adms = str(feature["IdentyfikatorTERC"]).zfill(7)
+            if teryt_adms in identyfikatory_terc_adms:
+                identyfikatory_terc_adms[teryt_adms].append(feature["nazwa"])
+            else:
+                identyfikatory_terc_adms[teryt_adms] = [feature["nazwa"]]
+        
+        # Sprawdź pokrycie
+        for teryt, nazwa_adja in identyfikatory_teryt.items():
+            if teryt in identyfikatory_terc_adms and len(teryt) == 7:
+                # Stwórz zapytanie dla obu warstw, aby filtrować tylko te obiekty, które mają odpowiednie identyfikatory
+                query_adja = f'"identyfikatorTerytJednostki" = \'{teryt}\''
+                query_adms = f'"IdentyfikatorTERC" = \'{teryt}\''
+                # Filtrowanie obiektów na podstawie zapytania
+                source_features = adja.getFeatures(QgsFeatureRequest().setFilterExpression(query_adja))
+                adms_features = adms.getFeatures(QgsFeatureRequest().setFilterExpression(query_adms))
+                nazwa_adms = identyfikatory_terc_adms[teryt]
+                if nazwa_adja not in nazwa_adms: # sprawdza czy dana nazwa występuje w miejscu
+                    blad = f'Dla obszaru o kodzie: {teryt}, nie znaleziono nazwy {nazwa_adja} w ADMS_A'
+                    tercADJA.append(blad)
+                # Sprawdź pokrycie geometrii
+                for source_feature in source_features:
+                    source_geometry = source_feature.geometry()
+                    for adms_feature in adms_features:
+                        adms_geometry = adms_feature.geometry()
+                        
+                        # Sprawdź, czy geometrie się pokrywają (można również użyć innych operacji geometrycznych w zależności od potrzeb)
+                        if not source_geometry.intersects(adms_geometry) and teryt not in przetworzone_teryt:
+                            blad1 = f"Obszar o identyfikatorze TERYT {teryt} nie pokrywa się między warstwami."
+                            tercADJA.append(blad1)
+                            przetworzone_teryt.add(teryt)
+            else:
+                blad2 = f"Identyfikator TERYT {teryt} nie znaleziony w warstwie ADMS_A."
+                tercADJA.append(blad2)
+                
+       # Dodatkowe sprawdzenie: kod TERYT w ADMS_A, ale nie w ADJA
+        for teryt_adms in identyfikatory_terc_adms.keys():
+           if teryt_adms not in identyfikatory_teryt:
+               blad3 = f"Błąd: Identyfikator TERYT {teryt_adms} jest w ADMS_A, ale nie ma go w ADJA."
+               tercADJA.append(blad3)
+               
+    adja.removeSelection()
+    return tercADJA
+
+
+def fullCoverage(layer):
+    # Tworzenie listy obiektów warstw
+    pokrycie = []
+    root = QgsProject.instance().layerTreeRoot()
+    for group in root.children():
+        if isinstance(group, QgsLayerTreeGroup):
+            # Iteracja przez wszystkie warstwy w grupie
+            layerIds = group.findLayerIds()
+            if layerIds:  # Sprawdzenie, czy layerIds nie jest None
+                for layerId in layerIds:
+                    la = QgsProject.instance().mapLayer(layerId)
+                    if isinstance(la, QgsVectorLayer) and 'OT_PT' in layerId:
+                    # Dodanie warstwy wektorowej do listy 'pokrycie'
+                        pokrycie.append(la)
+                    if isinstance(la, QgsVectorLayer) and 'OT_ADJA_A' in  layerId:
+                        adja = la # wyszukanie warstwy ADJA_A potrzebnej do wykrycia dziur
+    # dodanie warstwy, gdy ma wszystkie przecięcia
+    przeciecia = []
+    przetworzone_warstwy = set()
+    # Iteracja przez każdą parę warstw do sprawdzenia pokryć
+    dalszeWarstwy = ['RT','SK','SW','SU','TC'] # ogranicza iterację do jednej, nawet gdy później wczytywane są kolejne warstwt 
+    if len(pokrycie) == 12 and not QgsProject.instance().mapLayersByName("Przecięcia") and not QgsProject.instance().mapLayersByName("Dziury") and all(z not in layer for z in dalszeWarstwy):
+        for i in range(len(pokrycie)):
+            for j in range(i,len(pokrycie)):
+                # Parametry dla przecięcia
+                nazwa_warstwy1 = pokrycie[i].name()
+                nazwa_warstwy2 = pokrycie[j].name()
+                # Tworzymy unikalny klucz dla pary warstw, aby zapewnić, że ta para nie zostanie przetworzona ponownie
+                klucz_pary = frozenset([nazwa_warstwy1, nazwa_warstwy2])
+                if klucz_pary not in przetworzone_warstwy:
+                     przetworzone_warstwy.add(klucz_pary)
+                params_inter = {
+                         'INPUT': pokrycie[i],
+                         'OVERLAY': pokrycie[j],
+                         'OUTPUT': 'memory:'
+                             }
+                inter = processing.run("native:intersection", params_inter)['OUTPUT']
+                inter.setName(f"Przecięcia '{pokrycie[i].name()}' i '{pokrycie[j].name()}'")
+                if nazwa_warstwy1 == nazwa_warstwy2:
+                # Krok 2: Extract by expression (wyodrębnienie obiektów, które się nakładają)
+                # W tym przypadku, szukamy obiektów, które powstały powyżej i mają więcej niż 1 źródłowy identyfikator obiektu 
+                     expression = '"lokalnyId" <> "lokalnyId_2"'
+                     params_extract = {
+                             'INPUT': inter,
+                             'EXPRESSION': expression,
+                             'OUTPUT': 'memory:'
+                             }
+                     samo = processing.run("qgis:extractbyexpression", params_extract)['OUTPUT']
+                     samo.setName(f"Przecięcia '{pokrycie[i].name()}' i '{pokrycie[j].name()}'")
+                     przeciecia.append(samo)
+                else:
+                     przeciecia.append(inter)
+        if przeciecia:
+             params_merge = {
+                 'LAYERS': przeciecia,
+                 'OUTPUT': 'memory:'
+                 }
+             przeciecia_razem = processing.run("qgis:mergevectorlayers", params_merge)['OUTPUT']
+             przeciecia_razem.setName('Przecięcia')
+             jest = QgsProject.instance().addMapLayer(przeciecia_razem)
+        # obliczanie przecięć /\  i dziur- braków między warstwami \/
+        invalid_layer = processing.run("qgis:checkvalidity", {'INPUT_LAYER': adja, 'METHOD': 0, 'IGNORE_RING_SELF_INTERSECTION': True, 'VALID_OUTPUT': 'memory:', 'INVALID_OUTPUT': 'memory:', 'ERROR_OUTPUT': 'memory:'})
+           # Krok 3: obliczanie dziur (braków w pokryciu) między warstwami
+           # zawiera warstwę z niepoprawnymi geometriami
+        if invalid_layer['INVALID_OUTPUT'] and not QgsProject.instance().mapLayersByName("naprawiona adja"):
+                 params = {
+                 'INPUT': adja,
+                 'OUTPUT': 'memory:'
+                 }
+             # Wykonanie naprawy geometrii
+                 naprawiona= processing.run("native:fixgeometries", params)['OUTPUT']
+                 naprawiona.setName("naprawiona adja")
+                 adja = naprawiona
+        if not QgsProject.instance().mapLayersByName("Dziury"): # warstwa ma się utworzyć tylko raz
+            dziury = []
+            for i in pokrycie: 
+                params_difference = {
+                      'INPUT': i,
+                      'OVERLAY': adja,
+                      'OUTPUT': 'memory:'
+                }
+                dissolve = processing.run('native:dissolve', params_difference)['OUTPUT']
+                dissolve.setName(f"Dziury {i.name()}")
+                dziury.append(dissolve)
+                # Połącz wszystkie wynikowe warstwy dissolve w jedną warstwę
+            if dziury:  # Sprawdź, czy lista nie jest pusta
+                combined_layer = processing.run('native:mergevectorlayers', {
+                    'LAYERS': dziury,
+                    'OUTPUT': 'memory:'
+                    })['OUTPUT']
+                combined_layer.setName("Dziury polaczone")
+                alg_params = { # obliczenie różnicy
+                    'INPUT': adja,
+                    'OVERLAY': combined_layer,
+                    'OUTPUT': 'memory:'
+                    }
+                output = processing.run('native:difference', alg_params)['OUTPUT']
+                output.setName("Dziury")
+                # Dodaj połączoną warstwę do projektu
+                QgsProject.instance().addMapLayer(output)
+
+
+def boundaryPTWP(layer):
+    przecieciaSkarpy = []
+    ptwp = None
+    rtlw = None
+    root = QgsProject.instance().layerTreeRoot()
+    for child in root.children():
+        if isinstance(child, QgsLayerTreeGroup):
+            layerIds = child.findLayerIds()
+            if layerIds:
+                # Iteracja przez wszystkie warstwy w grupie
+                if layerIds:  # Sprawdzenie, czy layerIds nie jest None
+                   for layerId in layerIds:
+                       la = QgsProject.instance().mapLayer(layerId)
+                       if isinstance(la, QgsVectorLayer) and 'OT_PTWP_A' in layerId:
+                           ptwp = la
+                       if isinstance(la, QgsVectorLayer) and 'OT_RTLW_L' in layerId:
+                           rtlw = la
+    dalszeWarstwy = ['SK','SW','SU','TC']
+    if ptwp != None and rtlw != None and all(z not in layer for z in dalszeWarstwy):
+        # Iteracja przez każdy obiekt w warstwie RTLW
+        for rtlw_feature in rtlw.getFeatures():
+            rtlw_geom = rtlw_feature.geometry()
+        
+            # Iteracja przez każdy obiekt w warstwie PTWP
+            for ptwp_feature in ptwp.getFeatures():
+                ptwp_geom = ptwp_feature.geometry()
+            
+            # Sprawdzanie przecięcia wnętrza (ignoruje stykanie się)
+                if rtlw_geom.crosses(ptwp_geom) or (rtlw_geom.intersects(ptwp_geom) and not rtlw_geom.touches(ptwp_geom)):
+                    komunikat = f"Linia o ID {rtlw_feature.id()} przecina wnętrze poligonu o ID {ptwp_feature.id()}."
+                    przecieciaSkarpy.append(komunikat)
+    return przecieciaSkarpy
+
+
+def gminyCzyNakladajaSie(layer):
+    
+    gminy = processing.run("qgis:executesql", {
+        'INPUT_DATASOURCES': [layer],     
+        'INPUT_QUERY':'select * from obiekty where rodzaj = "gmina"',
+        'INPUT_UID_FIELD':'',
+        'INPUT_GEOMETRY_FIELD':'',
+        'INPUT_GEOMETRY_TYPE':None,
+        'INPUT_GEOMETRY_CRS':None,
+        'OUTPUT':'memory'})
+    layer = gminy['OUTPUT']
+    
+    obiektyZbledami = []
+    spatial_index = QgsSpatialIndex(layer.getFeatures())    
+    wynik = processing.run("qgis:extractbylocation", {
+        'INPUT': [layer],
+        'PREDICATE': [5],
+        'INTERSECT': [layer],
+        'OUTPUT': 'memory'})    
+    layer = wynik['OUTPUT']    
+    for obj in layer.getFeatures():        
+        obiektyZbledami.append(obj)
+    return obiektyZbledami
+
+
+def miastoWiesCzyNakladajaSie(layer):
+    miastoWies = processing.run("qgis:executesql", {
+        'INPUT_DATASOURCES': layer,
+        'INPUT_QUERY':'select * from obiekty where rodzaj = "gmina" or rodzaj = "wieś"',
+        'INPUT_UID_FIELD':'',
+        'INPUT_GEOMETRY_FIELD':'',
+        'INPUT_GEOMETRY_TYPE':None,
+        'INPUT_GEOMETRY_CRS':None,
+        'OUTPUT':'memory:'})
+    layer = miastoWies['OUTPUT']
+
+    obiektyZbledami = []
+    spatial_index = QgsSpatialIndex(layer.getFeatures())
+    wynik = processing.run("qgis:extractbylocation", {
+        'INPUT': layer,
+        'PREDICATE': [5],
+        'INTERSECT': layer,
+        'OUTPUT': 'memory:'})
+    layer = wynik['OUTPUT']
+    for obj in layer.getFeatures():        
+        obiektyZbledami.append(obj)
+    return obiektyZbledami
+
+
+def OT_SKDR_L_z_OT_PTTR_A(layer):
+    OT_PTTR_A = None
+    OT_SKDR_L = None
+    root = QgsProject.instance().layerTreeRoot()
+    for child in root.children():
+        if isinstance(child, QgsLayerTreeGroup):
+            layerIds = child.findLayerIds()
+            for layerId in child.findLayerIds():
+                la = QgsProject.instance().mapLayer(layerId)
+                if isinstance(la, QgsVectorLayer) and 'OT_PTTR_A' in layerId:
+                    OT_PTTR_A_layer = la
+                if isinstance(la, QgsVectorLayer) and 'OT_SKDR_L' in layerId:
+                    OT_SKDR_L_layer = la
+    if OT_PTTR_A_layer and OT_SKDR_L_layer:             
+        
+        szer_1_2 = processing.run("qgis:fieldcalculator", {
+                'INPUT':OT_SKDR_L_layer,
+                'FIELD_NAME':'1_2',
+                'FIELD_TYPE':0,
+                'FIELD_LENGTH':0,
+                'FIELD_PRECISION':0,
+                'FORMULA':' "szerokoscNawierzchni" / 2',
+                'OUTPUT':'memory:'})
+    
+        szer_5 = processing.run("qgis:extractbyattribute", {
+            'INPUT':szer_1_2['OUTPUT'],
+            'FIELD':'1_2',
+            'OPERATOR':2,
+            'VALUE':'5',
+            'OUTPUT':'memory:'})
+    
+        powierzchnia = processing.run("qgis:fieldcalculator", {
+            'INPUT':OT_PTTR_A_layer,
+            'FIELD_NAME':'pow',
+            'FIELD_TYPE':0,
+            'FIELD_LENGTH':0,
+            'FIELD_PRECISION':0,
+            'FORMULA':' $area ',
+            'OUTPUT':'memory:'})
+    
+        pow500_1000 = processing.run("qgis:executesql", {
+            'INPUT_DATASOURCES':powierzchnia['OUTPUT'],     
+            'INPUT_QUERY':'select * from powierzchnia where pow < 500 or pow > 1000',
+            'INPUT_UID_FIELD':'',
+            'INPUT_GEOMETRY_FIELD':'',
+            'INPUT_GEOMETRY_TYPE':None,
+            'INPUT_GEOMETRY_CRS':None,
+            'OUTPUT':'memory:'})
+    
+        obiektyZbledami = []
+        wynik = processing.run("qgis:intersection", {
+            'INPUT':pow500_1000['OUTPUT'],
+            'OVERLAY':szer_5['OUTPUT'],
+            'INPUT_FIELDS':[],
+            'OVERLAY_FIELDS':[],
+            'OVERLAY_FIELDS_PREFIX':'',
+            'OUTPUT':'memory:',
+            'GRID_SIZE':None})
+        
+        for obj in wynik['OUTPUT'].getFeatures():        
+            obiektyZbledami.append(obj)
+        return obiektyZbledami  
+    
