@@ -274,7 +274,7 @@
           <item row="1" column="1">
            <widget class="QLabel" name="label_14">
             <property name="text">
-             <string>1.0.5</string>
+             <string>1.0.6</string>
             </property>
             <property name="scaledContents">
              <bool>true</bool>

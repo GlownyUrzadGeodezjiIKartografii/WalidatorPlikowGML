@@ -27,6 +27,7 @@ from qgis.PyQt.QtWidgets import *
 import pathlib
 import configparser
 import sys
+import re
 
 
 def findDuplicates(layer):
@@ -133,10 +134,10 @@ def minimalnaPTTRronda(layer):
     ADJA_A_layer = None
     PTTR_A_layer = None
     SKRW_P_layer = None
-    if layer.name()[-6:] == 'SKRW_P':
-        ADJA_A_layer = QgsProject().instance().mapLayersByName(layer.name().replace("OT_SKRW_P","OT_ADJA_A"))[0]
-        PTTR_A_layer = QgsProject().instance().mapLayersByName(layer.name().replace("OT_SKRW_P","OT_PTTR_A"))[0]
-        SKRW_P_layer = QgsProject().instance().mapLayersByName(layer.name())[0]
+    if layer.name()[-6:] == 'PTTR_A':
+        ADJA_A_layer = QgsProject().instance().mapLayersByName(layer.name().replace("OT_PTTR_A","OT_ADJA_A"))[0]
+        SKRW_P_layer = QgsProject().instance().mapLayersByName(layer.name().replace("OT_PTTR_A","OT_SKRW_P"))[0]
+        PTTR_A_layer = QgsProject().instance().mapLayersByName(layer.name())[0]
     identyfikatory_bledow = set()
     invalid_layer = processing.run("qgis:checkvalidity", {'INPUT_LAYER': ADJA_A_layer, 'METHOD': 0, 'IGNORE_RING_SELF_INTERSECTION': True, 'VALID_OUTPUT': 'memory:', 'INVALID_OUTPUT': 'memory:', 'ERROR_OUTPUT': 'memory:'})
     # zawiera warstwę z niepoprawnymi geometriami
@@ -508,42 +509,45 @@ def czyPrzecinaGranicePowiatuDlugoscPonizej50m(layer):
                         czyPrzecina = True
                 if czyPrzecina:
                     obiektyZbledami.append(obj)
-        return obiektyZbledami
     except:
-        QMessageBox.critical(QMessageBox(),'Brak warstwy referencyjnej','Sprawdź ścieżkę do pliku z granicami powiatów w Walidator_plikow_gml.ini', QMessageBox.Ok)
+        print('Sprawdź ścieżkę do pliku z granicami powiatów w Walidator_plikow_gml.ini')
+    return obiektyZbledami
 
 
 def czyObiektyWewnatrzPowiatu(layer, teryt):
-    obiektyZbledami = []
-    config = configparser.ConfigParser()
-    mainPath = pathlib.Path(QgsApplication.qgisSettingsDirPath())/pathlib.Path("python/plugins/Walidator_plikow_gml/")
-    config.read(str(mainPath)+'/Walidator_plikow_gml.ini')
-    granicePowiatowPath = config['sciezkaPowiaty']['shpPowiaty']
-    granicePowiatow_A = QgsVectorLayer(granicePowiatowPath, 'GranicePowiatow', 'ogr')
-    request = QgsFeatureRequest(QgsExpression("jpt_kod_je = \'" + teryt + "\'"))
-    requestFeatures = granicePowiatow_A.getFeatures(request)
-    for requestFeature in requestFeatures:
-        granicaPowiatu = requestFeature
-        break
-    if granicaPowiatu is not None:
-        geom = granicaPowiatu.geometry()
-        granica = geom.convertToType(QgsWkbTypes.LineGeometry) # konwersja poligona na linię, w celu wydobycia granicy
+    try:
+        obiektyZbledami = []
+        config = configparser.ConfigParser()
+        mainPath = pathlib.Path(QgsApplication.qgisSettingsDirPath())/pathlib.Path("python/plugins/Walidator_plikow_gml/")
+        config.read(str(mainPath)+'/Walidator_plikow_gml.ini')
+        granicePowiatowPath = config['sciezkaPowiaty']['shpPowiaty']
+        granicePowiatow_A = QgsVectorLayer(granicePowiatowPath, 'GranicePowiatow', 'ogr')
+        request = QgsFeatureRequest(QgsExpression("jpt_kod_je = \'" + teryt + "\'"))
+        requestFeatures = granicePowiatow_A.getFeatures(request)
+        for requestFeature in requestFeatures:
+            granicaPowiatu = requestFeature
+            break
+        if granicaPowiatu is not None:
+            geom = granicaPowiatu.geometry()
+            granica = geom.convertToType(QgsWkbTypes.LineGeometry) # konwersja poligona na linię, w celu wydobycia granicy
         
-    for obj in layer.getFeatures():
-        objGeom = obj.geometry()
-        vertices = list(objGeom.vertices())
-        numVertices = len(vertices) # Liczba wierzchołków
-        p1 = QgsPointXY(vertices[0])
-        p2 = QgsPointXY(vertices[-1])
-        # Konwersja na QgsGeometry
-        geomP1 = QgsGeometry.fromPointXY(p1)
-        geomP2 = QgsGeometry.fromPointXY(p2)
-        # Konwersja QgsPointXY na QgsGeometry przed użyciem distance()
-        d1 = granica.distance(geomP1)
-        d2 = granica.distance(geomP2)
-        if d1 > 0.01 and d2 > 0.01:
-            if not geom.contains(obj.geometry()):
-                obiektyZbledami.append(obj)
+        for obj in layer.getFeatures():
+            objGeom = obj.geometry()
+            vertices = list(objGeom.vertices())
+            numVertices = len(vertices) # Liczba wierzchołków
+            p1 = QgsPointXY(vertices[0])
+            p2 = QgsPointXY(vertices[-1])
+            # Konwersja na QgsGeometry
+            geomP1 = QgsGeometry.fromPointXY(p1)
+            geomP2 = QgsGeometry.fromPointXY(p2)
+            # Konwersja QgsPointXY na QgsGeometry przed użyciem distance()
+            d1 = granica.distance(geomP1)
+            d2 = granica.distance(geomP2)
+            if d1 > 0.01 and d2 > 0.01:
+                if not geom.contains(obj.geometry()):
+                    obiektyZbledami.append(obj)
+    except:
+        print('Sprawdź ścieżkę do pliku z granicami powiatów w Walidator_plikow_gml.ini')
     return obiektyZbledami
 
 
@@ -571,7 +575,7 @@ def czyOdleglosciMiedzyPoziomicami2m(layer):
        for group in root.findGroups():
            if not group.findLayers():  # Sprawdzenie, czy grupa jest pusta
                root.removeChildNode(group)
-               break 
+               break
     spatial_index = QgsSpatialIndex(layer.getFeatures(), flags=QgsSpatialIndex.FlagStoreFeatureGeometries)
     id_to_feature = {feature.id(): feature for feature in layer.getFeatures()} # Tworzenie słownika mapującego ID obiektu na obiekt
     for obj1 in layer.getFeatures():
@@ -582,7 +586,6 @@ def czyOdleglosciMiedzyPoziomicami2m(layer):
            for nn in nearestNeighbors:
                if obj1.id() != nn:
                    obj2 = id_to_feature[nn]
-                   #for obj2 in layer.getFeatures(): nn == obj2.id() and 
                    if obj2.attribute("rodzaj") == "poziomica" and not obj1 in obiekty_z_bledami and obj1.geometry().distance(obj2.geometry()) < 2 and \
                        obj1.geometry().distance(obj2.geometry()) > 0:
                        obiekty_z_bledami.append(obj1)
@@ -657,6 +660,7 @@ def przewerteksowanie(layer):
                         return obiekty_z_bledami
     return obiekty_z_bledami
 
+
 def przecieciaLiniiNapieciaPodziemna(layer):
     obiekty_z_bledami = []
     OT_SULN_L_layer = None
@@ -728,8 +732,8 @@ def kontrola_OT_ADMS_P_z_OT_ADMS_A(layer): #topo_e3_k5
     OT_ADMS_A_layer = None
     OT_ADMS_P_layer = None
     if layer.name()[-6:] == 'ADMS_P':
-        OT_ADMS_A_layer = QgsProject().instance().mapLayersByName(layer.name().replace("OT_ADMS_P","OT_ADMS_A"))[0]  
-        OT_ADMS_P_layer = QgsProject().instance().mapLayersByName(layer.name())[0]  
+        OT_ADMS_A_layer = QgsProject().instance().mapLayersByName(layer.name().replace("OT_ADMS_P","OT_ADMS_A"))[0]
+        OT_ADMS_P_layer = QgsProject().instance().mapLayersByName(layer.name())[0]
     if OT_ADMS_A_layer and OT_ADMS_P_layer:
         identyfikatory_bledow = set() # Zbiór do śledzenia identyfikatorów błędnych obiektów
         nazwy_adms_p = set([feature['nazwa'] for feature in OT_ADMS_P_layer.getFeatures()])
@@ -760,11 +764,11 @@ def kontrolaTERCpunkt(layer):
     adms = None
     adja = None
     if layer.name()[-6:] == 'ADMS_P':
-        adja = QgsProject().instance().mapLayersByName(layer.name().replace("OT_ADMS_P","OT_ADJA_A"))[0]  
-        adms = QgsProject().instance().mapLayersByName(layer.name())[0] 
+        adja = QgsProject().instance().mapLayersByName(layer.name().replace("OT_ADMS_P","OT_ADJA_A"))[0]
+        adms = QgsProject().instance().mapLayersByName(layer.name())[0]
     # Zestaw do śledzenia już dodanych identyfikatorów TERYT
     przetworzone_teryt = set()
-
+    
     # Sprawdzenie, czy są warstwy
     if adms and adja:
         expression = """ "rodzaj" IN ('miasto', 'miasto w gminie miejsko-wiejskiej', 'gmina') """
@@ -800,10 +804,10 @@ def kontrolaTERCpowierzchnia(layer):
     if layer.name()[-6:] == 'ADMS_A':
         adja = QgsProject().instance().mapLayersByName(layer.name().replace("ADMS","ADJA"))[0]
         adms = QgsProject().instance().mapLayersByName(layer.name())[0]
-
+        
     # Zestaw do śledzenia już dodanych identyfikatorów TERYT
     przetworzone_teryt = set()
-
+    
     # Sprawdzenie, czy jsą warstwy
     if adms and adja:
         # Iteruj przez warstwy
@@ -924,23 +928,53 @@ def fullCoverage(layer):
 
 
 def boundaryPTWP(layer):
-    obiektyZbledami = []
-    ptwp = None
-    rtlw = None
-    if layer.name()[-6:] == 'RTLW_L':
-        ptwp = QgsProject().instance().mapLayersByName(layer.name().replace("RTLW_L","PTWP_A"))[0]  
-        rtlw = QgsProject().instance().mapLayersByName(layer.name())[0] 
-    if ptwp and rtlw:
-        # Iteracja przez każdy obiekt w warstwie RTLW  
-        for rtlw_feature in rtlw.getFeatures():
-            rtlw_geom = rtlw_feature.geometry()
-            rodzaj_rtlw = rtlw_feature['rodzaj']
-            # Iteracja przez każdy obiekt w warstwie PTWP
-            for ptwp_feature in ptwp.getFeatures():
-                ptwp_geom = ptwp_feature.geometry() 
-            # Sprawdzanie przecięcia wnętrza (ignoruje stykanie się)
+    try: 
+        obiektyZbledami = []
+        ptwp = None
+        rtlw = None
+        if layer.name()[-6:] == 'RTLW_L':
+            ptwp = QgsProject().instance().mapLayersByName(layer.name().replace("RTLW_L","PTWP_A"))[0]
+            rtlw = QgsProject().instance().mapLayersByName(layer.name())[0]
+        if ptwp and rtlw:
+            # Iteracja przez każdy obiekt w warstwie RTLW
+            for rtlw_feature in rtlw.getFeatures():
+                rtlw_geom = rtlw_feature.geometry()
+                rodzaj_rtlw = rtlw_feature['rodzaj']
+                # Iteracja przez każdy obiekt w warstwie PTWP
+                for ptwp_feature in ptwp.getFeatures():
+                    ptwp_geom = ptwp_feature.geometry()
+                # Sprawdzanie przecięcia wnętrza (ignoruje stykanie się)
                 if (rtlw_geom.crosses(ptwp_geom) or (rtlw_geom.intersects(ptwp_geom)) and not rtlw_geom.touches(ptwp_geom)) and rodzaj_rtlw in ('skarpa','wąwóz'):
-                    obiektyZbledami.append(rtlw_feature) 
+                    obiektyZbledami.append(rtlw_feature)
+    except:
+       print('Brak warstwy OT_PTWP_A.')
+    return obiektyZbledami
+
+
+def KontrolaAtrybutuKlasouzytek(layer, plikGML):
+    obiektyZbledami = []
+    plikGML = plikGML.getroot()
+    ns = {'gml': 'http://www.opengis.net/gml/3.2', 'egb': 'ewidencjaGruntowIBudynkow:1.0'}
+    for featureMember in plikGML.findall('.//gml:featureMember', namespaces=ns):
+        dzialka = featureMember.find('.//egb:EGB_DzialkaEwidencyjna', namespaces=ns)
+        if dzialka is not None:
+           # Dla każdego Klasouzytek w obrębie Działki Ewidencyjnej
+           for klasouzytek in dzialka.findall('.//egb:EGB_Klasouzytek', namespaces=ns):
+               lokalnyId = dzialka.find('.//egb:lokalnyId', namespaces=ns)
+               lokalnyId_text = lokalnyId.text if lokalnyId is not None else "Nieznane ID"
+               OFU = klasouzytek.find('.//egb:OFU', namespaces=ns)
+               ofu_value = OFU.text if OFU is not None else None
+               if ofu_value in ['Ls', 'W']:
+                   OZU = klasouzytek.find('.//egb:OZU', namespaces=ns)
+                   ozu_value = OZU.text if OZU is not None else None
+                   if ozu_value == 'Ls':
+                       OZK = klasouzytek.find('.//egb:OZK', namespaces=ns)
+                       ozk_value = OZK.text if OZK is not None else None
+                       if not ozk_value in ['IIIa', 'IIIb', 'IVa', 'IVb']:
+                           expression = f"\"lokalnyId\" = '{lokalnyId_text}'"
+                           request = QgsFeatureRequest().setFilterExpression(expression)
+                           for feature in layer.getFeatures(request):
+                               obiektyZbledami.append(feature)
     return obiektyZbledami
 
 
@@ -960,7 +994,7 @@ def gminyCzyNakladajaSie(layer):
         'VALID_OUTPUT': 'memory:', 
         'INVALID_OUTPUT': 'memory:', 
         'ERROR_OUTPUT': 'memory:'})
-
+        
         # zawiera warstwę z niepoprawnymi geometriami
     if invalid_layer['INVALID_OUTPUT']:
               params = {
@@ -1002,13 +1036,13 @@ def miastoWiesCzyNakladajaSie(layer):
         'VALID_OUTPUT': 'memory:',
         'INVALID_OUTPUT': 'memory:',
         'ERROR_OUTPUT': 'memory:'})
-
-        # zawiera warstwę z niepoprawnymi geometriami  
+    
+        # zawiera warstwę z niepoprawnymi geometriami
     if invalid_layer['INVALID_OUTPUT']:
               params = {
               'INPUT': miastoWies,
               'OUTPUT': 'memory:'
-              }  
+              }
           # Wykonanie naprawy geometrii
               naprawiona= processing.run("native:fixgeometries", params)['OUTPUT']
               naprawiona.setName("naprawiona ADMS_A")
@@ -1026,3 +1060,188 @@ def miastoWiesCzyNakladajaSie(layer):
         obiektyZbledami.append(obj)
     return obiektyZbledami
 
+
+def sprawdzLokalnyId(layer):
+    if layer.name()[-6:] in ['RTLW_L', 'RTPW_P']:
+        # funkcja nie wykona się dla warstw z rzeźbą terenu
+        return
+    obiektyZbledami = []
+    uuid_pattern = re.compile(r'^[A-Za-z0-9]{8}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{12}$|^$')
+    # Zbiór do sprawdzania unikalności
+    unique_ids = set()
+    for f in layer.getFeatures():
+        lokalny = f.attribute('lokalnyId')
+        matches_pattern = bool(uuid_pattern.match(lokalny))
+        if not isinstance(lokalny, str):
+            poczatek = str(lokalny) # konwersja pustej wartosci na string
+        is_unique = lokalny not in unique_ids
+        if is_unique and not matches_pattern:
+            unique_ids.add(lokalny)
+            obiektyZbledami.append(f)
+    return obiektyZbledami
+
+
+def sprawdzPrzestrzenNazw(layer):
+    if layer.name()[-6:] in ['RTLW_L', 'RTPW_P']:
+        # funkcja nie wykona się dla warstw z rzeźbą terenu
+        return
+    obiektyZbledami = []
+    dozwolone_kody = {
+    '02': '337',  # dolnośląskie
+    '04': '994',  # kujawsko-pomrskie
+    '06': '3700', # lubelskie
+    '26': '370',  # świętokrzyskie
+    '08': '333',  # lubuskie
+    '10': '340',  # łódzkie
+    '12': '283',  # małopolskie
+    '14': '330',  # mazowieckie
+    '16': '1833', # opolskie
+    '18': '332',  # podlaskie
+    '20': '335',  # podkarpackie
+    '22': '336',  # pomorskie
+    '24': '238',  # śląskie
+    '28': '341',  # warmińsko-mazurskie
+    '30': '308',  # wielkopolskie
+    '32': '339'   # zachodniopomorskie
+    }
+    pattern = re.compile(r'^PL\.PZGiK\.(\d{3,4})\.BDOT10k$')
+    # Zbiór do sprawdzania unikalności
+    unique_ids = set()
+    for f in layer.getFeatures():
+        przestrzen = f.attribute('przestrzenNazw')
+        match = pattern.match(przestrzen)
+        if not isinstance(przestrzen, str):
+            poczatek = str(przestrze) # konwersja pustej wartosci na string
+        if not match: # sprawdza, czy są niezgodne z schematem
+            obiektyZbledami.append(f)
+        else: 
+            woj = layer.name()[13:15] # sprawdza niezgodnosci cyfr w wojewodztwach
+            if woj in ['.1', '.0']:
+                woj = layer.name()[14:16]
+            cyfry = match.group(1) if match.group(1) else None
+            expected_cyfry = dozwolone_kody.get(woj, None)
+            if isinstance(expected_cyfry, list):
+                valid = cyfry in expected_cyfry
+            else:
+                valid = cyfry == expected_cyfry
+                
+            if not valid:
+                    obiektyZbledami.append(f)
+    return obiektyZbledami
+
+
+def sprawdzWersja(layer):
+    if layer.name()[-6:] in ['RTLW_L', 'RTPW_P']:
+        # funkcja nie wykona się dla warstw z rzeźbą terenu
+        return
+    obiektyZbledami = []
+    uuid_pattern = re.compile(r'^[0-9]{4}-[01][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]$|^$')
+    # Zbiór do sprawdzania unikalności
+    unique_ids = set()
+    for f in layer.getFeatures():
+        wersja = f.attribute('wersja')
+        matches_pattern = bool(uuid_pattern.match(wersja))
+        if not isinstance(wersja, str):
+            poczatek = str(wersja) # konwersja pustej wartosci na string
+        is_unique = wersja not in unique_ids
+        if is_unique and not matches_pattern:
+            unique_ids.add(wersja)
+            obiektyZbledami.append(f)
+    return obiektyZbledami
+
+
+def sprawdzPoczątekWersjiObiektu(layer):
+    if layer.name()[-6:] in ['RTLW_L', 'RTPW_P']:
+        # funkcja nie wykona się dla warstw z rzeźbą terenu
+        return
+    obiektyZbledami = []
+    uuid_pattern = re.compile(r'^[0-9]{4}-[01][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]$')
+    # Zbiór do sprawdzania unikalności
+    unique_ids = set()
+    for f in layer.getFeatures():
+        poczatek = f.attribute('poczatekWersjiObiektu')
+        wersja = f.attribute('wersja')
+        if not isinstance(poczatek, str):
+            poczatek = str(poczatek) # konwersja pustej wartosci na string
+        matches_pattern = bool(uuid_pattern.match(wersja))
+        is_unique = wersja not in unique_ids
+        if is_unique and matches_pattern:
+            matches_pattern2 = bool(uuid_pattern.match(poczatek))
+            is_unique = poczatek not in unique_ids
+            if is_unique and not matches_pattern2:
+                unique_ids.add(poczatek)
+                obiektyZbledami.append(f)
+    return obiektyZbledami
+
+
+def przestrzenNazw(layer,teryt):
+    #woj = teryt[:2]
+    obiektyZbledami = []
+    slownik = {
+    '02': '337',  # dolnośląskie
+    '04': '994',  # kujawsko-pomrskie
+    '06': '3700',  # lubelskie
+    '26': '370',  # świętokrzyskie
+    '08': '333',  # lubuskie
+    '10': '340',  # łódzkie
+    '12': '283',  # małopolskie
+    '14': '330',  # mazowieckie
+    '16': '1833',  # opolskie
+    '18': '332',  # podlaskie
+    '20': '335',  # podkarpackie
+    '22': '336',  # pomorskie
+    '24': '238',  # śląskie
+    '28': '341',  # warmińsko-mazurskie
+    '30': '308',  # wielkopolskie
+    '32': '339'   # zachodniopomorskie
+    }
+    pattern = re.compile(r'^PL\.PZGiK\.(\d{3,4})\.BDOT10k$')
+    # Zbiór do sprawdzania unikalności
+    unique_ids = set()
+    for f in layer.getFeatures():
+        przestrzen = f.attribute('przestrzenNazw')
+        if not isinstance(przestrzen, str):
+            #print (przestrzen, type(przestrzen))
+            przestrzen = str(przestrzen) # konwersja pustej wartosci na string
+            obiektyZbledami.append(f)
+        else:
+            match = pattern.match(przestrzen)
+            if not match: # sprawdza, czy są niezgodne z schematem
+                match = pattern.match(przestrzen)
+                obiektyZbledami.append(f)
+            else:
+                woj = teryt[:2]
+                cyfry = match.group(1) if match.group(1) else None
+                expected_cyfry = slownik.get(woj, None)
+                if isinstance(expected_cyfry, list):
+                    valid = cyfry in expected_cyfry
+                else:
+                    valid = cyfry == expected_cyfry
+                if not valid:
+                    obiektyZbledami.append(f)
+    return obiektyZbledami
+
+
+def KontrolaGeometriaSchody(layer, plikGML):
+    obiektyZbledami = []
+    plikGML = plikGML.getroot()
+    ns = {'gml': 'http://www.opengis.net/gml/3.2', 'egb': 'ewidencjaGruntowIBudynkow:1.0'}
+    for featureMember in plikGML.findall('.//gml:featureMember', namespaces=ns):
+        budynek = featureMember.find('.//egb:EGB_ObiektTrwaleZwiazanyZBudynkiem', namespaces=ns)
+        if budynek is not None:
+            polKier =  budynek.findall('.//egb:poliliniaKierunkowa', namespaces=ns)
+            lokalnyId = budynek.find('.//egb:lokalnyId', namespaces=ns)
+            lokalnyId_text = lokalnyId.text if lokalnyId is not None else "Nieznane ID"
+            expression = f"\"lokalnyId\" = '{lokalnyId_text}'"
+            request = QgsFeatureRequest().setFilterExpression(expression)
+            if not polKier: # całkowity brak atrybutu 
+                for feature in layer.getFeatures(request):
+                    obiektyZbledami.append(feature)
+            else:
+                for pk in polKier:  # błędy i braki wewnątrz atrybutu
+                    posList = pk.find('.//gml:posList', namespaces=ns)
+                    posList_wsp = posList.text 
+                    if posList_wsp is None:
+                        for feature in layer.getFeatures(request):
+                            obiektyZbledami.append(feature)
+    return obiektyZbledami

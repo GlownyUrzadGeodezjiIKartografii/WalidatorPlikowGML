@@ -50,6 +50,8 @@ from .resources import *
 from .utils import *
 from .walidatorPlikowGML_dialog import walidatorPlikowGMLDialog
 from osgeo_utils.samples import ogr2ogr
+from .fpdf import FPDF
+from .fpdf import FontFace
 
 
 
@@ -130,7 +132,7 @@ class walidatorPlikowGML:
     def run(self):
         global xsdPaths, szablonKontroliPaths
         walidowanaBaza = ['EGIB','GESUT','BDOT500','RCN','PRNG','BDOT10k','BDOO']
-        formatRaportu = ['xls','txt']
+        formatRaportu = ['xls','txt', 'pdf']
         xsdPaths = {'BDOO':"/XSD/BDOT10kBDOO/BDOT10k_BDOO.xsd",
                     'BDOT10k':"/XSD/BDOT10kBDOO/BDOT10k_BDOO.xsd",
                     'PRNG':"/XSD/PRNG/NG_PRNG.xsd",
@@ -141,11 +143,11 @@ class walidatorPlikowGML:
                    }
         
         szablonKontroliPaths = {'BDOO':"/SzablonyKontroli/BDOO/SK_BDOO_1.0.0.xml",
-                                'BDOT10k':"/SzablonyKontroli/BDOT10k/SK_BDOT10k_1.0.3.xml",
+                                'BDOT10k':"/SzablonyKontroli/BDOT10k/SK_BDOT10k_1.0.4.xml",
                                 'PRNG':"/SzablonyKontroli/PRNG/SK_PRNG_1.0.0.xml",
-                                'BDOT500':"/SzablonyKontroli/BDOT500/SK_BDOT500_1.0.1.xml",
+                                'BDOT500':"/SzablonyKontroli/BDOT500/SK_BDOT500_1.0.2.xml",
                                 'GESUT':"/SzablonyKontroli/GESUT/SK_GESUT_1.0.0.xml",
-                                'EGIB':"/SzablonyKontroli/EGIB/SK_EGIB_1.0.0.xml",
+                                'EGIB':"/SzablonyKontroli/EGIB/SK_EGIB_1.0.1.xml",
                                 'RCN':"/SzablonyKontroli/RCN/SK_RCN_1.0.0.xml"
                                }
         
@@ -223,8 +225,13 @@ class walidatorPlikowGML:
                 path = sciezkaGML + "/RaportBledow_" + str(nazwa_pliku) + "_" + timestr + ".txt"
                 formatPlikuRaportu = "txt"
             else:
-                path = sciezkaGML + "/RaportBledow_" + str(nazwa_pliku) + "_" + timestr + ".xls"
-                formatPlikuRaportu = "xls"
+                if self.dlg.comboBox_2.currentText() == 'pdf':
+                    path = sciezkaGML + "/RaportBledow_" + str(nazwa_pliku) + "_" + timestr + ".pdf"
+                    formatPlikuRaportu = "pdf"
+                    pdfpath=path
+                else:
+                    path = sciezkaGML + "/RaportBledow_" + str(nazwa_pliku) + "_" + timestr + ".xls"
+                    formatPlikuRaportu = "xls"
             try:
                 if os.path.isfile(path):
                     os.remove(path)
@@ -315,6 +322,11 @@ class walidatorPlikowGML:
                         if parent.child(j).checkState() == 2:
                             liczbaKontroliDoWykonania += 1
                             nazwy.append((parent.child(j).data(1),parent.child(j).data(2)))
+                            
+            if liczbaKontroliDoWykonania > 0: # wczytaj warstwy nawet, gdy nie wybierze się żadniej kontroli
+                for plikZparsowany in plikiZparsowane:
+                    self.importGML(plikZparsowany)
+            
             QCoreApplication.processEvents()
             progressMessageBar = iface.messageBar().createMessage("Postęp wykonania kontroli atrybutów")
             progress.setMaximum(liczbaKontroliDoWykonania)
@@ -334,6 +346,155 @@ class walidatorPlikowGML:
             for i in range(len(kontrolowanePliki_df)):
                 opisBledu = 'KONTROLOWANY PLIK: ' + kontrolowanePliki_df[i] + ', KLASA: ' + klasy_df[i] + ', LOKALNYID: ' + lokalneId_df[i] + ', KOMUNIKAT BŁĘDU: ' + komunikatyBledowKontroli_df[i] + '\n'
                 plikRaportu.write(opisBledu)
+        elif formatPlikuRaportu == 'pdf':
+             nazwaPliku = str(pathlib.Path(plikZparsowany).name)
+             bledyWalidacji = {'WALIDOWANY PLIK': walidowanePliki_df, 'WIERSZ': wiersze_df, 'OPIS BŁĘDU': opisyBledow_df, 'KOMUNIKAT BŁĘDU': komunikatyBledow_df}
+             bledyKontroli = {'KONTROLOWANY PLIK':kontrolowanePliki_df, 'KLASA':klasy_df, 'LOKALNYID':lokalneId_df, 'KOMUNIKAT BŁĘDU':komunikatyBledowKontroli_df}
+             dfWalidcaji = pd.DataFrame(bledyWalidacji)
+             dfKontroli = pd.DataFrame(bledyKontroli)
+             datawalidacja = dfWalidcaji.values.tolist()
+             datakontrola = dfKontroli.values.tolist()
+        
+             if len(str(bledyWalidacji["WIERSZ"])) == 0:
+                 bledyWalidacji["WIERSZ"] = 0
+                 
+             # tworzenie dokumentu
+             class PDF(FPDF): # stopka z numerem strony
+                 def header(self):
+                     self.add_font('Verdana', '', os.path.dirname(os.path.realpath(__file__)) + "\\fpdf\\Verdana.ttf", uni = True)
+                     self.set_font('Verdana', size=5)
+                     self.cell(0,-5,"Raport został wygenerowany przy pomocy wtyczki QGIS – „Walidator plików GML” w wersji 1.0.6 - udostępnionej przez GUGiK",0,0,"L")
+                 def footer(self):
+                     self.set_y(-15)
+                     self.cell(0, 10, f'Strona {self.page_no()}', 0, 0, 'C')
+             def create_pdf(filename):
+                 czas = time.strftime("%Y-%m-%d %H:%M")
+                 pdf = PDF()
+                 walidator_sciezka = os.path.dirname(os.path.realpath(__file__))
+                 pdf.add_page()
+                 pdf.alias_nb_pages()
+                 pdf.set_margins(10,10,10)
+                 pdf.add_font('Verdana', '', walidator_sciezka + "\\fpdf\\Verdana.ttf", uni = True)
+                 pdf.add_font("Verdana", "B", walidator_sciezka + "\\fpdf\\Verdana-bold.ttf", uni = True)
+                 pdf.set_font('Verdana', 'B',14)
+                 pdf.cell(0,5,ln = 1)
+                 pdf.cell(0,0, "Raport z kontroli", align='C',ln=2)
+                 pdf.set_font("Verdana", "", 8)
+                 pdf.cell(0,10,ln = 1)
+                 pdf.cell(100,0, "wskazany plik:", align='R',ln=0)
+                 pdf.cell(100,0, nazwaPliku, align = "L")
+                 pdf.cell(0,5,ln = 1)
+                 pdf.cell(100,0, "wynik walidacji:", align = "R", ln = 0)
+                 if len(bledyWalidacji["WIERSZ"]) == 0:
+                    wynikw = "Pozytywny"
+                    pdf.set_text_color(0,153,0)
+                 else:
+                    wynikw = "Negatywny"
+                    pdf.set_text_color(255,0,0)
+                 lightblue = (143, 216, 255)
+                 gray = (240,240,240)
+                 pdf.cell(100,0,wynikw, align = "L")
+                 pdf.cell(0,5,ln = 1)
+                 pdf.set_text_color(0,0,0)
+                 pdf.cell(100,0, "wynik kontroli atrybutów:", align = "R", ln = 0)
+                 if len(bledyKontroli["KLASA"]) == 0:
+                    wynikon = "Pozytywny"
+                    pdf.set_text_color(0,153,0)
+                 else:
+                    wynikon = "Negatywny"
+                    pdf.set_text_color(255,0,0)
+                 pdf.cell(100,0,wynikon, align = "L")
+                 pdf.cell(0,5, ln = 1) # wolne miejsce
+                 pdf.set_text_color(0,0,0)
+                 pdf.cell(100,0,"data kontroli:", ln=0, align = "R") # tekst
+                 pdf.cell(100,0, czas , ln = 1, align = "L")
+                 pdf.cell(0,5,ln = 1)
+                 pdf.cell(100,0,"wersja szablonu:", align = "R")
+                 pdf.cell(100,0,wersjaSzablonuKontroli, align = "L", ln = 1)
+                 pdf.cell(0,1,ln = 1)
+                 with pdf.table(first_row_as_headings = False, col_widths = (105,95), borders_layout = "NONE", v_align = "TOP") as tabelaskp:
+                     rzad = tabelaskp.row()
+                     rzad.cell("szablon kontroli:", align = "R", padding=(1,1,1,1))
+                     rzad.cell(szablonKontroliSciezka, align = "J", padding = (1,5,1,1))
+                 pdf.cell(0,1,ln = 1)
+                 pdf.cell(100,0,"wersja schematu aplikacyjnego GML:", align = "R", ln = 0)
+                 pdf.cell(100,0, wersjaSchematu, align = "L", ln = 1)
+                 pdf.cell(0,1,ln = 1)
+                 with pdf.table(first_row_as_headings = False, col_widths = (105,95), borders_layout = "NONE", v_align = "TOP") as tabelaskp:
+                     rzad = tabelaskp.row()
+                     rzad.cell("schemat aplikacyjny GML:", align = "R", padding=(1,1,1,1))
+                     rzad.cell(schematKontroliPath, align = "J", padding = (1,5,1,1))
+                 pdf.cell(0,1,ln = 1)
+                 pdf.cell(100,0,"suma kontrolna schematu (CRC32):", align = "R", ln = 0)
+                 pdf.cell(100,0, sumaKontrolaSchemat, align = "L", ln = 1)
+                 pdf.cell(0,5,ln = 1)
+                 pdf.cell(100,0,"suma kontrolna wskazanego pliku (CRC32):", align = "R", ln = 0)
+                 pdf.cell(100,0, sumaKontrolaPlikWalidowany, align = "L")
+                 pdf.cell(0,10,ln =1)
+                 if len(nazwy) > 0:
+                     pdf.set_font("Verdana", "B", 10)
+                     pdf.cell(0,0,"Tabela z wykonanymi kontrolami dodatkowymi", align = "C")
+                     pdf.cell(0,5,ln = 1)
+                     pdf.set_font("Verdana",  "", 8)
+                     pdf.set_fill_color(lightblue)
+                     with pdf.table(col_widths=(12,40), text_align = "C",padding = (1)) as table:
+                         pdf.set_font("Verdana", "", 5)
+                         headings = table.row()
+                         headings.cell("ID KONTROLI")
+                         headings.cell("ZAKRES KONTROLI")
+                         pdf.set_fill_color(gray)
+                     with pdf.table(nazwy, col_widths=(12,40), first_row_as_headings = False, text_align = "L", padding = (1)):
+                         pass
+                 else: # jak nie ma błędów walidacji
+                      pdf.set_font("Verdana", "B", 10)
+                      pdf.cell(0,0, "Nie wykonano kontroli dodatkowych", align = "C")
+                 pdf.set_fill_color(255,255,255)
+                 pdf.set_font("Verdana", "" , 6)
+                 pdf.cell(0,12,ln = 1)
+                 # tabela walidacji
+                 if len(bledyWalidacji["WIERSZ"]) > 0:
+                     pdf.set_font("Verdana", "B", 10)
+                     pdf.cell(0,0,"Tabela z błędami walidacji", align = "C")
+                     pdf.set_font("Verdana",  "", 8)
+                     pdf.cell(0,5,ln = 1)
+                     pdf.set_fill_color(lightblue)
+                     with pdf.table(col_widths=(40,12,40,88), text_align = "C",padding = (1)) as table:
+                         pdf.set_font("Verdana", "", 5)
+                         headings = table.row()
+                         headings.cell("WALIDOWANY PLIK")
+                         headings.cell("WIERSZ")
+                         headings.cell("OPIS BŁĘDU")
+                         headings.cell("KOMUNIKAT BŁĘDU")
+                         pdf.set_fill_color(gray)
+                     with pdf.table(datawalidacja, col_widths=(40,12,40,88), first_row_as_headings = False, text_align = "L", padding = (1)):
+                         pass
+                     pdf.set_fill_color(255,255,255)
+                     pdf.set_font("Verdana", "" , 6)
+                 else: # jak nie ma błędów walidacji
+                     pdf.set_font("Verdana", "", 10)
+                     pdf.cell(0,0, "Nie znaleziono błędów walidacji", align = "C")
+                 pdf.cell(w=0,h=10,txt = " ",ln=1)
+                 # tabela konotroli
+                 if len(bledyKontroli["KLASA"]) > 0:
+                     pdf.set_font("Verdana", "B", 10)
+                     naglowek=[["KONTROLOWANY PLIK", "KLASA",  "LOKALNY ID", "KOMUNIKAT BŁĘDU"]] # Definicja nagłówka
+                     datakontrola2 = naglowek + datakontrola # dodanie do tablicy
+                     pdf.set_font("Verdana", "B", 10)
+                     pdf.cell(0,0,"Tabela z błędami kontroli atrybutowych", align="C")
+                     pdf.set_font("Verdana", "", 5)
+                     pdf.cell(0,5,ln = 1)
+                     headings_style = FontFace(emphasis="BOLD", color=0, fill_color=(143, 216, 255)) 
+                     with pdf.table(datakontrola2, num_heading_rows=1, col_widths=(40,20,50,70), cell_fill_color=(240,240,240), headings_style=headings_style, first_row_as_headings = True, 
+                                    text_align="C", padding = (1)):
+                         pass
+                 else:
+                     pdf.set_font("Verdana", "B", 10)
+                     pdf.cell(0,0,"Nie znaleziono błędów kontroli", align = "C")
+                     pdf.set_font("Verdana", "", 5)
+                     
+                 pdf.output(name=filename,dest='F'.encode('latin-1'))
+             create_pdf(pdfpath)
+             # koniec pdfu
         else:
             bledyWalidacji = {'WALIDOWANY PLIK': walidowanePliki_df, 'WIERSZ': wiersze_df, 'OPIS BŁĘDU': opisyBledow_df, 'KOMUNIKAT BŁĘDU': komunikatyBledow_df}
             bledyKontroli = {'KONTROLOWANY PLIK':kontrolowanePliki_df, 'KLASA':klasy_df, 'LOKALNYID':lokalneId_df, 'KOMUNIKAT BŁĘDU':komunikatyBledowKontroli_df}
@@ -354,22 +515,22 @@ class walidatorPlikowGML:
                 neg = xlwt.easyxf("align: horz left, vert center; font: bold on, color red; align: wrap on; borders: left thin, right thin, top thin, bottom thin")
                 poz = xlwt.easyxf("align: horz left, vert center; font: bold on, color green; align: wrap on; borders: left thin, right thin, top thin, bottom thin")
                 arkuszDaneWstepne.write(0,0,"Wynik kontroli", styl3)
-                arkuszDaneWstepne.write(1,0,"Data kontroli", styl3)
-                arkuszDaneWstepne.write(2,0,"Suma kontrolna plików walidowanych", styl3)
-                arkuszDaneWstepne.write(3,0,"Wersja szablonu kontroli", styl3)
-                arkuszDaneWstepne.write(4,0,"Suma kontrolna schematu", styl3)
-                arkuszDaneWstepne.write(5,0,"Wersja schematu", styl3)
+                arkuszDaneWstepne.write(1,0,"Data kontroli i wskazany plik", styl3)
+                arkuszDaneWstepne.write(2,0,"Suma kontrolna wskazanego pliku (CRC32)", styl3)
+                arkuszDaneWstepne.write(3,0,"Wersja szablonu", styl3)
+                arkuszDaneWstepne.write(4,0,"Suma kontrolna schematu (CRC32)", styl3)
+                arkuszDaneWstepne.write(5,0,"Wersja schematu aplikacyjnego GML", styl3)
                 arkuszDaneWstepne.write(6,0,"Wynik walidacji", styl3)
-                arkuszDaneWstepne.write(7,0,"Wynik kontroli atrybutowych", styl3)
+                arkuszDaneWstepne.write(7,0,"Wynik kontroli atrybutów", styl3)
                 arkuszDaneWstepne.col(0).width = 10000
                 arkuszDaneWstepne.col(1).width = 5000
                 arkuszDaneWstepne.col(2).width = 35000
                 timestr = time.strftime("%Y-%m-%d %H:%M")
                 arkuszDaneWstepne.write(0,2,'', styl1)
                 arkuszDaneWstepne.write(1,1,timestr, styl1)
-                arkuszDaneWstepne.write(1,2,'', styl1)
+                arkuszDaneWstepne.write(1,2,plikGML, styl1)
                 arkuszDaneWstepne.write(2,1,sumaKontrolaPlikWalidowany,styl1)
-                arkuszDaneWstepne.write(2,2,plikGML, styl1)
+                arkuszDaneWstepne.write(2,2,'', styl1)
                 arkuszDaneWstepne.write(3,1,wersjaSzablonuKontroli,styl1)
                 arkuszDaneWstepne.write(3,2,szablonKontroliSciezka,styl1)
                 arkuszDaneWstepne.write(4,1,sumaKontrolaSchemat,styl1)
@@ -457,7 +618,7 @@ class walidatorPlikowGML:
 
     # walidacja pliku GML z conajmniej jednym obiektem
     def walidacja(self, task):
-        global walidacjaZWynikiemPozytywnym, plikiZparsowane, plikGML
+        global walidacjaZWynikiemPozytywnym, plikiZparsowane, plikGML, walidowanyPlik
         plikGML = pliki[int(task.description())]
         try:
             walidowanyPlik = lxml.etree.parse(plikGML)
@@ -630,6 +791,7 @@ class walidatorPlikowGML:
                     group.addLayer(qgis_layer)
                     qgis_layer = None
 
+
     # wczytanie szablonu kontroli
     def wczytanieSzablonuKontroli(self):
         global modelKontroli, wersjaSzablonuKontroli, wersjaSchematu, sumaKontrolaSchemat, metaSchemat, szablonKontroliSciezka, schematKontroliPath
@@ -660,7 +822,7 @@ class walidatorPlikowGML:
             for chunk in iter(lambda: f.read(4096), b""):
                 md5.update(chunk)
                 sha1.update(chunk)
-
+        
         # Zapisanie wyniku sumy kontrolnej w formie heksadecymalnej do zmiennej
         #sumaKontrolaSchemat = md5.hexdigest()
         szablonKontroliSciezka = szablonKontroliSciezka.replace("/","\\")
@@ -669,7 +831,7 @@ class walidatorPlikowGML:
         modelKontroli.setHorizontalHeaderLabels(['Lista kontroli'])
         self.dlg.treeView.setModel(modelKontroli)
         self.dlg.treeView.setUniformRowHeights(True)
-
+        
         i = 0
         for grupaKontroli in root:
             parent = QStandardItem(grupaKontroli.get('name')) 
@@ -877,12 +1039,22 @@ class walidatorPlikowGML:
                                            layerTMP = QgsProject().instance().mapLayersByName(nazwaWarstwyJ1)
                                            if sqltxt.count('(teryt)') > 0:
                                                requestFeatures = globals().get(sqltxt.replace('(teryt)', ''))(layerTMP[0], teryt)
+                                           elif sqltxt.count('(gml)') > 0: # do bezposredniego wczytania xml-a do wtyczki
+                                               requestFeatures = globals().get(sqltxt.replace('(gml)', ''))(layerTMP[0], walidowanyPlik)
                                            else:
                                                requestFeatures = globals().get(sqltxt)(layerTMP[0])
                                        selected_features = []  # lista z wybranymi obiektami
+                                       if klasa == 'OT_SKRW_P' and errorPhrase == 'topo_e3_k164 Powierzchnia OT_PTTR_A mniejsza niż 1000 m2':
+                                           klasa = 'OT_PTTR_A'
+                                           nazwaPliku = str(pathlib.Path(zparsowanyPlik).name)
+                                           nazwaPliku = nazwaPliku[:-10] + 'PTTR_A' + nazwaPliku[-4:] if nazwaPliku[-10:-4] == 'SKRW_P' else nazwaPliku
+                                       else: # rozwiązanie problemu z błędną nazwą klasy, dla kontroli, która wymaga warstwy alfabetycznie później wczytanej
+                                           nazwaPliku = str(pathlib.Path(zparsowanyPlik).name)
                                        for feature in requestFeatures:
-                                           kontrolowanePliki_df.append(str(pathlib.Path(zparsowanyPlik).name))
+                                           kontrolowanePliki_df.append(nazwaPliku)
                                            lokalneId_df.append(feature['lokalnyId'])
+                                           if klasa == 'OT':
+                                               klasa = klasa + str(pathlib.Path(zparsowanyPlik).name)[-11:-4]
                                            klasy_df.append(klasa)
                                            komunikatyBledowKontroli_df.append(errorPhrase)
                                except Exception as e:

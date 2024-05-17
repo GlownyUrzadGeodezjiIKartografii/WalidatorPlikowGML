@@ -6,7 +6,7 @@
 name=Walidator plików GML
 qgisMinimumVersion=3.22
 description=Walidacja i kontrola plików GML baz: BDOO, BDOT10k, PRNG, RCN, GESUT, EGiB, BDOT500
-version=1.0.5
+version=1.0.6
 author=Marcin Lebiecki - Główny Urząd Geodezji i Kartografii
 email=marcin.lebiecki@gugik.gov.pl
 
@@ -21,10 +21,11 @@ repository=https://github.com/GlownyUrzadGeodezjiIKartografii/WalidatorPlikowGML
 hasProcessingProvider=no
 # Uncomment the following line and add your changelog:
 changelog= 
+    1.0.6 Dodanie lub poprawa kontroli BDOT10k, BDOT500 i EGiB. Dodano generowanie raportu w formacie PDF.
     1.0.5 Dodanie lub poprawa kontroli BDOT10k i BDOT500.
     1.0.4 Poprawa drobnych błędów w zakresie kontroli BDOT10k.
-	1.0.3 Poprawa drobnych błędów. Rozbudowa kontroli BDOT10k.
-	1.0.2 Dodano możliwość kontroli atrybutowych baz BDOT500, GESUT, EGiB.
+    1.0.3 Poprawa drobnych błędów. Rozbudowa kontroli BDOT10k.
+    1.0.2 Dodano możliwość kontroli atrybutowych baz BDOT500, GESUT, EGiB.
 
 # Tags are comma separated with spaces allowed
 tags=python, GML, XSD, walidacja, BDOO, BDOT10k, PRNG, RCN, GESUT, EGiB, BDOT500
