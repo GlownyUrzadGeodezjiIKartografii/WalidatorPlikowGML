@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SzablonKontroli xmlns="http://www.gugik.gov.pl" id="mgr" version="1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<GrupaKontroli id="mgr_m1" name="Kontrole atrybutowe">
+		<Kontrola id="mgr_m1_k1" name="GR_KonturGlebowy Kontrola poprawnego wpisania wartości przestrzenNazw" class="GR_KonturGlebowy" errorPhrase="Zła wartość atrybutu przestrzenNazw">
+			<Parametr typ="QgsExpression" sql="przestrzenNazw != 'PL.PZGiK.9171.MGR'"/>
+		</Kontrola>
+		<Kontrola id="mgr_m1_k2" name="GR_KonturGlebowy Kontrola poprawnego wpisania wartości w atrybucie zrodlo" class="GR_KonturGlebowy" errorPhrase="Zła wartość atrybutu zrodlo">
+			<Parametr typ="QgsExpression" sql="zrodlo != 'Mgr5000'"/>
+		</Kontrola>
+		<Kontrola id="mgr_m1_k3" name="GR_OdkrywkaGlebowa Kontrola poprawnego wpisania wartości przestrzenNazw" class="GR_OdkrywkaGlebowa" errorPhrase="Zła wartość atrybutu przestrzenNazw">
+			<Parametr typ="QgsExpression" sql="przestrzenNazw != 'PL.PZGiK.9171.MGR'"/>
+		</Kontrola>
+		<Kontrola id="mgr_m1_k4" name="GR_OdkrywkaGlebowa Kontrola w zakresie błędnego wpisania wartości do atrybutu numerOdkrywkiGlebowej" class="GR_OdkrywkaGlebowa" errorPhrase="Podana liczba jest ujemna">
+			<Parametr typ="QgsExpression" sql="numerOdkrywkiGlebowej &lt; 0"/>
+		</Kontrola>
+	</GrupaKontroli>
+</SzablonKontroli>
