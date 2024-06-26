@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--GUGiK 08.12.2023-->
+<schema xmlns="http://www.w3.org/2001/XMLSchema" xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:gr="urn:gugik:specyfikacje:gmlas:mapaGlebowoRolnicza:1.0" targetNamespace="urn:gugik:specyfikacje:gmlas:mapaGlebowoRolnicza:1.0" elementFormDefault="qualified" attributeFormDefault="unqualified" version="1.0">
+	<import namespace="http://www.opengis.net/gml/3.2" schemaLocation="http://schemas.opengis.net/gml/3.2.1/gml.xsd"/>
+	<element name="GR_KonturGlebowy" type="gr:GR_KonturGlebowyType" substitutionGroup="gml:AbstractFeature"/>
+	<complexType name="GR_KonturGlebowyType">
+		<complexContent>
+			<extension base="gml:AbstractFeatureType">
+				<sequence>
+					<element name="lokalnyId" type="string"/>
+					<element name="przestrzenNazw" type="string"/>
+					<element name="wersjaObiektu" type="dateTime"/>
+					<element name="poczatekWersjiObiektu" type="dateTime"/>
+					<element name="koniecWersjiObiektu" type="dateTime" minOccurs="0"/>
+					<element name="dataUtworzenia" type="date"/>
+					<element name="opisPodloza" minOccurs="0" maxOccurs="5">
+						<complexType>
+							<sequence>
+								<element name="numerPodloza" type="integer"/>
+								<element name="podloze" type="gr:GR_TypGatunekGlebyType" minOccurs="0"/>
+								<element name="szkieletowosc" type="gr:GR_TypSzkieletowoscType" minOccurs="0"/>
+								<element name="rodzajGlebyOrganicznej" type="gr:GR_TypRodzajGlebyOrganicznejType" minOccurs="0"/>
+								<element name="miazszosc" type="gr:GR_TypMiazszoscType" minOccurs="0"/>
+								<element name="gatunekMady" type="gr:GR_TypGatunekMadyType" minOccurs="0"/>
+								<element name="gatunekRedziny" type="gr:GR_TypGatunekRedzinyType" minOccurs="0"/>
+								<element name="informacjeDodatkowe" type="string" minOccurs="0"/>
+							</sequence>
+						</complexType>
+					</element>
+					<element name="skala" type="gr:GR_TypRodzajSkalyMacierzystejType" minOccurs="0"/>
+					<element name="skalaMacierzysta" type="gr:GR_TypGatunekGlebySkalyMacierzystejType" minOccurs="0"/>
+					<element name="terenZalewowy" type="boolean" minOccurs="0"/>
+					<element name="uwagi" type="string" minOccurs="0"/>
+					<element name="zrodlo" type="gr:GR_ZrodloOpracowania"/>
+					<element name="geometria" type="gml:SurfacePropertyType"/>
+					<element name="aktualnosc" nillable="true">
+						<complexType>
+							<simpleContent>
+								<extension base="date">
+									<attribute name="nilReason" type="gml:NilReasonType"/>
+								</extension>
+							</simpleContent>
+					</complexType>
+					</element>
+					<element name="kompleks" nillable="true">
+						<complexType>
+							<simpleContent>
+								<extension base="gr:GR_TypKompleksType">
+									<attribute name="nilReason" type="gml:NilReasonType"/>
+								</extension>
+							</simpleContent>
+						</complexType>
+					</element>
+					<element name="typPodtyp" nillable="true">
+						<complexType>
+							<simpleContent>
+								<extension base="gr:GR_TypPodtypGlebyType">
+									<attribute name="nilReason" type="gml:NilReasonType"/>
+								</extension>
+							</simpleContent>
+						</complexType>
+					</element>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="GR_KonturGlebowyPropertyType">
+		<sequence minOccurs="0">
+			<element ref="gr:GR_KonturGlebowy"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="GR_OdkrywkaGlebowa" type="gr:GR_OdkrywkaGlebowaType" substitutionGroup="gml:AbstractFeature"/>
+	<complexType name="GR_OdkrywkaGlebowaType">
+		<complexContent>
+			<extension base="gml:AbstractFeatureType">
+				<sequence>
+					<element name="lokalnyId" type="string"/>
+					<element name="przestrzenNazw" type="string"/>
+					<element name="wersjaObiektu" type="dateTime"/>
+					<element name="poczatekWersjiObiektu" type="dateTime"/>
+					<element name="koniecWersjiObiektu" type="dateTime" minOccurs="0"/>
+					<element name="dataUtworzenia" type="date"/>
+					<element name="numerOdkrywkiGlebowej" type="integer"/>
+					<element name="analiza" type="boolean"/>
+					<element name="URL" type="string" minOccurs="0"/>
+					<element name="uwagi" type="string" minOccurs="0"/>
+					<element name="geometria" type="gml:PointPropertyType"/>
+					<element name="aktualnosc" nillable="true">
+						<complexType>
+							<simpleContent>
+								<extension base="date">
+									<attribute name="nilReason" type="gml:NilReasonType"/>
+								</extension>
+							</simpleContent>
+						</complexType>
+					</element>
+					<element name="uzytekGruntowy" nillable="true">
+						<complexType>
+							<simpleContent>
+								<extension base="gr:GR_TypUzytekGruntowyType">
+									<attribute name="nilReason" type="gml:NilReasonType"/>
+								</extension>
+							</simpleContent>
+						</complexType>
+					</element>
+					<element name="klasaBonitacyjna" nillable="true">
+						<complexType>
+							<simpleContent>
+								<extension base="gr:GR_TypKlasaBonitacyjnaType">
+										<attribute name="nilReason" type="gml:NilReasonType"/>
+								</extension>
+							</simpleContent>
+						</complexType>
+					</element>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="GR_OdkrywkaGlebowaPropertyType">
+		<sequence minOccurs="0">
+			<element ref="gr:GR_OdkrywkaGlebowa"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<simpleType name="GR_TypKompleksType">
+		<restriction base="string">
+			<enumeration value="1"/>
+			<enumeration value="2"/>
+			<enumeration value="3"/>
+			<enumeration value="4"/>
+			<enumeration value="5"/>
+			<enumeration value="6"/>
+			<enumeration value="7"/>
+			<enumeration value="8"/>
+			<enumeration value="9"/>
+			<enumeration value="10"/>
+			<enumeration value="11"/>
+			<enumeration value="12"/>
+			<enumeration value="13"/>
+			<enumeration value="14"/>
+			<enumeration value="1z"/>
+			<enumeration value="2z"/>
+			<enumeration value="3z"/>
+			<enumeration value="RN"/>
+			<enumeration value="Tz"/>
+			<enumeration value="Ls"/>
+			<enumeration value="Lz"/>
+			<enumeration value="W"/>
+			<enumeration value="WN"/>
+			<enumeration value="N"/>
+			<enumeration value="Tnk"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="GR_TypPodtypGlebyType">
+		<restriction base="string">
+			<enumeration value="A"/>
+			<enumeration value="Ad"/>
+			<enumeration value="B"/>
+			<enumeration value="Bd"/>
+			<enumeration value="Bk"/>
+			<enumeration value="Bkd"/>
+			<enumeration value="Bw"/>
+			<enumeration value="Bwd"/>
+			<enumeration value="C"/>
+			<enumeration value="Cd"/>
+			<enumeration value="Cz"/>
+			<enumeration value="Czd"/>
+			<enumeration value="D"/>
+			<enumeration value="Dd"/>
+			<enumeration value="DG"/>
+			<enumeration value="DGd"/>
+			<enumeration value="Dz"/>
+			<enumeration value="Dzd"/>
+			<enumeration value="DzG"/>
+			<enumeration value="DzGd"/>
+			<enumeration value="E"/>
+			<enumeration value="Emt"/>
+			<enumeration value="Etm"/>
+			<enumeration value="F"/>
+			<enumeration value="Fb"/>
+			<enumeration value="Fc"/>
+			<enumeration value="Fd"/>
+			<enumeration value="FG"/>
+			<enumeration value="FGd"/>
+			<enumeration value="G"/>
+			<enumeration value="Gd"/>
+			<enumeration value="M"/>
+			<enumeration value="Md"/>
+			<enumeration value="R"/>
+			<enumeration value="Rb"/>
+			<enumeration value="Rc"/>
+			<enumeration value="Rd"/>
+			<enumeration value="Rg"/>
+			<enumeration value="T"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="GR_TypGatunekGlebyType">
+		<restriction base="string">
+			<enumeration value="żp"/>
+			<enumeration value="żg"/>
+			<enumeration value="pl"/>
+			<enumeration value="plp"/>
+			<enumeration value="ps"/>
+			<enumeration value="psp"/>
+			<enumeration value="pgl"/>
+			<enumeration value="pglp"/>
+			<enumeration value="pgm"/>
+			<enumeration value="pgmp"/>
+			<enumeration value="gl"/>
+			<enumeration value="glp"/>
+			<enumeration value="gs"/>
+			<enumeration value="gsp"/>
+			<enumeration value="gc"/>
+			<enumeration value="gcp"/>
+			<enumeration value="i"/>
+			<enumeration value="ip"/>
+			<enumeration value="płz"/>
+			<enumeration value="płi"/>
+			<enumeration value="l"/>
+			<enumeration value="li"/>
+			<enumeration value="w"/>
+			<enumeration value="d"/>
+			<enumeration value="dl"/>
+			<enumeration value="ds"/>
+			<enumeration value="dc"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="GR_TypRodzajSkalyMacierzystejType">
+		<restriction base="string">
+			<enumeration value="1"/>
+			<enumeration value="2"/>
+			<enumeration value="3"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="GR_TypSzkieletowoscType">
+		<restriction base="string">
+			<enumeration value="1"/>
+			<enumeration value="2"/>
+			<enumeration value="sz"/>
+			<enumeration value="r"/>
+			<enumeration value="sk"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="GR_TypGatunekGlebySkalyMacierzystejType">
+		<restriction base="string">
+			<enumeration value="p"/>
+			<enumeration value="g"/>
+			<enumeration value="i"/>
+			<enumeration value="pł"/>
+			<enumeration value="sz"/>
+			<enumeration value="sk"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="GR_TypKlasaBonitacyjnaType">
+		<restriction base="string">
+			<enumeration value="I"/>
+			<enumeration value="II"/>
+			<enumeration value="III"/>
+			<enumeration value="IIIa"/>
+			<enumeration value="IIIb"/>
+			<enumeration value="IV"/>
+			<enumeration value="IVa"/>
+			<enumeration value="IVb"/>
+			<enumeration value="V"/>
+			<enumeration value="VI"/>
+			<enumeration value="VIz"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="GR_TypRodzajGlebyOrganicznejType">
+		<restriction base="string">
+			<enumeration value="n"/>
+			<enumeration value="v"/>
+			<enumeration value="t"/>
+			<enumeration value="tm"/>
+			<enumeration value="mt"/>
+			<enumeration value="ga"/>
+			<enumeration value="m"/>
+			<enumeration value="wł"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="GR_TypMiazszoscType">
+		<restriction base="string">
+			<enumeration value="-"/>
+			<enumeration value="="/>
+			<enumeration value="."/>
+			<enumeration value=":"/>
+			<enumeration value=":."/>
+		</restriction>
+	</simpleType>
+		<simpleType name="GR_TypGatunekRedzinyType">
+		<restriction base="string">
+			<enumeration value="l"/>
+			<enumeration value="s"/>
+			<enumeration value="c"/>
+			<enumeration value="(l)"/>
+			<enumeration value="(s)"/>
+			<enumeration value="(c)"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="GR_TypGatunekMadyType">
+		<restriction base="string">
+			<enumeration value="l"/>
+			<enumeration value="bl"/>
+			<enumeration value="s"/>
+			<enumeration value="c"/>
+			<enumeration value="bc"/>
+		</restriction>
+	</simpleType>
+		<simpleType name="GR_TypUzytekGruntowyType">
+		<restriction base="string">
+			<enumeration value="R"/>
+			<enumeration value="S"/>
+			<enumeration value="Ł"/>
+			<enumeration value="Ps"/>
+			<enumeration value="Br"/>
+			<enumeration value="Lzr"/>
+			<enumeration value="Wsr"/>
+			<enumeration value="W"/>
+			<enumeration value="N"/>
+			<enumeration value="Ls"/>
+			<enumeration value="Lz"/>
+			<enumeration value="B"/>
+			<enumeration value="Ba"/>
+			<enumeration value="Bz"/>
+			<enumeration value="Bi"/>
+			<enumeration value="Bp"/>
+			<enumeration value="K"/>
+			<enumeration value="dr"/>
+			<enumeration value="Tk"/>
+			<enumeration value="Ti"/>
+			<enumeration value="Tp"/>
+			<enumeration value="Wm"/>
+			<enumeration value="Wp"/>
+			<enumeration value="Ws"/>
+			<enumeration value="Tr"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="GR_ZrodloOpracowania">
+		<restriction base="string">
+			<enumeration value="Mgr5000"/>
+			<enumeration value="Mgr25000"/>
+			<enumeration value="EGiB"/>
+			<enumeration value="Teren"/>
+		</restriction>
+	</simpleType>
+</schema>
