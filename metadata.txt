@@ -5,12 +5,12 @@
 [general]
 name=Walidator plików GML
 qgisMinimumVersion=3.22
-description=Walidacja i kontrola plików GML baz: BDOO, BDOT10k, PRNG, RCN, GESUT, EGiB, BDOT500
-version=1.0.6
+description=Walidacja i kontrola plików GML baz: BDOO, BDOT10k, PRNG, RCN, GESUT, EGiB, BDOT500, MGR
+version=1.0.7
 author=Marcin Lebiecki - Główny Urząd Geodezji i Kartografii
 email=marcin.lebiecki@gugik.gov.pl
 
-about=Walidacja ze schematem aplikacyjnym GML - XSD i kontrola plików GML baz: BDOO, BDOT10k, PRNG, GESUT, EGiB, BDOT500, RCN.
+about=Walidacja ze schematem aplikacyjnym GML - XSD i kontrola plików GML baz: BDOO, BDOT10k, PRNG, GESUT, EGiB, BDOT500, RCN, MGR.
 
 tracker=https://github.com/GlownyUrzadGeodezjiIKartografii/WalidatorPlikowGML/issues
 repository=https://github.com/GlownyUrzadGeodezjiIKartografii/WalidatorPlikowGML
@@ -21,6 +21,13 @@ repository=https://github.com/GlownyUrzadGeodezjiIKartografii/WalidatorPlikowGML
 hasProcessingProvider=no
 # Uncomment the following line and add your changelog:
 changelog= 
+    1.0.7 Dodano lub poprawiono kontrole BDOT10k, BDOT500 i GESUT.
+          Dodano możliwość wyboru wielu formatów raportów.
+          Dodano tworzenie tymczasowych warstw z obiektami błędów walidacji lub kontroli atrybutów.
+          Dodano możliwość wyboru szablonu kontroli.
+          Dodano walidację i kontrolę atrybutów bazy map glebowo-rolniczych (MGR).
+          Dodano możliwość wyłączenia kontroli dla obiektów z wypełnionym atrybutem koniecWersjiObiektu.
+          Przyspieszono działanie niektórych kontroli BDOT10k.
     1.0.6 Dodanie lub poprawa kontroli BDOT10k, BDOT500 i EGiB. Dodano generowanie raportu w formacie PDF.
     1.0.5 Dodanie lub poprawa kontroli BDOT10k i BDOT500.
     1.0.4 Poprawa drobnych błędów w zakresie kontroli BDOT10k.
