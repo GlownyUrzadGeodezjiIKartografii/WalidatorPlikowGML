@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <SzablonKontroli xmlns="http://www.gugik.gov.pl" id="bdot10k" version="1.0.6" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-
 	<GrupaKontroli id="topo_e1_k1" name="Kontrole atrybutowe">
 		<Kontrola id="topo_e1_k1" name="OT_ADJA_A Kontrola jednostki nadrzędnej dla państwa i województwa" class="OT_ADJA_A" errorPhrase="topo_e1_k1 Państwo i województwo nie mogą mieć jednostki nadrzędnej">
 			<Parametr typ="QgsExpression" sql="rodzaj in ('państwo', 'województwo') and idTERYTjednostkiNadrzednej is not NULL"/>
@@ -500,7 +499,6 @@
 		<Kontrola id="topo_e1_k120" name="OT_TCRZ_A Kontrola atrybutu zrodloDanychGeometrycznych" class="OT_TCRZ_A" errorPhrase="topo_e1_k120 Błędnie wypełnoiony atrybut zrodloDanychGeometrycznych">
 			<Parametr typ="QgsExpression" sql="zrodloDanychGeometrycznych not in ('Centralny Rejestr Form Ochrony Przyrody') "/>
 		</Kontrola>
-		
 	</GrupaKontroli>
 	
 	<!-- ....................................................................................................................................................... -->
@@ -1379,19 +1377,19 @@
 			<Parametr typ="pythonFunction" sql="minimalnaPowierzchnia"/>
 		</Kontrola>
 		<Kontrola id="topo_e3_k162" name="Kontrola minimalnej powierzchni OT_PTRK_A - krzewy względem OT_PTLZ_A" class="OT_PTRK_A" errorPhrase="topo_e3_k162 Powierzchnia OT_PTRK_A powinna znaleźć się w klasie OT_PTLZ_A">
-			<Parametr typ="pythonFunction" sql="minPowierzchniaPTRKwzgledemPTLZ"/>
+			<Parametr typ="pythonFunction" sql="minimalnaPTRKwzgledemPTLZ"/>
 		</Kontrola>
 		<Kontrola id="topo_e3_k163" name="Kontrola minimalnej powierzchni OT_PTUT_A" class="OT_PTUT_A" errorPhrase="topo_e3_k163 Powierzchnia OT_PTUT_A mniejsza niż 1000 m2">
 			<Parametr typ="pythonFunction" sql="minimalnaPowierzchnia"/>
 		</Kontrola>
 		<Kontrola id="topo_e3_k164" name="Kontrola minimalnej powierzchni OT_PTTR_A -bez ronda" class="OT_SKRW_P" errorPhrase="topo_e3_k164 Powierzchnia OT_PTTR_A mniejsza niż 1000 m2">
-			<Parametr typ="pythonFunction" sql="minPowierzchniaPTTRronda"/>
+			<Parametr typ="pythonFunction" sql="minimalnaPTTRronda"/>
 		</Kontrola>
 		<Kontrola id="topo_e3_k166" name="Kontrola minimalnej powierzchni OT_PTGN_A" class="OT_PTGN_A" errorPhrase="topo_e3_k166 Powierzchnia OT_PTGN_A mniejsza niż 1000 m2">
 			<Parametr typ="pythonFunction" sql="minimalnaPowierzchnia"/>
 		</Kontrola>
 		<Kontrola id="topo_e3_k167" name="Kontrola minimalnej powierzchni OT_PTPL_A bez nazwy" class="OT_PTPL_A" errorPhrase="topo_e3_k167 Powierzchnia OT_PTPL_A mniejsza niż 1000 m2">
-			<Parametr typ="pythonFunction" sql="minPowierzchniaPTPL"/>
+			<Parametr typ="pythonFunction" sql="minimalnaPTPL"/>
 		</Kontrola>
 		<Kontrola id="topo_e3_k169" name="Kontrola minimalnej powierzchni OT_PTSO_A" class="OT_PTSO_A" errorPhrase="topo_e3_k169 Powierzchnia OT_PTSO_A mniejsza niż 1000 m2">
 			<Parametr typ="pythonFunction" sql="minimalnaPowierzchnia"/>
@@ -1409,13 +1407,13 @@
 			<Parametr typ="pythonFunction" sql="minimalnaPowierzchnia"/>
 		</Kontrola>
 		<Kontrola id="topo_e3_k174" name="Kontrola minimalnej powierzchni OT_BUIT_A" class="OT_BUIT_A" errorPhrase="topo_e3_k174 Powierzchnia zespołu transformatorów i zespołu dystrybutorów paliwa w klasie OT_BUIT_A mniejsza niż 1000 m2">
-			<Parametr typ="pythonFunction" sql="minPowierzchniaBUIT"/>
+			<Parametr typ="pythonFunction" sql="minimalnaBUIT"/>
 		</Kontrola>
 		<Kontrola id="topo_e3_k175" name="Kontrola minimalnej powierzchni OT_KUPG_A" class="OT_KUPG_A" errorPhrase="topo_e3_k175 Powierzchnia OT_KUPG_A mniejsza niż 3000 m2">
-			<Parametr typ="pythonFunction" sql="minPowierzchniaKUPG"/>
+			<Parametr typ="pythonFunction" sql="minimalnaKUPG"/>
 		</Kontrola>
 		<Kontrola id="topo_e3_k176" name="Kontrola minimalnej powierzchni OT_KUKO_A" class="OT_KUKO_A" errorPhrase="topo_e3_k176 Powierzchnia OT_KUKO_A mniejsza niż 3000 m2">
-			<Parametr typ="pythonFunction" sql="minPowierzchniaKUKO"/>
+			<Parametr typ="pythonFunction" sql="minimalnaKUKO"/>
 		</Kontrola>
 		<Kontrola id="topo_e3_k177" name="Kontrola minimalnej powierzchni OT_KUSK_A" class="OT_KUSK_A" errorPhrase="topo_e3_k177 Powierzchnia OT_KUSK_A mniejsza niż 3000 m2">
 			<Parametr typ="pythonFunction" sql="minimalnaPowierzchnia"/>
@@ -1436,19 +1434,19 @@
 			<Parametr typ="pythonFunction" sql="minimalnaPowierzchnia"/>
 		</Kontrola>
 		<Kontrola id="topo_e3_k183" name="Kontrola minimalnej powierzchni OT_KUSC_A" class="OT_KUSC_A" errorPhrase="topo_e3_k183 Powierzchnia zespołu sakaralnego - OT_KUSC_A mniejsza niż 5000 m2">
-			<Parametr typ="pythonFunction" sql="minPowierzchniaKUSC"/>
+			<Parametr typ="pythonFunction" sql="minimalnaKUSC"/>
 		</Kontrola>
 		<Kontrola id="topo_e3_k184" name="Kontrola minimalnej powierzchni OT_OIKM_A" class="OT_OIKM_A" errorPhrase="topo_e3_k184 Powierzchnia schodów - OT_OIKM_A mniejsza niż 500 m2">
-			<Parametr typ="pythonFunction" sql="minPowierzchniaOIKM"/>
+			<Parametr typ="pythonFunction" sql="minimalnaOIKM"/>
 		</Kontrola>
 		<Kontrola id="topo_e3_k185" name="Kontrola minimalnej powierzchni OT_OIOR_A - bunkier lub schron" class="OT_OIOR_A" errorPhrase="topo_e3_k185 Powierzchnia bunkra lub schronu - OT_OIOR_A mniejsza niż 100 m2">
-			<Parametr typ="pythonFunction" sql="minPowierzchniaOIORschron"/>
+			<Parametr typ="pythonFunction" sql="minimalnaOIORschron"/>
 		</Kontrola>
 		<Kontrola id="topo_e3_k186" name="Kontrola minimalnej powierzchni OT_OIOR_A - szklarnia" class="OT_OIOR_A" errorPhrase="topo_e3_k186 Powierzchnia szklarni niebędącej budynkiem - OT_OIOR_A mniejsza niż 100 m2">
-			<Parametr typ="pythonFunction" sql="minPowierzchniaOIORszklarnia"/>
+			<Parametr typ="pythonFunction" sql="minimalnaOIORszklarnia"/>
 		</Kontrola>
 		<Kontrola id="topo_e3_k187" name="Kontrola minimalnej powierzchni OT_OIOR_A - wiata lub altana" class="OT_OIOR_A" errorPhrase="topo_e3_k187 Powierzchnia wiaty lub altany - OT_OIOR_A mniejsza niż 200 m2">
-			<Parametr typ="pythonFunction" sql="minPowierzchniaOIORwiataAltana"/>
+			<Parametr typ="pythonFunction" sql="minimalnaOIORwiataAltana"/>
 		</Kontrola>
 		<Kontrola id="topo_e3_k188_1" name="Kontrola minimalnej powierzchni budynku OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e3_k188_1 Powierzchnia budynku mniejsza niż 40 m2">
 			<Parametr typ="QgsExpression" sql="(funkcjaOgolnaBudynku IS NULL or funkcjaOgolnaBudynku !='budynki mieszkalne') and $area &lt;40 and (overlay_intersects(layer:='OT_PTUT_A',filter:= rodzaj ='ogródki działkowe'))"/>
