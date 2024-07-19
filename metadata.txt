@@ -6,7 +6,7 @@
 name=Walidator plików GML
 qgisMinimumVersion=3.22
 description=Walidacja i kontrola plików GML baz: BDOO, BDOT10k, PRNG, RCN, GESUT, EGiB, BDOT500, MGR
-version=1.0.7
+version=1.0.9
 author=Marcin Lebiecki - Główny Urząd Geodezji i Kartografii
 email=marcin.lebiecki@gugik.gov.pl
 
@@ -20,7 +20,17 @@ repository=https://github.com/GlownyUrzadGeodezjiIKartografii/WalidatorPlikowGML
 
 hasProcessingProvider=no
 # Uncomment the following line and add your changelog:
-changelog= 
+changelog=
+    1.0.9 Dodano lub poprawiono kontrole BDOT10k.
+          Przyspieszono działanie niektórych kontroli BDOT10k.
+          Dodano zakładkę z ustawieniami wtyczki.
+          Dodano możliwość wskazania plików granic PRG.
+          Dodano możliwość wskazania lub zmiany pliku do walidacji i kontroli.
+          Dodano kontrole map glebowo-rolniczych.
+          Dodano możliwość logowania czasów wykonania kontroli w Konsoli Python.
+          Wprowadzono zmiany redakcyjne do raportów w formacie pdf i xls.
+          Zaktualizowano schemat aplikacyjny GML dla EGiB w wersji 1.9.
+    1.0.8 Dodano lub poprawiono kontrole BDOT10k.
     1.0.7 Dodano lub poprawiono kontrole BDOT10k, BDOT500 i GESUT.
           Dodano możliwość wyboru wielu formatów raportów.
           Dodano tworzenie tymczasowych warstw z obiektami błędów walidacji lub kontroli atrybutów.
@@ -35,7 +45,7 @@ changelog=
     1.0.2 Dodano możliwość kontroli atrybutowych baz BDOT500, GESUT, EGiB.
 
 # Tags are comma separated with spaces allowed
-tags=python, GML, XSD, walidacja, BDOO, BDOT10k, PRNG, RCN, GESUT, EGiB, BDOT500
+tags=python, GML, XSD, walidacja, BDOO, BDOT10k, PRNG, RCN, GESUT, EGiB, BDOT500, MGR
 
 homepage=https://www.gov.pl/web/gugik
 category=Plugins
