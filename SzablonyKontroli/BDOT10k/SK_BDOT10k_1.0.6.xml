@@ -22,6 +22,9 @@
 		<Kontrola id="topo_e1_k3" name="OT_BUHD_L Kontrola wysokości zapory" class="OT_BUHD_L" errorPhrase="topo_e1_k3 Wysokość  podaje się tylko dla zapory">
 			<Parametr typ="QgsExpression" sql="rodzaj != 'zapora' and wysokoscZapory is not NULL"/>
 		</Kontrola>
+		<Kontrola id="topo_e1_k3_1" name="OT_BUHD_A Kontrola wysokości zapory" class="OT_BUHD_A" errorPhrase="topo_e1_k3_1 Wysokość  podaje się tylko dla zapory">
+			<Parametr typ="QgsExpression" sql="rodzaj != 'zapora' and wysokoscZapory is not NULL"/>
+		</Kontrola>
 		<Kontrola id="topo_e1_k4" name="OT_BUIN_L Kontrola konstrukcji mostu" class="OT_BUIN_L" errorPhrase="topo_e1_k4 Konstrukcję podaje się tylko dla mostów">
 			<Parametr typ="QgsExpression" sql="rodzaj != 'most' and konstrukcja is not NULL"/>
 		</Kontrola>
@@ -88,8 +91,8 @@
 		<Kontrola id="topo_e1_k21" name="OT_SKJZ_L Kontrola szerokości dla nawierzchni gruntowej" class="OT_SKJZ_L" errorPhrase="topo_e1_k21 Dla nawierzchni gruntowej nie podaje się szerokości">
 			<Parametr typ="QgsExpression" sql="materialNawierzchni in ('grunt naturalny', NULL) and szerokoscNawierzchni is not NULL"/>
 		</Kontrola>
-		<Kontrola id="topo_e1_k22" name="OT_SKJZ_L Kontrola liczby jezdni w klasie SKJZ" class="OT_SKJZ_L" errorPhrase="topo_e1_k22 Liczba jezdni nie powinna wynosić 0">
-			<Parametr typ="QgsExpression" sql="liczbaJezdniDrogi = 0"/>
+		<Kontrola id="topo_e1_k22" name="OT_SKJZ_L Kontrola wypełnienia liczby jezdni" class="OT_SKJZ_L" errorPhrase="topo_e1_k22 Atrybut liczbaJezdniDrogi musi pozostać niewypełniony">
+			<Parametr typ="QgsExpression" sql="liczbaJezdniDrogi is not NULL"/>
 		</Kontrola>
 		<Kontrola id="topo_e1_k23" name="OT_SKJZ_L Kontrola materiału nawierzchni" class="OT_SKJZ_L" errorPhrase="topo_e1_k23 Materiał nawierzchni dróg wybranych klas nie może być gruntem naturalnym">
 			<Parametr typ="QgsExpression" sql="klasaDrogi in ('autostrada', 'droga ekspresowa', 'droga główna ruchu przyśpieszonego', 'droga główna', 'droga zbiorcza') and materialNawierzchni = 'grunt naturalny'"/>
@@ -112,8 +115,14 @@
 		<Kontrola id="topo_e1_k24_5" name="OT_SKJZ_L Kontrola wypełnienia obligatoryjnego atrybutu 'szerokoscNawierzchni'" class="OT_SKJZ_L" errorPhrase="topo_e1_k24_5 Brak atrybutu 'szerokoscNawierzchni'">
 			<Parametr typ="QgsExpression" sql="szerokoscNawierzchni is NULL and kategoriaIstnienia in ('eksploatowany') and (cechaGeometrii IS NULL or cechaGeometrii != 'linia umowna') and materialNawierzchni != 'grunt naturalny'"/>
 		</Kontrola>
-		<Kontrola id="topo_e1_k24_6" name="OT_SKJZ_L Kontrola wypełnienia obligatoryjnego atrybutu 'liczbaJezdniDrogi'" class="OT_SKJZ_L" errorPhrase="topo_e1_k24_6 Brak atrybutu 'liczbaJezdniDrogi'">
-			<Parametr typ="QgsExpression" sql="liczbaJezdniDrogi is NULL and kategoriaIstnienia in ('eksploatowany') and (cechaGeometrii IS NULL or cechaGeometrii != 'linia umowna')"/>
+		<Kontrola id="topo_e1_k24_6" name="OT_SKDR_L Kontrola wypełnienia obligatoryjnego atrybutu 'szerokoscNawierzchni'" class="OT_SKDR_L" errorPhrase="topo_e1_k24_6 Brak atrybutu 'szerokoscNawierzchni'">
+			<Parametr typ="QgsExpression" sql="szerokoscNawierzchni is NULL and liczbaJezdniDrogi = 1"/>
+		</Kontrola>
+		<Kontrola id="topo_e1_k24_7" name="OT_SKDR_L Kontrola nadmiarowego wypełnienia atrybutu 'szerokoscNawierzchni'" class="OT_SKDR_L" errorPhrase="topo_e1_k24_7 Atrybut 'szerokoscNawierzchni' wypełnia się tylko dla dróg jednojezniowych">
+			<Parametr typ="QgsExpression" sql="szerokoscNawierzchni is not NULL and (liczbaJezdniDrogi is NULL or liczbaJezdniDrogi = 0 or liczbaJezdniDrogi &gt;1)"/>
+		</Kontrola>
+		<Kontrola id="topo_e1_k24_8" name="OT_SKDR_L Kontrola wypełnienia obligatoryjnego atrybutu 'liczbaJezdniDrogi'" class="OT_SKDR_L" errorPhrase="topo_e1_k24_8 Brak atrybutu 'liczbaJezdniDrogi'">
+			<Parametr typ="QgsExpression" sql="liczbaJezdniDrogi is NULL"/>
 		</Kontrola>
 		<Kontrola id="topo_e1_k25" name="OT_SKRP_L Kontrola nadania szerokości ciągu ruchu pieszego|rowerowego" class="OT_SKRP_L" errorPhrase="topo_e1_k25 Szerokość podaje się tylko dla alei lub pasażu">
 			<Parametr typ="QgsExpression" sql="rodzaj != 'aleja lub pasaż' and szerokosc is not NULL"/>
@@ -1079,7 +1088,7 @@
 		</Kontrola>
 		<Kontrola id="topo_e2_k202" name="Kontrola kodu kartograficznego 0010_810_1 w klasie OT_BUZM_L" class="OT_BUZM_L" errorPhrase="topo_e2_k202 Błędny kod kartograficzny">
 			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_810_1' and not (rodzaj in ('nasyp', 'wał przeciwpowodziowy lub grobla') and szerokoscKorony &lt; 5 and szerokoscKorony &gt;= 3 and (szerokoscPodstawy - szerokoscKorony) &gt;= 14 and wysokosc &gt;= 1)"/>
-		</Kontrola>  
+		</Kontrola>
 		<Kontrola id="topo_e2_k203" name="Kontrola kodu kartograficznego 0010_810_2 w klasie OT_BUZM_L" class="OT_BUZM_L" errorPhrase="topo_e2_k203 Błędny kod kartograficzny">
 			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_810_2' and not (rodzaj in ('nasyp', 'wał przeciwpowodziowy lub grobla') and szerokoscKorony &lt; 5 and szerokoscKorony &gt;= 3 and (szerokoscPodstawy - szerokoscKorony) &lt; 14 and wysokosc &gt;= 1)"/>
 		</Kontrola>
@@ -1089,7 +1098,7 @@
 		<Kontrola id="topo_e2_k205" name="Kontrola kodu kartograficznego 0010_811_2 w klasie OT_BUZM_L" class="OT_BUZM_L" errorPhrase="topo_e2_k205 Błędny kod kartograficzny">
 			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_811_2' and not (rodzaj in ('nasyp', 'wał przeciwpowodziowy lub grobla') and szerokoscKorony &lt; 3 and (szerokoscPodstawy - szerokoscKorony) &lt; 19 and wysokosc &gt;= 1)"/>
 		</Kontrola>
-		<Kontrola id="topo_e2_k206" name="Kontrola kodu kartograficznego 0010_812 w klasie OT_RTPW_P" class="OT_RTPW_P" errorPhrase="topo_e2_k206 Błędny kod kartograficzny">     
+		<Kontrola id="topo_e2_k206" name="Kontrola kodu kartograficznego 0010_812 w klasie OT_RTPW_P" class="OT_RTPW_P" errorPhrase="topo_e2_k206 Błędny kod kartograficzny">
 			<Parametr typ="QgsExpression" sql="kodKarto10k = '0010_812' and not (rodzaj in ('kopiec lub hałda'))"/>
 		</Kontrola>
 		<Kontrola id="topo_e2_k207" name="Kontrola kodu kartograficznego 0010_813 w klasie OT_RTPW_P" class="OT_RTPW_P" errorPhrase="topo_e2_k207 Błędny kod kartograficzny">
@@ -1607,9 +1616,6 @@
 		<Kontrola id="topo_e3_k190_51" name="OT_OISZ_A Kontrola zasięgu przestrzennego w granicy powiatu" class="OT_OISZ_A" errorPhrase="topo_e3_k190_51 Błąd zasięgu przestrzennego OT_OISZ_A w granicy powiatu">
 			<Parametr typ="pythonFunction" sql="czyObiektyWewnatrzPowiatu(teryt)"/>
 		</Kontrola>
-		<Kontrola id="topo_e3_k191_2" name="OT_ADMS_A Kontrola nadmiernej segmentacji" class="OT_ADMS_A" errorPhrase="topo_e3_k191_2 Nadmierna segmentacja">
-			<Parametr typ="pythonFunction" sql="nadmiernaSegmentacja"/>
-		</Kontrola>
 		<Kontrola id="topo_e3_k191_3" name="OT_PTWP_A Kontrola nadmiernej segmentacji" class="OT_PTWP_A" errorPhrase="topo_e3_k191_3 Nadmierna segmentacja">
 			<Parametr typ="pythonFunction" sql="nadmiernaSegmentacja"/>
 		</Kontrola>
@@ -1720,7 +1726,7 @@
 		<Kontrola id="topo_e4_k16" name="OT_RTLW_L Kontrola występowania zduplikowanych obiektów" class="OT_RTLW_L" errorPhrase="topo_e4_k16 Błąd zduplikowanych obiektów OT_RTLW_L">
 			<Parametr typ="pythonFunction" sql="findDuplicates"/>
 		</Kontrola>
-		<Kontrola id="topo_e4_k17" name="OT_RTLW_L Kontrola minimalnej powierzchni zarysowanej poziomicą" class="OT_RTLW_L" errorPhrase="topo_e4_k17 Błąd minimalnej powierzchni zarysowanej poziomicą (200m^2)"> 
+		<Kontrola id="topo_e4_k17" name="OT_RTLW_L Kontrola minimalnej powierzchni zarysowanej poziomicą" class="OT_RTLW_L" errorPhrase="topo_e4_k17 Błąd minimalnej powierzchni zarysowanej poziomicą (200m^2)">
 			<Parametr typ="QgsExpression" sql="if(is_closed($geometry) and area(make_polygon($geometry))&lt;200,1,0)"/>
 		</Kontrola>
 		<Kontrola id="topo_e4_k18" name="OT_RTLW_L Kontrola przecinania się wody stojącej OT_PTWP_A z poziomicą OT_RTLW_L" class="OT_RTLW_L" errorPhrase="topo_e4_k18 Błąd przecinania się poziomic z wodą stojącą wodą morską OT_PTWP_A">
@@ -1736,7 +1742,7 @@
 			<Parametr typ="QgsExpression" sql="rodzaj in ('skarpa','wąwóz') and (overlay_intersects(layer:='OT_SKJZ_L',filter:= polozenie='na powierzchni gruntu') or overlay_intersects(layer:='OT_SKTR_L',filter:= polozenie='na powierzchni gruntu') or overlay_intersects(layer:='OT_SKDR_L',filter:= polozenie='na powierzchni gruntu') or overlay_intersects(layer:='OT_SKRP_L',filter:= polozenie='na powierzchni gruntu'))"/>
 		</Kontrola>
 		<Kontrola id="topo_e4_k22" name="OT_RTLW_L Kontrola przecinania się zbiorników i osadników OT_BUZT_A z obiektami klasy OT_RTLW_L" class="OT_RTLW_L" errorPhrase="topo_e4_k22 Błąd przecinania się obiektów klasy OT_RTLW_L z obszarem zbiorników/osadników OT_BUZT_A">
-			<Parametr typ="QgsExpression" sql="overlay_intersects(layer:='OT_BUZT_A')"/>
+			<Parametr typ="QgsExpression" sql="overlay_intersects(layer:='OT_BUZT_A') and kodKarto10k is not NULL"/>
 		</Kontrola>
 		<Kontrola id="topo_e4_k23" name="OT_RTLW_L Kontrola przecinania się obiektów liniowych OT_RTLW_L z obietkami klasy OT_BUZM_L" class="OT_RTLW_L" errorPhrase="topo_e4_k23 Błąd przecinania się obiektów liniowych klasy OT_RTLW_L z budowlami ziemnymi OT_BUZM_L">
 			<Parametr typ="QgsExpression" sql="rodzaj in ('skarpa','wąwóz') and overlay_intersects(layer:='OT_BUZM_L')"/>
@@ -1761,6 +1767,6 @@
 		</Kontrola>
 		<Kontrola id="topo_e4_k30" name="OT_RTLW_L Kontrola wypełnienia atrybutu PrzestrzenNazw" class="OT_RTLW_L" errorPhrase="topo_e4_k30 Błąd formatu atrybutu PrzestrzenNazw">
 			<Parametr typ="pythonFunction" sql="przestrzenNazw(teryt)"/>
-		</Kontrola> 
+		</Kontrola>
 	</GrupaKontroli>
 </SzablonKontroli>
