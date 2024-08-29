@@ -30,6 +30,8 @@ import configparser
 import sys
 import re
 from datetime import datetime
+import lxml
+from lxml import etree
 
 
 def findDuplicates(layer):
@@ -68,8 +70,8 @@ def findDuplicates(layer):
 
 
 def validateGeometry(layer):
-    obiektyZbledami = []
-    gml_ids = []
+    obiektyZbledami = set()
+    
     checkvalidity1 = processing.run("qgis:checkvalidity", {
         'INPUT_LAYER': layer,
         'METHOD': 1, # QGIS
@@ -78,8 +80,11 @@ def validateGeometry(layer):
     })
     
     for obj in checkvalidity1['INVALID_OUTPUT'].getFeatures():
-        obiektyZbledami.append(obj)
-        gml_ids.append(obj['gml_id'])
+        geom = obj.geometry()
+        if geom.type() == QgsWkbTypes.LineGeometry:
+            if geom.asPolyline()[0] == geom.asPolyline()[-1]:
+                continue
+        obiektyZbledami.add(obj)
     
     checkvalidity2 = processing.run("qgis:checkvalidity", {
         'INPUT_LAYER': layer,
@@ -89,34 +94,59 @@ def validateGeometry(layer):
     })
     
     for obj in checkvalidity2['INVALID_OUTPUT'].getFeatures():
-        if obj['gml_id'] not in gml_ids:
-            gml_ids.append(obj['gml_id'])
-            obiektyZbledami.append(obj)
+        geom = obj.geometry()
+        if geom.type() == QgsWkbTypes.LineGeometry:
+            if geom.asPolyline()[0] == geom.asPolyline()[-1]:
+                continue
+        obiektyZbledami.add(obj)
     
     return obiektyZbledami
 
 
+def adjaMinus2cmBufor(layer, klasa):
+    ADJA_A_layer = QgsProject().instance().mapLayersByName(layer.name().replace(klasa,"OT_ADJA_A"))[0]
+    
+    powiat = processing.run("qgis:extractbyexpression", {
+        'INPUT': ADJA_A_layer,
+        'EXPRESSION': '"rodzaj" = \'powiat\'',
+        'FAIL_OUTPUT': 'memory:',
+        'OUTPUT': 'memory:'
+    })
+    
+    bufor = processing.run("native:buffer", {
+        'INPUT': powiat['OUTPUT'],
+        'DISTANCE': -0.02,
+        'SEGMENTS': 10,
+        'DISSOLVE': True,
+        'OUTPUT': 'memory:'
+    })
+    
+    # zamiana poligonu na linie
+    granica = processing.run("native:polygonstolines", {
+        'INPUT': bufor['OUTPUT'],
+        'OUTPUT': 'memory:'
+    })['OUTPUT']
+    
+    return granica
+
+
 def minimalnaPowierzchnia(layer):
-    minPowWarstwy = {"OT_PTWP_A":80, "OT_PTZB_A":1000, "OT_PTLZ_A":500, "OT_PTRK_A":1000,"OT_PTUT_A":1000,"OT_PTGN_A":1000, "OT_PTSO_A":1000, "OT_PTWZ_A":1000, "OT_PTNZ_A":1000, "OT_BUWT_A":100, "OT_BUZT_A":175, "OT_KUSK_A":3000, "OT_KUHO_A":3000, "OT_KUHU_A":3000, "OT_KUOS_A":3000, "OT_KUOZ_A":3000, "OT_KUZA_A":3000}
+    minPowWarstwy = {"OT_PTWP_A":80,"OT_PTZB_A":1000,"OT_PTLZ_A":500, "OT_PTRK_A":1000,"OT_PTUT_A":1000,"OT_PTGN_A":1000,
+                     "OT_PTSO_A":1000,"OT_PTWZ_A":1000,"OT_PTNZ_A":1000,"OT_BUWT_A":100,"OT_BUZT_A":175,"OT_KUSK_A":3000,
+                     "OT_KUHO_A":3000,"OT_KUHU_A":3000,"OT_KUOS_A":3000,"OT_KUOZ_A":3000,"OT_KUZA_A":3000}
     obiektyZbledami = []
     klasa = layer.name()[-9:]
-    ADJA_A_layer = QgsProject().instance().mapLayersByName(layer.name().replace(klasa,"OT_ADJA_A"))[0]
-    invalid_layer = processing.run("qgis:checkvalidity", {'INPUT_LAYER': ADJA_A_layer, 'METHOD': 0, 'IGNORE_RING_SELF_INTERSECTION': True, 'VALID_OUTPUT': 'memory:', 'INVALID_OUTPUT': 'memory:', 'ERROR_OUTPUT': 'memory:'})
-    # zawiera warstwę z niepoprawnymi geometriami
-    if invalid_layer['INVALID_OUTPUT']:
-              ADJA_A_layer = processing.run("native:fixgeometries", {'INPUT': ADJA_A_layer,'OUTPUT': 'memory:'})['OUTPUT']
-    outputs = processing.run('native:dissolve', {'INPUT': ADJA_A_layer,'SEPARATE_DISJOINT': False,'OUTPUT': 'memory:'})['OUTPUT']
-    granica = processing.run("native:polygonstolines", {'INPUT': outputs,'OUTPUT': 'memory:'})['OUTPUT'] # zamiana poligonu na linie
+    
+    granica = adjaMinus2cmBufor(layer, klasa)
+    
     for feature in layer.getFeatures():
         geom = feature.geometry()
         if klasa == 'OT_BUZT_A' and feature['rodzaj'] != 'zbiornik':
             continue
         else:
             if geom.area() < minPowWarstwy[klasa]:
-                styka = False
                 for g in granica.getFeatures():
                     if not geom.intersects(g.geometry()):
-                        styka = True
                         obiektyZbledami.append(feature)
     
     return obiektyZbledami
@@ -124,25 +154,13 @@ def minimalnaPowierzchnia(layer):
 
 def minimalnaPTRKwzgledemPTLZ(layer):
     obiektyZbledami = []
-    ADJA_A_layer = None
-    PTRK_A_layer = None
-    PTLZ_A_layer = None
     if layer.name()[-6:] == 'PTRK_A':
-        ADJA_A_layer = QgsProject().instance().mapLayersByName(layer.name().replace("OT_PTRK_A","OT_ADJA_A"))[0]
         PTLZ_A_layer = QgsProject().instance().mapLayersByName(layer.name().replace("OT_PTRK_A","OT_PTLZ_A"))[0]
         PTRK_A_layer = QgsProject().instance().mapLayersByName(layer.name())[0]
     identyfikatory_bledow = set()
-    invalid_layer = processing.run("qgis:checkvalidity", {'INPUT_LAYER': ADJA_A_layer, 'METHOD': 0, 'IGNORE_RING_SELF_INTERSECTION': True, 'VALID_OUTPUT': 'memory:', 'INVALID_OUTPUT': 'memory:', 'ERROR_OUTPUT': 'memory:'})
-    # zawiera warstwę z niepoprawnymi geometriami
-    if invalid_layer['INVALID_OUTPUT']:
-              params = {'INPUT': ADJA_A_layer,'OUTPUT': 'memory:'}
-              # Wykonanie naprawy geometrii
-              naprawiona= processing.run("native:fixgeometries", params)['OUTPUT']
-              ADJA_A_layer = naprawiona # usunięcie granic wewnątrz warstwy ADJA
-    alg_params = {'INPUT': ADJA_A_layer,'SEPARATE_DISJOINT': False,'OUTPUT': 'memory:'}
-    outputs = processing.run('native:dissolve', alg_params)['OUTPUT']
-    params = {'INPUT': outputs,'OUTPUT': 'memory:'}# To zapisuje wynik w pamięci, bez tworzenia fizycznej warstwy
-    granica = processing.run("native:polygonstolines", params)['OUTPUT'] # zamiana poligonu na linie
+    
+    granica = adjaMinus2cmBufor(layer, "OT_PTRK_A")
+    
     for PTRK_A_feature in PTRK_A_layer.getFeatures():
         for PTLZ_A_feature in PTLZ_A_layer.getFeatures():
             geom1 = PTRK_A_feature.geometry()
@@ -159,60 +177,73 @@ def minimalnaPTRKwzgledemPTLZ(layer):
 
 
 def minimalnaPTTRronda(layer):
+    minimalnaPowierzchniaBezWod(layer)
+
+
+def minimalnaPowierzchniaBezWod(layer):
     obiektyZbledami = []
-    ADJA_A_layer = None
-    SKRW_P_layer = None
+    minPowWarstwy = {"OT_PTLZ_A":500, "OT_PTRK_A":1000, "OT_PTTR_A":1000}
+    klasa = layer.name()[-9:]
     
-    if layer.name().__contains__('OT_PTTR_A'):
-        ADJA_A_layer = QgsProject().instance().mapLayersByName(layer.name().replace("OT_PTTR_A","OT_ADJA_A"))[0]
-        SKRW_P_layer = QgsProject().instance().mapLayersByName(layer.name().replace("OT_PTTR_A","OT_SKRW_P"))[0]
-    identyfikatory_bledow = set()
-    invalid_layer = processing.run("qgis:checkvalidity", {'INPUT_LAYER': ADJA_A_layer, 'METHOD': 0, 'IGNORE_RING_SELF_INTERSECTION': True, 'VALID_OUTPUT': 'memory:', 'INVALID_OUTPUT': 'memory:', 'ERROR_OUTPUT': 'memory:'})
-    # zawiera warstwę z niepoprawnymi geometriami
-    if invalid_layer['INVALID_OUTPUT']:
-              params = {'INPUT': ADJA_A_layer,'OUTPUT': 'memory:'} # Wykonanie naprawy geometrii
-              naprawiona = processing.run("native:fixgeometries", params)['OUTPUT']
-              ADJA_A_layer = naprawiona
-    alg_params = {'INPUT': ADJA_A_layer,'SEPARATE_DISJOINT': False,'OUTPUT': 'memory:'} # usunięcie granic wewnątrz warstwy ADJA
-    outputs = processing.run('native:dissolve', alg_params)['OUTPUT']
-    params = {'INPUT': outputs,'OUTPUT': 'memory:'} # To zapisuje wynik w pamięci, bez tworzenia fizycznej warstwy
-    granica = processing.run("native:polygonstolines", params)['OUTPUT'] # zamiana poligonu na linie
-    index_SKRW_P = QgsSpatialIndex()
+    granica = adjaMinus2cmBufor(layer, klasa)
+    
+    pokrycie = []
+    for layer_id, lyr in QgsProject.instance().mapLayers().items():
+        if lyr.name().__contains__("OT_PT"): # wrzucenie wszystkich warstw Pokrycia do jednej tablicy
+            pokrycie.append(lyr)
+    
     index_granica = QgsSpatialIndex()
-    selected_ids = []
+    index_pokrycie = []
+    for lyr in pokrycie: # umieszczenie wszystkich indeksów na obiekcie przestrzennym
+       index = QgsSpatialIndex()
+       for feature in lyr.getFeatures():
+           index.insertFeature(feature)
+       index_pokrycie.append((lyr, index))
+     
     for feature in granica.getFeatures():
-        index_granica.insertFeature(feature)
-    for SKRW_P_feature in SKRW_P_layer.getFeatures():
-        if SKRW_P_feature['rodzaj'] != 'rondo':
-            index_SKRW_P.insertFeature(SKRW_P_feature)
-    for PTTR_A_feature in layer.getFeatures():
-        geom1 = PTTR_A_feature.geometry()
-        if geom1.area() < 1000:
-            intersects_SKRW_P = any(geom1.intersects(SKRW_P_layer.getFeature(fid).geometry()) for fid in index_SKRW_P.intersects(geom1.boundingBox()))
-            touches_boundary = any(geom1.intersects(granica.getFeature(fid).geometry()) for fid in index_granica.intersects(geom1.boundingBox()))
-            if not intersects_SKRW_P and not touches_boundary and PTTR_A_feature.id() not in identyfikatory_bledow:
-                obiektyZbledami.append(PTTR_A_feature)
-                identyfikatory_bledow.add(PTTR_A_feature.id())
+            index_granica.insertFeature(feature)
+    if klasa == 'OT_PTTR_A': # dodatkowy indeks przestrzenny dla PTTR bez ronda
+        SKRW_P_layer = QgsProject().instance().mapLayersByName(layer.name().replace(klasa,"OT_SKRW_P"))[0]
+        index_SKRW_P = QgsSpatialIndex()
+        identyfikatory_bledow = set()
+        for SKRW_P_feature in SKRW_P_layer.getFeatures():
+                if SKRW_P_feature['rodzaj'] != 'rondo':
+                    index_SKRW_P.insertFeature(SKRW_P_feature)
+    for feature in layer.getFeatures(): # obiekty z przeglądanych warstw
+        geom = feature.geometry()
+        graniczy_z = set()
+        # Sprawdzanie sąsiedztwa z warstwami OT_PT
+        for lyr, index in index_pokrycie:
+            for fid in index.intersects(geom.boundingBox()):
+                lyr_feature = lyr.getFeature(fid)
+                if lyr_feature.id() != feature.id() and geom.intersects(lyr_feature.geometry()): # pomija sąsiada z tej samej warstwy
+                    graniczy_z.add(lyr.name())
+        # Sprawdzanie, czy obiekt graniczy tylko z jedną warstwą
+        if len(graniczy_z) == 1 and any(layer_name.endswith('OT_PTWP_A') for layer_name in graniczy_z):
+                continue  # Pomiń obiekt, jeśli graniczy tylko z OT_PTWP_A
+        if klasa == 'OT_PTTR_A':
+            if geom.area() < minPowWarstwy[klasa]:
+                    intersects_SKRW_P = any(geom.intersects(SKRW_P_layer.getFeature(fid).geometry()) for fid in index_SKRW_P.intersects(geom.boundingBox()))
+                    touches_boundary = any(geom.intersects(granica.getFeature(fid).geometry()) for fid in index_granica.intersects(geom.boundingBox()))
+                    if not intersects_SKRW_P and not touches_boundary and feature.id() not in identyfikatory_bledow:
+                        obiektyZbledami.append(feature)
+                        identyfikatory_bledow.add(feature.id())
+        else:
+            if geom.area() < minPowWarstwy[klasa]:
+                styka = False
+                for g in granica.getFeatures():
+                    if not geom.intersects(g.geometry()):
+                        styka = True
+                        obiektyZbledami.append(feature)
     
     return obiektyZbledami
 
 
 def minimalnaPTPL(layer):
     obiektyZbledami = []
-    ADJA_A_layer = None
-    if layer.name()[-6:] == 'PTPL_A':
-        ADJA_A_layer = QgsProject().instance().mapLayersByName(layer.name().replace("OT_PTPL_A","OT_ADJA_A"))[0]
-    invalid_layer = processing.run("qgis:checkvalidity", {'INPUT_LAYER': ADJA_A_layer, 'METHOD': 0, 'IGNORE_RING_SELF_INTERSECTION': True, 'VALID_OUTPUT': 'memory:', 'INVALID_OUTPUT': 'memory:', 'ERROR_OUTPUT': 'memory:'})
-    # zawiera warstwę z niepoprawnymi geometriami
-    if invalid_layer['INVALID_OUTPUT']:
-              params = {'INPUT': ADJA_A_layer,'OUTPUT': 'memory:'}
-              # Wykonanie naprawy geometrii
-              naprawiona= processing.run("native:fixgeometries", params)['OUTPUT']
-              ADJA_A_layer = naprawiona
-    alg_params = {'INPUT': ADJA_A_layer,'SEPARATE_DISJOINT': False,'OUTPUT': 'memory:'} # usunięcie granic wewnątrz warstwy ADJA
-    outputs = processing.run('native:dissolve', alg_params)['OUTPUT']
-    params = {'INPUT': outputs,'OUTPUT': 'memory:'} # To zapisuje wynik w pamięci, bez tworzenia fizycznej warstwy
-    granica = processing.run("native:polygonstolines", params)['OUTPUT'] # zamiana poligonu na linie
+    
+    granica = adjaMinus2cmBufor(layer, "OT_PTPL_A")
+    
     for PTPL_A_feature in layer.getFeatures():
         geom = PTPL_A_feature.geometry()
         if geom.area() < 1000 and not 'placNazwa1' in PTPL_A_feature.fields().names():
@@ -227,24 +258,12 @@ def minimalnaPTPL(layer):
 
 def minPowierzchniaPTPLzKUPG(layer):
     obiektyZbledami = []
-    ADJA_A_layer = None
-    PTPL_A_layer = None
-    KUPG_A_layer = None
     if layer.name()[-6:] == 'PTPL_A':
-        ADJA_A_layer = QgsProject().instance().mapLayersByName(layer.name().replace("OT_PTPL_A","OT_ADJA_A"))[0]
         KUPG_A_layer = QgsProject().instance().mapLayersByName(layer.name().replace("OT_PTPL_A","OT_KUPG_A"))[0]
         PTPL_A_layer = QgsProject().instance().mapLayersByName(layer.name())[0]
-    invalid_layer = processing.run("qgis:checkvalidity", {'INPUT_LAYER': ADJA_A_layer, 'METHOD': 0, 'IGNORE_RING_SELF_INTERSECTION': True, 'VALID_OUTPUT': 'memory:', 'INVALID_OUTPUT': 'memory:', 'ERROR_OUTPUT': 'memory:'})
-    # zawiera warstwę z niepoprawnymi geometriami
-    if invalid_layer['INVALID_OUTPUT']:
-              params = {'INPUT': ADJA_A_layer, 'OUTPUT': 'memory:'}
-          # Wykonanie naprawy geometrii
-              naprawiona= processing.run("native:fixgeometries", params)['OUTPUT']
-              ADJA_A_layer = naprawiona
-    alg_params = {'INPUT': ADJA_A_layer,'SEPARATE_DISJOINT': False,'OUTPUT': 'memory:'} # usunięcie granic wewnątrz warstwy ADJA
-    outputs = processing.run('native:dissolve', alg_params)['OUTPUT']
-    params = {'INPUT': outputs, 'OUTPUT': 'memory:'} # To zapisuje wynik w pamięci, bez tworzenia fizycznej warstwy
-    granica = processing.run("native:polygonstolines", params)['OUTPUT'] # zamiana poligonu na linie
+    
+    granica = adjaMinus2cmBufor(layer, "OT_PTPL_A")
+    
     for PTPL_A_feature in PTPL_A_layer.getFeatures():
         for KUPG_A_feature in KUPG_A_layer.getFeatures():
             geom1 = PTPL_A_feature.geometry()
@@ -261,21 +280,11 @@ def minPowierzchniaPTPLzKUPG(layer):
 
 def minimalnaBUIT(layer):
     obiektyZbledami = []
-    ADJA_A_layer = None
-    BUIT_A_layer = None
     if layer.name()[-6:] == 'BUIT_A':
-        ADJA_A_layer = QgsProject().instance().mapLayersByName(layer.name().replace("OT_BUIT_A","OT_ADJA_A"))[0]
         BUIT_A_layer = QgsProject().instance().mapLayersByName(layer.name())[0]
-    invalid_layer = processing.run("qgis:checkvalidity", {'INPUT_LAYER': ADJA_A_layer, 'METHOD': 0, 'IGNORE_RING_SELF_INTERSECTION': True, 'VALID_OUTPUT': 'memory:', 'INVALID_OUTPUT': 'memory:', 'ERROR_OUTPUT': 'memory:'})
-    # zawiera warstwę z niepoprawnymi geometriami
-    if invalid_layer['INVALID_OUTPUT']:
-              params = {'INPUT': ADJA_A_layer,'OUTPUT': 'memory:'} # Wykonanie naprawy geometrii
-              naprawiona= processing.run("native:fixgeometries", params)['OUTPUT']
-              ADJA_A_layer = naprawiona
-    alg_params = {'INPUT': ADJA_A_layer,'SEPARATE_DISJOINT': False,'OUTPUT': 'memory:'} # usunięcie granic wewnątrz warstwy ADJA
-    outputs = processing.run('native:dissolve', alg_params)['OUTPUT']
-    params = {'INPUT': outputs,'OUTPUT': 'memory:'} # To zapisuje wynik w pamięci, bez tworzenia fizycznej warstwy
-    granica = processing.run("native:polygonstolines", params)['OUTPUT'] # zamiana poligonu na linie
+    
+    granica = adjaMinus2cmBufor(layer, "OT_BUIT_A")
+    
     for BUIT_A_feature in BUIT_A_layer.getFeatures():
         geom = BUIT_A_feature.geometry()
         if geom.area() < 1000 and BUIT_A_feature['rodzaj'] in ['zespół dystrybutorów paliwa', 'zespół transformatorów']:
@@ -290,22 +299,11 @@ def minimalnaBUIT(layer):
 
 def minimalnaKUPG(layer):
     obiektyZbledami = []
-    ADJA_A_layer = None
-    KUPG_A_layer = None
     if layer.name()[-6:] == 'KUPG_A':
-        ADJA_A_layer = QgsProject().instance().mapLayersByName(layer.name().replace("OT_KUPG_A","OT_ADJA_A"))[0]
         KUPG_A_layer = QgsProject().instance().mapLayersByName(layer.name())[0]
-    invalid_layer = processing.run("qgis:checkvalidity", {'INPUT_LAYER': ADJA_A_layer, 'METHOD': 0, 'IGNORE_RING_SELF_INTERSECTION': True, 'VALID_OUTPUT': 'memory:', 'INVALID_OUTPUT': 'memory:', 'ERROR_OUTPUT': 'memory:'})
-    # zawiera warstwę z niepoprawnymi geometriami
-    if invalid_layer['INVALID_OUTPUT']:
-              params = {'INPUT': ADJA_A_layer,'OUTPUT': 'memory:'}
-          # Wykonanie naprawy geometrii
-              naprawiona= processing.run("native:fixgeometries", params)['OUTPUT']
-              ADJA_A_layer = naprawiona
-    alg_params = {'INPUT': ADJA_A_layer,'SEPARATE_DISJOINT': False,'OUTPUT': 'memory:'} # usunięcie granic wewnątrz warstwy ADJA
-    outputs = processing.run('native:dissolve', alg_params)['OUTPUT']
-    params = {'INPUT': outputs,'OUTPUT': 'memory:'} # To zapisuje wynik w pamięci, bez tworzenia fizycznej warstwy
-    granica = processing.run("native:polygonstolines", params)['OUTPUT'] # zamiana poligonu na linie
+    
+    granica = adjaMinus2cmBufor(layer, "OT_KUPG_A")
+    
     for KUPG_A_feature in KUPG_A_layer.getFeatures():
         geom = KUPG_A_feature.geometry()
         if geom.area() < 3000 and KUPG_A_feature['rodzaj'] not in ['oczyszczalnia ścieków', 'podstacja elektroenergetyczna']:
@@ -320,21 +318,11 @@ def minimalnaKUPG(layer):
 
 def minimalnaKUKO(layer):
     obiektyZbledami = []
-    ADJA_A_layer = None
-    KUKO_A_layer = None
     if layer.name()[-6:] == 'KUKO_A':
-        ADJA_A_layer = QgsProject().instance().mapLayersByName(layer.name().replace("OT_KUKO_A","OT_ADJA_A"))[0]
         KUKO_A_layer = QgsProject().instance().mapLayersByName(layer.name())[0]
-    invalid_layer = processing.run("qgis:checkvalidity", {'INPUT_LAYER': ADJA_A_layer, 'METHOD': 0, 'IGNORE_RING_SELF_INTERSECTION': True, 'VALID_OUTPUT': 'memory:', 'INVALID_OUTPUT': 'memory:', 'ERROR_OUTPUT': 'memory:'})
-    # zawiera warstwę z niepoprawnymi geometriami
-    if invalid_layer['INVALID_OUTPUT']:
-              params = {'INPUT': ADJA_A_layer,'OUTPUT': 'memory:'} # Wykonanie naprawy geometrii
-              naprawiona= processing.run("native:fixgeometries", params)['OUTPUT']
-              ADJA_A_layer = naprawiona
-    alg_params = {'INPUT': ADJA_A_layer,'SEPARATE_DISJOINT': False,'OUTPUT': 'memory:'} # usunięcie granic wewnątrz warstwy ADJA
-    outputs = processing.run('native:dissolve', alg_params)['OUTPUT']
-    params = {'INPUT': outputs,'OUTPUT': 'memory:'} # To zapisuje wynik w pamięci, bez tworzenia fizycznej warstwy
-    granica = processing.run("native:polygonstolines", params)['OUTPUT'] # zamiana poligonu na linie
+    
+    granica = adjaMinus2cmBufor(layer, "OT_KUKO_A")
+    
     for KUKO_A_feature in KUKO_A_layer.getFeatures():
         geom = KUKO_A_feature.geometry()
         if geom.area() < 3000 and KUKO_A_feature['rodzaj'] != 'stacja paliw':
@@ -349,21 +337,11 @@ def minimalnaKUKO(layer):
 
 def minimalnaKUSC(layer):
     obiektyZbledami = []
-    ADJA_A_layer = None
-    KUSC_A_layer = None
     if layer.name()[-6:] == 'KUSC_A':
-        ADJA_A_layer = QgsProject().instance().mapLayersByName(layer.name().replace("OT_KUSC_A","OT_ADJA_A"))[0]
         KUSC_A_layer = QgsProject().instance().mapLayersByName(layer.name())[0]
-    invalid_layer = processing.run("qgis:checkvalidity", {'INPUT_LAYER': ADJA_A_layer, 'METHOD': 0, 'IGNORE_RING_SELF_INTERSECTION': True, 'VALID_OUTPUT': 'memory:', 'INVALID_OUTPUT': 'memory:', 'ERROR_OUTPUT': 'memory:'})
-    # zawiera warstwę z niepoprawnymi geometriami
-    if invalid_layer['INVALID_OUTPUT']:
-              params = {'INPUT': ADJA_A_layer, 'OUTPUT': 'memory:'} # Wykonanie naprawy geometrii
-              naprawiona= processing.run("native:fixgeometries", params)['OUTPUT']
-              ADJA_A_layer = naprawiona
-    alg_params = {'INPUT': ADJA_A_layer, 'SEPARATE_DISJOINT': False, 'OUTPUT': 'memory:'} # usunięcie granic wewnątrz warstwy ADJA
-    outputs = processing.run('native:dissolve', alg_params)['OUTPUT']
-    params = {'INPUT': outputs,'OUTPUT': 'memory:'} # To zapisuje wynik w pamięci, bez tworzenia fizycznej warstwy
-    granica = processing.run("native:polygonstolines", params)['OUTPUT'] # zamiana poligonu na linie
+    
+    granica = adjaMinus2cmBufor(layer, "OT_KUSC_A")
+    
     for KUSC_A_feature in KUSC_A_layer.getFeatures():
         geom = KUSC_A_feature.geometry()
         if geom.area() < 5000 and KUSC_A_feature['rodzaj'] == 'zespół sakralny lub klasztorny':
@@ -378,21 +356,11 @@ def minimalnaKUSC(layer):
 
 def minimalnaOIKM(layer):
     obiektyZbledami = []
-    ADJA_A_layer = None
-    OIKM_A_layer = None
     if layer.name()[-6:] == 'OIKM_A':
-        ADJA_A_layer = QgsProject().instance().mapLayersByName(layer.name().replace("OT_OIKM_A","OT_ADJA_A"))[0]
         OIKM_A_layer = QgsProject().instance().mapLayersByName(layer.name())[0]
-    invalid_layer = processing.run("qgis:checkvalidity", {'INPUT_LAYER': ADJA_A_layer, 'METHOD': 0, 'IGNORE_RING_SELF_INTERSECTION': True, 'VALID_OUTPUT': 'memory:', 'INVALID_OUTPUT': 'memory:', 'ERROR_OUTPUT': 'memory:'})
-    # zawiera warstwę z niepoprawnymi geometriami
-    if invalid_layer['INVALID_OUTPUT']:
-              params = {'INPUT': ADJA_A_layer,'OUTPUT': 'memory:'} # Wykonanie naprawy geometrii
-              naprawiona= processing.run("native:fixgeometries", params)['OUTPUT']
-              ADJA_A_layer = naprawiona
-    alg_params = {'INPUT': ADJA_A_layer,'SEPARATE_DISJOINT': False,'OUTPUT': 'memory:'}# usunięcie granic wewnątrz warstwy ADJA
-    outputs = processing.run('native:dissolve', alg_params)['OUTPUT']
-    params = {'INPUT': outputs,'OUTPUT': 'memory:'} # To zapisuje wynik w pamięci, bez tworzenia fizycznej warstwy
-    granica = processing.run("native:polygonstolines", params)['OUTPUT'] # zamiana poligonu na linie
+    
+    granica = adjaMinus2cmBufor(layer, "OT_OIKM_A")
+    
     for OIKM_A_feature in OIKM_A_layer.getFeatures():
         geom = OIKM_A_feature.geometry()
         if geom.area() < 500 and OIKM_A_feature['rodzaj'] == 'schody':
@@ -407,21 +375,11 @@ def minimalnaOIKM(layer):
 
 def minimalnaOIORschron(layer):
     obiektyZbledami = []
-    ADJA_A_layer = None
-    OIOR_A_layer = None
     if layer.name()[-6:] == 'OIOR_A':
-        ADJA_A_layer = QgsProject().instance().mapLayersByName(layer.name().replace("OT_OIOR_A","OT_ADJA_A"))[0]
         OIOR_A_layer = QgsProject().instance().mapLayersByName(layer.name())[0]
-    invalid_layer = processing.run("qgis:checkvalidity", {'INPUT_LAYER': ADJA_A_layer, 'METHOD': 0, 'IGNORE_RING_SELF_INTERSECTION': True, 'VALID_OUTPUT': 'memory:', 'INVALID_OUTPUT': 'memory:', 'ERROR_OUTPUT': 'memory:'})
-    # zawiera warstwę z niepoprawnymi geometriami
-    if invalid_layer['INVALID_OUTPUT']:
-              params = {'INPUT': ADJA_A_layer,'OUTPUT': 'memory:'} # Wykonanie naprawy geometrii
-              naprawiona= processing.run("native:fixgeometries", params)['OUTPUT']
-              ADJA_A_layer = naprawiona
-    alg_params = {'INPUT': ADJA_A_layer, 'SEPARATE_DISJOINT': False, 'OUTPUT': 'memory:'} # usunięcie granic wewnątrz warstwy ADJA
-    outputs = processing.run('native:dissolve', alg_params)['OUTPUT']
-    params = {'INPUT': outputs,'OUTPUT': 'memory:'} # To zapisuje wynik w pamięci, bez tworzenia fizycznej warstwy
-    granica = processing.run("native:polygonstolines", params)['OUTPUT'] # zamiana poligonu na linie
+    
+    granica = adjaMinus2cmBufor(layer, "OT_OIOR_A")
+    
     for OIOR_A_feature in OIOR_A_layer.getFeatures():
         geom = OIOR_A_feature.geometry()
         if geom.area() < 100 and OIOR_A_feature['rodzaj'] == 'bunkier lub schron':
@@ -436,21 +394,11 @@ def minimalnaOIORschron(layer):
 
 def minimalnaOIORszklarnia(layer):
     obiektyZbledami = []
-    ADJA_A_layer = None
-    OIOR_A_layer = None
     if layer.name()[-6:] == 'OIOR_A':
-        ADJA_A_layer = QgsProject().instance().mapLayersByName(layer.name().replace("OT_OIOR_A","OT_ADJA_A"))[0]
         OIOR_A_layer = QgsProject().instance().mapLayersByName(layer.name())[0]
-    invalid_layer = processing.run("qgis:checkvalidity", {'INPUT_LAYER': ADJA_A_layer, 'METHOD': 0, 'IGNORE_RING_SELF_INTERSECTION': True, 'VALID_OUTPUT': 'memory:', 'INVALID_OUTPUT': 'memory:', 'ERROR_OUTPUT': 'memory:'})
-    # zawiera warstwę z niepoprawnymi geometriami
-    if invalid_layer['INVALID_OUTPUT']:
-              params = {'INPUT': ADJA_A_layer,'OUTPUT': 'memory:'} # Wykonanie naprawy geometrii
-              naprawiona= processing.run("native:fixgeometries", params)['OUTPUT']
-              ADJA_A_layer = naprawiona
-    alg_params = {'INPUT': ADJA_A_layer, 'SEPARATE_DISJOINT': False,'OUTPUT': 'memory:'} # usunięcie granic wewnątrz warstwy ADJA
-    outputs = processing.run('native:dissolve', alg_params)['OUTPUT']
-    params = {'INPUT': outputs,'OUTPUT': 'memory:'} # To zapisuje wynik w pamięci, bez tworzenia fizycznej warstwy
-    granica = processing.run("native:polygonstolines", params)['OUTPUT'] # zamiana poligonu na linie
+    
+    granica = adjaMinus2cmBufor(layer, "OT_OIOR_A")
+    
     for OIOR_A_feature in OIOR_A_layer.getFeatures():
         geom = OIOR_A_feature.geometry()
         if geom.area() < 100 and OIOR_A_feature['rodzaj'] == 'szklarnia niebędąca budynkiem':
@@ -465,24 +413,13 @@ def minimalnaOIORszklarnia(layer):
 
 def minimalnaOIORwiataAltana(layer):
     obiektyZbledami = []
-    ADJA_A_layer = None
-    OIOR_A_layer = None
-    KUKO_A_layer = None
     if layer.name()[-6:] == 'OIOR_A':
-        ADJA_A_layer = QgsProject().instance().mapLayersByName(layer.name().replace("OT_OIOR_A","OT_ADJA_A"))[0]
         KUKO_A_layer = QgsProject().instance().mapLayersByName(layer.name().replace("OT_OIOR_A","OT_KUKO_A"))[0]
         OIOR_A_layer = QgsProject().instance().mapLayersByName(layer.name())[0]
-    invalid_layer = processing.run("qgis:checkvalidity", {'INPUT_LAYER': ADJA_A_layer, 'METHOD': 0, 'IGNORE_RING_SELF_INTERSECTION': True, 'VALID_OUTPUT': 'memory:', 'INVALID_OUTPUT': 'memory:', 'ERROR_OUTPUT': 'memory:'})
     identyfikatory_bledow = set()
-    # zawiera warstwę z niepoprawnymi geometriami
-    if invalid_layer['INVALID_OUTPUT']:
-              params = {'INPUT': ADJA_A_layer,'OUTPUT': 'memory:'} # Wykonanie naprawy geometrii
-              naprawiona= processing.run("native:fixgeometries", params)['OUTPUT']
-              ADJA_A_layer = naprawiona
-    alg_params = {'INPUT': ADJA_A_layer,'SEPARATE_DISJOINT': False,'OUTPUT': 'memory:'} # usunięcie granic wewnątrz warstwy ADJA
-    outputs = processing.run('native:dissolve', alg_params)['OUTPUT']
-    params = {'INPUT': outputs,'OUTPUT': 'memory:'} # To zapisuje wynik w pamięci, bez tworzenia fizycznej warstwy
-    granica = processing.run("native:polygonstolines", params)['OUTPUT'] # zamiana poligonu na linie
+    
+    granica = adjaMinus2cmBufor(layer, "OT_OIOR_A")
+    
     for OIOR_A_feature in OIOR_A_layer.getFeatures():
         for KUKO_A_feature in KUKO_A_layer.getFeatures():
             geom1 = OIOR_A_feature.geometry()
@@ -574,9 +511,9 @@ def czyObiektyWewnatrzPowiatu(layer, teryt):
         granica_powiatu_z_PRG.dataProvider().addFeatures([requestFeature])
         break
     
-    bufor1cm = processing.run("native:buffer", {
+    bufor = processing.run("native:buffer", {
         'INPUT': granica_powiatu_z_PRG,
-        'DISTANCE': 0.01,
+        'DISTANCE': 0.02,
         'SEGMENTS': 10,
         'DISSOLVE': True,
         'OUTPUT': 'memory:'
@@ -584,7 +521,7 @@ def czyObiektyWewnatrzPowiatu(layer, teryt):
     
     roznica = processing.run("qgis:difference", {
         'INPUT': layer,
-        'OVERLAY': bufor1cm['OUTPUT'],
+        'OVERLAY': bufor['OUTPUT'],
         'OUTPUT': 'memory:'
     })
     
@@ -616,9 +553,6 @@ def czyOdleglosciMiedzyPoziomicami2m(layer):
         'FAIL_OUTPUT': 'memory:',
         'OUTPUT': 'memory:'
     })
-    # print("poziomice ",datetime.now())
-    # poziomice['OUTPUT'].setName("poziomice")
-    # QgsProject.instance().addMapLayer(poziomice['OUTPUT'])
     
     # bufor
     bufor = processing.run("native:buffer", {
@@ -631,17 +565,11 @@ def czyOdleglosciMiedzyPoziomicami2m(layer):
         'DISSOLVE': False,
         'OUTPUT': 'memory:'
     })
-    # print("bufor ",datetime.now())
-    # bufor['OUTPUT'].setName("bufor")
-    # QgsProject.instance().addMapLayer(bufor['OUTPUT'])
     
     union = processing.run("qgis:union", {
         'INPUT': bufor['OUTPUT'],
         'OUTPUT': 'memory:'
     })
-    # print("union ",datetime.now())
-    # union['OUTPUT'].setName("union")
-    # QgsProject.instance().addMapLayer(union['OUTPUT'])
     
     nakladanie = QgsVectorLayer("Polygon?crs=epsg:2180&field=gml_id:string(254)", "nakładania poziomic", "memory")
     geom_union = []
@@ -672,9 +600,6 @@ def czyOdleglosciMiedzyPoziomicami2m(layer):
         'INTERSECT': nakladanie,
         'OUTPUT': 'memory:'
     })
-    # print("extractbylocation1 ",datetime.now())
-    # extractbylocation1['OUTPUT'].setName("extractbylocation1")
-    # QgsProject.instance().addMapLayer(extractbylocation1['OUTPUT'])
     
     extractbylocation2 = processing.run("qgis:extractbylocation", {
         'INPUT': poziomice['OUTPUT'],
@@ -682,9 +607,6 @@ def czyOdleglosciMiedzyPoziomicami2m(layer):
         'INTERSECT':extractbylocation1['OUTPUT'],
         'OUTPUT': 'memory:'
     })
-    # print("extractbylocation2 ",datetime.now())
-    # extractbylocation2['OUTPUT'].setName("extractbylocation2")
-    # QgsProject.instance().addMapLayer(extractbylocation2['OUTPUT'])
     
     if extractbylocation2['OUTPUT'].featureCount() > 0:
         for obj in extractbylocation2['OUTPUT'].getFeatures():
@@ -725,10 +647,18 @@ def nadmiernaSegmentacja(layer):
 
 
 def nadmiernaSegmentacja_rtwl(layer):
-    id_to_feature = {feature.id(): feature for feature in layer.getFeatures()} # Tworzenie słownika mapującego ID obiektu na obiekt
+    poziomice = processing.run("qgis:extractbyexpression", {
+        'INPUT': layer,
+        'EXPRESSION': '"rodzaj" = \'poziomica\' and "kodKarto10k" != \'\'',
+        'FAIL_OUTPUT': 'memory:',
+        'OUTPUT': 'memory:'
+    })
+    
+    id_to_feature = {feature.id(): feature for feature in poziomice['OUTPUT'].getFeatures()} # Tworzenie słownika mapującego ID obiektu na obiekt
     obiekty_z_bledami = []
     hash_to_ids = {}
-    spatial_index = QgsSpatialIndex(layer.getFeatures(), flags=QgsSpatialIndex.FlagStoreFeatureGeometries)
+    spatial_index = QgsSpatialIndex(poziomice['OUTPUT'].getFeatures(), flags=QgsSpatialIndex.FlagStoreFeatureGeometries)
+    
     for feature in id_to_feature.values():
         spatial_index.addFeature(feature)
     for feature_id, feature in id_to_feature.items():
@@ -759,15 +689,22 @@ def nadmiernaSegmentacja_rtwl(layer):
 def przewerteksowanie(layer):
     obiekty_z_bledami = []
     
-    simplifygeometries = processing.run("native:simplifygeometries", {
+    poziomice = processing.run("qgis:extractbyexpression", {
         'INPUT': layer,
+        'EXPRESSION': '"rodzaj" = \'poziomica\'',
+        'FAIL_OUTPUT': 'memory:',
+        'OUTPUT': 'memory:'
+    })
+    
+    simplifygeometries = processing.run("native:simplifygeometries", {
+        'INPUT': poziomice['OUTPUT'],
         'METHOD': 0, # DP
         'TOLERANCE': 0.05, # 5 cm strzałki
         'OUTPUT': 'memory:'
         })
     
     roznica = processing.run("qgis:difference", {
-        'INPUT': layer,
+        'INPUT': poziomice['OUTPUT'],
         'OVERLAY': simplifygeometries['OUTPUT'],
         'OUTPUT': 'memory:'
     })
@@ -1087,17 +1024,17 @@ def boundaryPTWP(layer):
         if layer.name().__contains__('RTLW_L'):
             ptwp = QgsProject().instance().mapLayersByName(layer.name().replace("RTLW_L","PTWP_A"))[0]
         if ptwp:
-            # bufor -0.01 m
-            buforMinus1cm = processing.run("native:buffer", {
+            # bufor -0.02 m
+            bufor = processing.run("native:buffer", {
                 'INPUT': ptwp,
-                'DISTANCE': -0.01,
+                'DISTANCE': -0.02,
                 'SEGMENTS': 10,
                 'DISSOLVE': True,
                 'OUTPUT': 'memory:'
             })
             
             pojedynczePTWP = processing.run("native:multiparttosingleparts", {
-                'INPUT': buforMinus1cm['OUTPUT'],
+                'INPUT': bufor['OUTPUT'],
                 'OUTPUT': 'memory:'
             })
             
@@ -1498,21 +1435,11 @@ def zapisWspolrzednych(layer, plikGML):
 
 def minDlugoscOIPR(layer):
     obiektyZbledami = []
-    ADJA_A_layer = None
-    OIPR_L_layer = None
     if layer.name()[-6:] == 'OIPR_L':
-        ADJA_A_layer = QgsProject().instance().mapLayersByName(layer.name().replace("OT_OIPR_L","OT_ADJA_A"))[0]
         OIPR_L_layer = QgsProject().instance().mapLayersByName(layer.name())[0]
-    invalid_layer = processing.run("qgis:checkvalidity", {'INPUT_LAYER': ADJA_A_layer, 'METHOD': 0, 'IGNORE_RING_SELF_INTERSECTION': True, 'VALID_OUTPUT': 'memory:', 'INVALID_OUTPUT': 'memory:', 'ERROR_OUTPUT': 'memory:'})
-    # zawiera warstwę z niepoprawnymi geometriami
-    if invalid_layer['INVALID_OUTPUT']:
-              params = {'INPUT': ADJA_A_layer,'OUTPUT': 'memory:'} # Wykonanie naprawy geometrii
-              naprawiona= processing.run("native:fixgeometries", params)['OUTPUT']
-              ADJA_A_layer = naprawiona
-    alg_params = {'INPUT': ADJA_A_layer, 'SEPARATE_DISJOINT': False,'OUTPUT': 'memory:'} # usunięcie granic wewnątrz warstwy ADJA
-    outputs = processing.run('native:dissolve', alg_params)['OUTPUT']
-    params = {'INPUT': outputs,'OUTPUT': 'memory:'} # To zapisuje wynik w pamięci, bez tworzenia fizycznej warstwy
-    granica = processing.run("native:polygonstolines", params)['OUTPUT'] # zamiana poligonu na linie
+    
+    granica = adjaMinus2cmBufor(layer, "OT_OIPR_L")
+    
     for OIPR_L_feature in OIPR_L_layer.getFeatures():
         geom = OIPR_L_feature.geometry()
         if geom.length() < 40 and OIPR_L_feature['rodzaj'] in ['rząd drzew','pas krzewów lub żywopłot']:
@@ -1527,26 +1454,16 @@ def minDlugoscOIPR(layer):
 
 def minDlugoscBUUO(layer):
     obiektyZbledami = []
-    ADJA_A_layer = None
-    BUUO_L_layer = None
     if layer.name()[-6:] == 'BUUO_L':
-        ADJA_A_layer = QgsProject().instance().mapLayersByName(layer.name().replace("OT_BUUO_L","OT_ADJA_A"))[0]
         BUUO_L_layer = QgsProject().instance().mapLayersByName(layer.name())[0]
-    invalid_layer = processing.run("qgis:checkvalidity", {'INPUT_LAYER': ADJA_A_layer, 'METHOD': 0, 'IGNORE_RING_SELF_INTERSECTION': True, 'VALID_OUTPUT': 'memory:', 'INVALID_OUTPUT': 'memory:', 'ERROR_OUTPUT': 'memory:'})
-    # zawiera warstwę z niepoprawnymi geometriami
-    if invalid_layer['INVALID_OUTPUT']:
-              params = {'INPUT': ADJA_A_layer,'OUTPUT': 'memory:'} # Wykonanie naprawy geometrii
-              naprawiona= processing.run("native:fixgeometries", params)['OUTPUT']
-              ADJA_A_layer = naprawiona
-    alg_params = {'INPUT': ADJA_A_layer, 'SEPARATE_DISJOINT': False,'OUTPUT': 'memory:'} # usunięcie granic wewnątrz warstwy ADJA
-    outputs = processing.run('native:dissolve', alg_params)['OUTPUT']
-    params = {'INPUT': outputs,'OUTPUT': 'memory:'} # To zapisuje wynik w pamięci, bez tworzenia fizycznej warstwy
-    granica = processing.run("native:polygonstolines", params)['OUTPUT'] # zamiana poligonu na linie
+    
+    granica = adjaMinus2cmBufor(layer, "OT_BUUO_L")
+    
     for BUUO_L_feature in BUUO_L_layer.getFeatures():
         geom = BUUO_L_feature.geometry()
         if geom.length() < 10 and BUUO_L_feature['rodzaj'] in ['falochron','ostroga']:
             styka = False
-            for g in granica.getFeatures():
+            for g in granica['OUTPUT'].getFeatures():
                 if not geom.intersects(g.geometry()):
                     styka = True
                     obiektyZbledami.append(BUUO_L_feature)
@@ -1556,33 +1473,109 @@ def minDlugoscBUUO(layer):
 
 def minDlugoscSUPRnaKUPG(layer):
     obiektyZbledami = []
-    ADJA_A_layer = None
-    KUPG_A_layer = None
-    SUPR_L_layer = None
     if layer.name()[-6:] == 'SUPR_L':
-        ADJA_A_layer = QgsProject().instance().mapLayersByName(layer.name().replace("OT_SUPR_L","OT_ADJA_A"))[0]
         KUPG_A_layer = QgsProject().instance().mapLayersByName(layer.name().replace("OT_SUPR_L","OT_KUPG_A"))[0]
         SUPR_L_layer = QgsProject().instance().mapLayersByName(layer.name())[0]
-    invalid_layer = processing.run("qgis:checkvalidity", {'INPUT_LAYER': ADJA_A_layer, 'METHOD': 0, 'IGNORE_RING_SELF_INTERSECTION': True, 'VALID_OUTPUT': 'memory:', 'INVALID_OUTPUT': 'memory:', 'ERROR_OUTPUT': 'memory:'})
-    # zawiera warstwę z niepoprawnymi geometriami
-    if invalid_layer['INVALID_OUTPUT']:
-              params = {'INPUT': ADJA_A_layer,'OUTPUT': 'memory:'} # Wykonanie naprawy geometrii
-              naprawiona= processing.run("native:fixgeometries", params)['OUTPUT']
-              ADJA_A_layer = naprawiona
-    alg_params = {'INPUT': ADJA_A_layer, 'SEPARATE_DISJOINT': False,'OUTPUT': 'memory:'} # usunięcie granic wewnątrz warstwy ADJA
-    outputs = processing.run('native:dissolve', alg_params)['OUTPUT']
-    params = {'INPUT': outputs,'OUTPUT': 'memory:'} # To zapisuje wynik w pamięci, bez tworzenia fizycznej warstwy
-    granica = processing.run("native:polygonstolines", params)['OUTPUT'] # zamiana poligonu na linie
+    else:
+        return []
+    
+    granica = adjaMinus2cmBufor(layer, "OT_SUPR_L")
+    
+    for g in granica.getFeatures():
+        ADJA_A_geom = g.geometry()
+    
     for SUPR_L_feature in SUPR_L_layer.getFeatures():
-        for KUPG_A_feature in KUPG_A_layer.getFeatures():
-            geom1 = SUPR_L_feature.geometry()
-            geom2 = KUPG_A_feature.geometry()
-            if geom1.length() < 100:
-                styka = False
-                for g in granica.getFeatures():
-                    if geom1.intersects(geom2) and not geom1.intersects(g.geometry()):
-                        styka = True
+        SUPR_L_geom = SUPR_L_feature.geometry()
+        SUPR_L_id = SUPR_L_feature.id()
+        if SUPR_L_geom.length() < 100 and not SUPR_L_geom.intersects(ADJA_A_geom):
+            for KUPG_A_feature in KUPG_A_layer.getFeatures():
+                KUPG_A_geom = KUPG_A_feature.geometry()
+                if SUPR_L_geom.intersects(KUPG_A_geom):
+                    przecina = False
+                    for SUPR_L_feature_o in SUPR_L_layer.getFeatures():
+                        SUPR_L_id_o = SUPR_L_feature_o.id()
+                        if SUPR_L_id_o != SUPR_L_id:
+                            SUPR_L_geom_o = SUPR_L_feature_o.geometry()
+                            if SUPR_L_geom_o.intersects(SUPR_L_geom):
+                                przecina = True
+                                break
+                    if not przecina:
                         obiektyZbledami.append(SUPR_L_feature)
+    
+    return obiektyZbledami
+
+
+def kontrolaZgodnosciIdentyfikatoraUlicyZNazwa(layer):
+    obiektyZbledami = []
+    
+    identyfikator_map = {}
+    for f in layer.getFeatures():
+        ulic = f.attribute('identyfikatorULIC')
+        if ulic == NULL: # pomija puste obiekty
+            continue
+        nazwa1 = f.attribute('ulicaNazwa1')
+        nazwa2 = f.attribute('ulicaNazwa2')
+        cecha = f.attribute('ulicaCecha')
+        if ulic not in identyfikator_map:
+            identyfikator_map[ulic] = {
+                'cecha': set(),
+                'nazwa1': set(),
+                'nazwa2': set(),
+                'features': []
+            }
+
+        # Dodajemy bieżące wartości atrybutów do zestawów
+        identyfikator_map[ulic]['cecha'].add(cecha)
+        identyfikator_map[ulic]['nazwa1'].add(nazwa1)
+        identyfikator_map[ulic]['nazwa2'].add(nazwa2)
+        identyfikator_map[ulic]['features'].append(f)
+
+    # Sprawdzamy, czy są jakieś różnice w zestawach
+    for ulic, data in identyfikator_map.items():
+        if (
+            len(data['cecha']) > 1 or
+            len(data['nazwa1']) > 1 or
+            len(data['nazwa2']) > 1
+        ):
+            # Jeśli są różnice, dodajemy wszystkie przypadki do obiektyZbledami
+            obiektyZbledami.extend(data['features'])
+    
+    return obiektyZbledami
+	
+def kontrolaZgodnosciIdentyfikatoraUlicyZNazwaPlacu(layer):
+    obiektyZbledami = []
+    
+    identyfikator_map = {}
+    for f in layer.getFeatures():
+        ulic = f.attribute('identyfikatorULIC')
+        if ulic == NULL: # pomija puste obiekty
+            continue
+        nazwa1 = f.attribute('placNazwa1')
+        nazwa2 = f.attribute('placNazwa2')
+        cecha = f.attribute('placCecha')
+        if ulic not in identyfikator_map:
+            identyfikator_map[ulic] = {
+                'cecha': set(),
+                'nazwa1': set(),
+                'nazwa2': set(),
+                'features': []
+            }
+
+        # Dodajemy bieżące wartości atrybutów do zestawów
+        identyfikator_map[ulic]['cecha'].add(cecha)
+        identyfikator_map[ulic]['nazwa1'].add(nazwa1)
+        identyfikator_map[ulic]['nazwa2'].add(nazwa2)
+        identyfikator_map[ulic]['features'].append(f)
+
+    # Sprawdzamy, czy są jakieś różnice w zestawach
+    for ulic, data in identyfikator_map.items():
+        if (
+            len(data['cecha']) > 1 or
+            len(data['nazwa1']) > 1 or
+            len(data['nazwa2']) > 1
+        ):
+            # Jeśli są różnice, dodajemy wszystkie przypadki do obiektyZbledami
+            obiektyZbledami.extend(data['features'])
     
     return obiektyZbledami
 
@@ -2000,5 +1993,128 @@ def kontrola_OT_ADJA_A_z_A05_Granice_jednostek_ewidencyjnych(layer):
         
         for obj in pojedynczeObiekty['OUTPUT'].getFeatures():
             obiektyZbledami.append(obj)
+    
+    return obiektyZbledami
+
+
+def kompletnoscPlikowBDOT10k(pliki):
+    obiektyZbledami = []
+    
+    listaKlas = ['OT_ADJA_A','OT_ADMS_A','OT_ADMS_P','OT_BUBD_A','OT_BUHD_A','OT_BUHD_L','OT_BUIB_A','OT_BUIB_L','OT_BUIN_L','OT_BUIT_A',
+                 'OT_BUIT_P','OT_BUSP_A','OT_BUSP_L','OT_BUTR_L','OT_BUTR_P','OT_BUUO_L','OT_BUWT_A','OT_BUWT_P','OT_BUZM_L','OT_BUZT_A',
+                 'OT_BUZT_P','OT_KUHO_A','OT_KUHU_A','OT_KUKO_A','OT_KUKO_P','OT_KUMN_A','OT_KUOS_A','OT_KUOZ_A','OT_KUPG_A','OT_KUPG_P',
+                 'OT_KUPW_A','OT_KUSC_A','OT_KUSK_A','OT_KUZA_A','OT_OIKM_A','OT_OIKM_L','OT_OIKM_P','OT_OIMK_A','OT_OIOR_A','OT_OIOR_L',
+                 'OT_OIOR_P','OT_OIPR_L','OT_OIPR_P','OT_OISZ_A','OT_PTGN_A','OT_PTKM_A','OT_PTLZ_A','OT_PTNZ_A','OT_PTPL_A','OT_PTRK_A',
+                 'OT_PTSO_A','OT_PTTR_A','OT_PTUT_A','OT_PTWP_A','OT_PTWZ_A','OT_PTZB_A','OT_RTLW_L','OT_RTPW_P','OT_SKDR_L','OT_SKJZ_L',
+                 'OT_SKPP_L','OT_SKRP_L','OT_SKRW_P','OT_SKTR_L','OT_SULN_L','OT_SUPR_L','OT_SWKN_L','OT_SWRM_L','OT_SWRS_L','OT_TCON_A',
+                 'OT_TCPK_A','OT_TCPN_A','OT_TCRZ_A']
+    
+    brakujaceKlasy = QgsVectorLayer("Point?crs=epsg:2180&field=gml_id:string(254)", "brakujace klasy", "memory")
+    
+    for klasa in listaKlas:
+        brakKlasy = True
+        for plik in pliki:
+            if plik.__contains__(klasa):
+                brakKlasy = False
+                break
+        if brakKlasy:
+            brakujaceKlasy.startEditing()
+            nowyRekord = QgsFeature(brakujaceKlasy.fields())
+            nowyRekord.setAttribute(0, klasa)
+            nowyRekord.setGeometry(QgsGeometry.fromPointXY(QgsPointXY(0, 0)))
+            brakujaceKlasy.addFeature(nowyRekord)
+            brakujaceKlasy.commitChanges()
+            obiektyZbledami.append(nowyRekord)
+    
+    return obiektyZbledami
+
+
+def kompletnoscObiektowBDOT10k(layer, plikGMLzrodlowy, plikGML):
+    obiektyZbledami = []
+    
+    ns = {'gml': 'http://www.opengis.net/gml/3.2', 'ot': 'urn:gugik:specyfikacje:gmlas:bazaDanychObiektowTopograficznych10k:2.0'}
+    lokalnyIdsKontrolowane = [element.text for element in lxml.etree.parse(plikGML).getroot().findall('.//ot:lokalnyId', namespaces=ns)]
+    lokalnyIdsZrodla = [element.text for element in lxml.etree.parse(plikGMLzrodlowy).getroot().findall('.//ot:lokalnyId', namespaces=ns)]
+    
+    set_difference = set(lokalnyIdsZrodla) - set(lokalnyIdsKontrolowane)
+    list_difference_result = list(set_difference)
+    
+    if len(list_difference_result) > 0:
+        layerDaneZrodlowe = QgsVectorLayer(plikGMLzrodlowy, 'BDOT10k_dane_zrodlowe', 'ogr')
+        
+        for diff in list_difference_result:
+            expression = QgsExpression(f'"lokalnyId" = \'{diff}\'')
+            request = QgsFeatureRequest(expression)
+            for feature in layerDaneZrodlowe.getFeatures(request):
+                obiektyZbledami.append(feature)
+    
+    return obiektyZbledami
+
+
+def kontrolaZmianAtrybutowWzgledemWersji(layer, plikGMLzrodlowy, plikGML):
+    obiektyZbledami = set()
+    
+    k = lxml.etree.parse(plikGML).getroot()
+    z = lxml.etree.parse(plikGMLzrodlowy).getroot()
+    
+    # usuwanie gml:id
+    for elem in k.xpath('//*[@gml:id]', namespaces={'gml': 'http://www.opengis.net/gml/3.2'}):
+        del elem.attrib['{http://www.opengis.net/gml/3.2}id']
+    # usuwanie gml:id
+    for elem in z.xpath('//*[@gml:id]', namespaces={'gml': 'http://www.opengis.net/gml/3.2'}):
+        del elem.attrib['{http://www.opengis.net/gml/3.2}id']
+    
+    ns = {'gml': 'http://www.opengis.net/gml/3.2', 'ot': 'urn:gugik:specyfikacje:gmlas:bazaDanychObiektowTopograficznych10k:2.0'}
+    fMembers_K = k.findall('.//gml:featureMember', namespaces=ns)
+    fMembers_Z = z.findall('.//gml:featureMember', namespaces=ns)
+    
+    fMembers_K_dic = {}
+    fMembers_Z_dic = {}
+    
+    for fMember in fMembers_K:
+        fMembers_K_dic[fMember.find('.//ot:lokalnyId', namespaces=ns).text] = fMember
+    for fMember in fMembers_Z:
+        fMembers_Z_dic[fMember.find('.//ot:lokalnyId', namespaces=ns).text] = fMember
+    
+    fMembers_K = None
+    fMembers_Z = None
+    
+    for fMember_Z_dic in fMembers_Z_dic:
+        for fMember_K_dic in fMembers_K_dic:
+            if fMember_K_dic == fMember_Z_dic:
+                fMember_K_dic_str = etree.tostring(fMembers_K_dic[fMember_K_dic], pretty_print=True, encoding='unicode')
+                fMember_Z_dic_str = etree.tostring(fMembers_Z_dic[fMember_Z_dic], pretty_print=True, encoding='unicode')
+                if fMember_K_dic_str != fMember_Z_dic_str:
+                    if fMembers_K_dic[fMember_K_dic].find('.//ot:wersja', namespaces=ns).text == fMembers_Z_dic[fMember_Z_dic].find('.//ot:wersja', namespaces=ns).text:
+                        atrybutyZRoznica = set()
+                        
+                        for element in fMembers_Z_dic[fMember_Z_dic].iter():
+                            elementyIdentyczne = False
+                            for fM_K_dic_element in fMembers_K_dic[fMember_K_dic].findall('.//' + element.tag):
+                                if fM_K_dic_element.text == element.text:
+                                    elementyIdentyczne = True
+                            if not elementyIdentyczne and element.tag != '{http://www.opengis.net/gml/3.2}featureMember':
+                                atrybutyZRoznica.add(element.tag.split("}")[1].replace('posList','geometria'))
+                                # print("1:",element.tag,':',element.text)
+                        
+                        for element in fMembers_K_dic[fMember_K_dic].iter():
+                            elementyIdentyczne = False
+                            for fM_Z_dic_element in fMembers_Z_dic[fMember_Z_dic].findall('.//' + element.tag):
+                                if fM_Z_dic_element.text == element.text:
+                                    elementyIdentyczne = True
+                            if not elementyIdentyczne and element.tag != '{http://www.opengis.net/gml/3.2}featureMember':
+                                atrybutyZRoznica.add(element.tag.split("}")[1].replace('posList','geometria'))
+                                # print("2:",element.tag,':',element.text)
+                        
+                        if len(atrybutyZRoznica) > 0:
+                            request = QgsFeatureRequest(QgsExpression(f'"lokalnyId" = \'{fMember_K_dic}\''))
+                            for feature in layer.getFeatures(request):
+                                gml_id = feature["gml_id"] + "|" + ','.join(atrybutyZRoznica)
+                                feature.setAttribute(layer.fields().indexFromName("gml_id"), gml_id)
+                                layer.updateFeature(feature)
+                                obiektyZbledami.add(feature)
+                            layer.commitChanges()
+                            
+                break
     
     return obiektyZbledami

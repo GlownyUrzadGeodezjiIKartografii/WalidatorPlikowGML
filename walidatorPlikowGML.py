@@ -36,7 +36,6 @@ import hashlib
 import binascii
 import logging
 from lxml.etree import parse, XMLSchema, ElementTree
-from lxml import etree 
 from time import sleep
 from datetime import datetime
 from osgeo import ogr,osr, gdal
@@ -45,13 +44,14 @@ from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
 from qgis.PyQt.QtGui import *
-from qgis.PyQt.QtWidgets import QFileDialog, QProgressBar, QMessageBox, QAction
+from qgis.PyQt.QtWidgets import QFileDialog, QProgressBar, QMessageBox, QAction, QLabel
 from .resources import *
 from .utils import *
 from .walidatorPlikowGML_dialog import walidatorPlikowGMLDialog
 from .fpdf import FPDF
 from .fpdf import FontFace
 import time
+
 
 
 
@@ -75,13 +75,39 @@ class walidatorPlikowGML:
         
         os.environ['QT_AUTO_SCREEN_SCALE_FACTOR'] = '1'
         
-        global mainPath, config, dlg
+        global mainPath, config, dlg, version, blokady, sciezkiPlikowZrodlowych
         
         mainPath = pathlib.Path(QgsApplication.qgisSettingsDirPath())/pathlib.Path("python/plugins/Walidator_plikow_gml/")
-        
+        ui_path = os.path.join(mainPath, 'walidatorPlikowGML_dialog_base.ui')
         config = configparser.ConfigParser()
         config.read(os.path.join(mainPath,'Walidator_plikow_gml.ini'))
+        
+        metadata_path = os.path.join(mainPath, 'metadata.txt')
+        
+        blokady = [0, 0, 0, 0, 0, 0]
+        
+        sciezkiPlikowZrodlowych = []
+        
+        # Odczytanie wersji wtyczki z pliku metadata.txt
+        version = ""
+        if os.path.exists(metadata_path):
+           with open(metadata_path, 'r') as metadata_file:
+               for line in metadata_file:
+                   if line.startswith('version='):
+                       version = line.split('=')[1].strip()
+                       break
+        
+        tree = et.parse(ui_path)
+        root = tree.getroot()
+        
+        for widget in root.iter('widget'):
+            if widget.get('name') == 'label_14':
+                text_property = widget.find('property[@name="text"]')
+                if text_property is not None:
+                    text_property.find('string').text = version
 
+        # Zapisz zmodyfikowany plik
+        tree.write(ui_path)
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -133,7 +159,7 @@ class walidatorPlikowGML:
     def run(self):
         global xsdPaths
         walidowanaBaza = ['EGIB','GESUT','BDOT500','RCN','PRNG','BDOT10k','BDOO','MGR']
-        formatRaportu = ['xls', 'pdf']
+        formatRaportu = ['xls', 'pdf', 'shp', 'gpkg']
         xsdPaths = {'BDOO':"/XSD/BDOT10kBDOO/BDOT10k_BDOO.xsd",
                     'BDOT10k':"/XSD/BDOT10kBDOO/BDOT10k_BDOO.xsd",
                     'PRNG':"/XSD/PRNG/NG_PRNG.xsd",
@@ -148,6 +174,7 @@ class walidatorPlikowGML:
         self.dlg.comboBox.addItems(walidowanaBaza)
         self.dlg.mComboBox.addItems(formatRaportu)
         self.dlg.mComboBox.setCheckedItems(['xls'])
+        self.dlg.pushButton.clicked.connect(self.zaznaczKontroleNaPodstawieDanych)
         self.dlg.pushButton_1.clicked.connect(self.zaznaczWszystkieKontrole)
         self.dlg.pushButton_2.clicked.connect(self.odznaczWszystkieKontrole)
         self.walidacjaIKontrolaAtrybutow()
@@ -178,9 +205,12 @@ class walidatorPlikowGML:
 
 
     def wyborPliku(self, txt):
-        global files, plikZIP
+        global files, plikZIP, blokady
         files = []
-        if txt != '':
+        if os.path.isfile(txt):
+            if self.dlg.mQgsFileWidget_dz.filePath() == self.dlg.mQgsFileWidget.filePath():
+                QMessageBox.critical(QMessageBox(),'Uwaga!','Wybrano ten sam plik co w zakładce "Ustawienia".', QMessageBox.Ok)
+            
             self.dlg.button_box.buttons()[0].setEnabled(True)
             
             if zipfile.is_zipfile(txt):
@@ -209,7 +239,14 @@ class walidatorPlikowGML:
                 self.dlg.comboBox.setCurrentIndex(self.dlg.comboBox.findText('EGIB'))
                 
             self.wczytanieWersjiSzablonow(self.dlg.comboBox.currentText())
+            
+            blokady[0] = 0
+            if sum(blokady) == 0:
+                self.dlg.button_box.buttons()[0].setEnabled(True)
+            else:
+                self.dlg.button_box.buttons()[0].setEnabled(False)
         else:
+            blokady[0] = 1
             self.dlg.button_box.buttons()[0].setEnabled(False)
 
 
@@ -234,38 +271,95 @@ class walidatorPlikowGML:
         self.kontrolaIstnieniaPlikowGranicDlaBDOT10k()
 
 
+    def wyborPlikuZrodlowego(self, txt):
+        global sciezkiPlikowZrodlowych, plikZIPzrodlowy
+        if os.path.isfile(txt):
+            if self.dlg.mQgsFileWidget_dz.filePath() == self.dlg.mQgsFileWidget.filePath():
+                QMessageBox.critical(QMessageBox(),'Uwaga!','Wybrano ten sam plik co w zakładce "Walidacja plików GML".', QMessageBox.Ok)
+            if zipfile.is_zipfile(txt):
+                try:
+                    plikZIPzrodlowy = zipfile.ZipFile(txt,'r')
+                except:
+                    self.iface.messageBar().pushMessage("Uwaga!", "Niepoprawny plik zip.", level = Qgis.Critical)
+                    return
+                pliki = plikZIPzrodlowy.namelist()
+                for plik in pliki:
+                    if os.path.splitext(plik)[1].lower() in ['.xml','.gml']:
+                        sciezkiPlikowZrodlowych.append(plik)
+            else:
+                if os.path.isfile(txt) and os.path.splitext(txt)[1].lower() in ['.xml','.gml']:
+                    sciezkiPlikowZrodlowych.append(txt)
+            blokady[5] = 0
+        try:
+            for i in range(modelKontroli.rowCount()):
+                item = modelKontroli.item(i)
+                if item.checkState() in (2,1):
+                    for c in range(item.rowCount()):
+                        if item.child(c).checkState() == 2 and item.child(c).data(6).__contains__('(gml,gml)'):
+                            if os.path.isfile(txt):
+                                if sum(blokady) == 0:
+                                    self.dlg.button_box.buttons()[0].setEnabled(True)
+                            else:
+                                self.dlg.button_box.buttons()[0].setEnabled(False)
+        except:
+            pass
+
+
     def kontrolaIstnieniaPlikowGranicDlaBDOT10k(self):
         if self.dlg.comboBox.currentText() == 'BDOT10k':
             granicePowiatow = config['DEFAULT']['granicePowiatow']
             graniceGmin = config['DEFAULT']['graniceGmin']
             graniceJednostekEwidencyjnych = config['DEFAULT']['graniceJednostekEwidencyjnych']
-            if granicePowiatow == "" or graniceGmin == "" or graniceJednostekEwidencyjnych == "":
-                # QMessageBox.critical(QMessageBox(), 'Brak ścieżki', 'W zakładce Ustawienia należy wpisać ścieżki do plików GML z granicami.', QMessageBox.Ok)
-                self.dlg.button_box.buttons()[0].setEnabled(False)
-            else:
-                if self.dlg.mQgsFileWidget.filePath() != '':
-                    self.dlg.button_box.buttons()[0].setEnabled(True)
+            
+            if granicePowiatow == "":
+                for i in range(modelKontroli.rowCount()):
+                    item = modelKontroli.item(i)
+                    if item.checkState() in (1,2):
+                        for child in range(item.rowCount()):
+                            if item.child(child).checkState() == 2 and (item.child(child).data(6).__contains__("czyObiektyWewnatrzPowiatu") or item.child(child).data(6).__contains__("Granice_powiatow")):
+                                self.dlg.button_box.buttons()[0].setEnabled(False)
+                                return
+            if graniceGmin == "":
+                for i in range(modelKontroli.rowCount()):
+                    item = modelKontroli.item(i)
+                    if item.checkState() in (1,2):
+                        for child in range(item.rowCount()):
+                            if item.child(child).checkState() == 2 and item.child(child).data(6).__contains__("Granice_gmin"):
+                                self.dlg.button_box.buttons()[0].setEnabled(False)
+                                return
+            if graniceJednostekEwidencyjnych == "":
+                for i in range(modelKontroli.rowCount()):
+                    item = modelKontroli.item(i)
+                    if item.checkState() in (1,2):
+                        for child in range(item.rowCount()):
+                            if item.child(child).checkState() == 2 and item.child(child).data(6).__contains__("Granice_jednostek_ewidencyjnych"):
+                                self.dlg.button_box.buttons()[0].setEnabled(False)
+                                return
+            
+            if self.dlg.mQgsFileWidget.filePath() != '':
+                self.dlg.button_box.buttons()[0].setEnabled(True)
 
 
     # wskazanie pliku i zlecenie walidacji
     def walidacjaIKontrolaAtrybutow(self):
         global pliki, sciezkaGML, files, plik, path, plikRaportu, walidacjaZWynikiemPozytywnym, kontrolaZWynikiemPozytywnym, xmlschema, formatPlikuRaportu, dataFrame
-        global walidowanePliki_df, wiersze_df, opisyBledow_df, komunikatyBledow_df, gmlid_df_w, groupaGlowna
+        global walidowanePliki_df, wiersze_df, opisyBledow_df, komunikatyBledow_df, gmlid_df_w, groupaGlowna, grupyKontroli_df
         global kontrolowanePliki_df, klasy_df, gmlid_df_k, komunikatyBledowKontroli_df, plikiZparsowane, slownikBledow, warstwyBledowKontroliAtrybutow, warstwyBledowWalidacji
-        global progress, liczbaKontroliWykonanych, nazwy, unikalny_id, nazwa_pliku, timestr
-        global granicePowiatow, graniceGmin, graniceJednostekEwidencyjnych, czySpawdzonowPokrycie, plikZIP
+        global progress, liczbaKontroliWykonanych, nazwy, unikalny_id, nazwa_pliku, timestr, version, idkontroli_LiczbaBledow
+        global granicePowiatow, graniceGmin, graniceJednostekEwidencyjnych, kontroleWykonaniePojedyncze, plikZIP, pathSHP, pathGPKG
         
         sciezkaGML_ini = config['DEFAULT']['sciezkagml']
         granicePowiatow = config['DEFAULT']['granicePowiatow']
         graniceGmin = config['DEFAULT']['graniceGmin']
         graniceJednostekEwidencyjnych = config['DEFAULT']['graniceJednostekEwidencyjnych']
         
-        czySpawdzonowPokrycie = False
+        kontroleWykonaniePojedyncze = {"topo_e3_k6":False,"topo_e5_k1":False}
         
         self.dlg.mQgsFileWidget.setFilter("Plik GML (*.gml);;Plik XML (*.xml);;Plik skompresowany (*.zip)")
         self.dlg.mQgsFileWidget_gp.setFilter("Plik GML (*.gml)")
         self.dlg.mQgsFileWidget_gg.setFilter("Plik GML (*.gml)")
         self.dlg.mQgsFileWidget_gje.setFilter("Plik GML (*.gml)")
+        self.dlg.mQgsFileWidget_dz.setFilter("Plik GML (*.gml);;Plik XML (*.xml);;Plik skompresowany (*.zip)")
         
         self.dlg.mQgsFileWidget_gp.setFilePath(granicePowiatow)
         self.dlg.mQgsFileWidget_gg.setFilePath(graniceGmin)
@@ -275,6 +369,7 @@ class walidatorPlikowGML:
         self.dlg.mQgsFileWidget_gp.setDialogTitle("Wskaż plik z granicami powiatów")
         self.dlg.mQgsFileWidget_gg.setDialogTitle("Wskaż plik z granicami gmin")
         self.dlg.mQgsFileWidget_gje.setDialogTitle("Wskaż plik z granicami jednostek ewidencyjnych")
+        self.dlg.mQgsFileWidget_dz.setDialogTitle("Wskaż plik z danymi źródłowymi")
         
         self.dlg.mQgsFileWidget.setDefaultRoot(sciezkaGML_ini)
         self.wyborPliku('')
@@ -283,6 +378,7 @@ class walidatorPlikowGML:
         self.dlg.mQgsFileWidget_gp.fileChanged.connect(self.wyborPlikuGranicPowiatow)
         self.dlg.mQgsFileWidget_gg.fileChanged.connect(self.wyborPlikuGranicGmin)
         self.dlg.mQgsFileWidget_gje.fileChanged.connect(self.wyborPlikuGranicJednostekEwidencyjnych)
+        self.dlg.mQgsFileWidget_dz.fileChanged.connect(self.wyborPlikuZrodlowego)
         
         self.dlg.comboBox.currentIndexChanged.connect(lambda: self.wczytanieWersjiSzablonow(self.dlg.comboBox.currentText()))
         self.dlg.comboBox_2.currentIndexChanged.connect(self.wczytanieSzablonuKontroli)
@@ -330,15 +426,8 @@ class walidatorPlikowGML:
             
             pathPDF = sciezkaGML + "/RaportBledow_" + str(nazwa_pliku) + "_" + timestr + ".pdf"
             pathXLS = sciezkaGML + "/RaportBledow_" + str(nazwa_pliku) + "_" + timestr + ".xls"
-            
-            try:
-                if os.path.isfile(pathPDF):
-                    os.remove(pathPDF)
-                if os.path.isfile(pathXLS):
-                    os.remove(pathXLS)
-            except:
-                self.iface.messageBar().pushMessage("Uwaga!", "Plik raportu jest otwarty. Proszę o zamknięcie pliku.", level=Qgis.Critical)
-                return
+            pathSHP = sciezkaGML + "/RaportBledow_" + str(nazwa_pliku) + "_" + timestr + ".shp"
+            pathGPKG = sciezkaGML + "/RaportBledow_" + str(nazwa_pliku) + "_" + timestr + ".gpkg"
         else:
             return
         
@@ -354,8 +443,10 @@ class walidatorPlikowGML:
         gmlid_df_w = []
         gmlid_df_k = []
         komunikatyBledowKontroli_df = []
+        grupyKontroli_df = []
         slownikBledow = {}
         slownikWalidacji = {}
+        idkontroli_LiczbaBledow = {}
         
         warstwyBledowKontroliAtrybutow = {
             'Point': QgsVectorLayer("Point?crs=epsg:" + str(2180), "błędy z kontroli atrybutów", "memory"),
@@ -469,16 +560,112 @@ class walidatorPlikowGML:
             if liczbaKontroliWykonanych != liczbaKontroliDoWykonania:
                 progress.setValue(progress.maximum())
             iface.messageBar().clearWidgets()
+            
+            # statystyki
+            listaBledow = {k: v for k, v in idkontroli_LiczbaBledow.items() if v > 0}
+            grupy = {}
+            grupa_map = {}
+            slownik_liczba_bledow = {}
+            slownik_grupa = {}
+            for i in range(modelKontroli.rowCount()):
+                item = modelKontroli.item(i)
+                grupa_nazwa = item.data(2)
+                if item.rowCount() > 0:
+                    for j in range(item.rowCount()):
+                        child = item.child(j)
+                        kontrola_id = child.data(1)
+                        kontrola_name = child.data(2)
+                        fraza = kontrola_id.split('_')[1][:2]
+                        klucz_grupy = '_'.join(kontrola_id.split('_')[:2])
+                        if fraza not in grupa_map:
+                            grupa_map[fraza] = grupa_nazwa
+                        if kontrola_id in idkontroli_LiczbaBledow:
+                           wartosc = idkontroli_LiczbaBledow[kontrola_id]
+                           slownik_liczba_bledow[kontrola_id] = (wartosc, kontrola_name)
+            for klucz, wartosc in idkontroli_LiczbaBledow.items():
+                fraza = klucz.split('_')[1][:2]
+                klucz_grupy = '_'.join(klucz.split('_')[:2])
+                if klucz_grupy in grupy:
+                    grupy[klucz_grupy] += wartosc
+                else:
+                    grupy[klucz_grupy] = wartosc
+            for klucz, suma in grupy.items():
+                nazwa_grupy = grupa_map.get(klucz.split('_')[1][:2], "Brak nazwy")
+                slownik_grupa[klucz] = (suma, nazwa_grupy)
+            slownik_liczba_bledow = dict(sorted(slownik_liczba_bledow.items()))
+            slownik_grupa = dict(sorted(slownik_grupa.items()))
+        
+        if not walidacjaZWynikiemPozytywnym:
+            i = 0
+            warstwa_punktowa_walidacja = None
+            warstwa_liniowa_walidacja = None
+            warstwa_powierzchniowa_walidacja = None
+            for gmlid_ in gmlid_df_w:
+                for lyr in QgsProject.instance().mapLayers().values():
+                    if lyr.type() == QgsMapLayer.VectorLayer:
+                        expression = f"gml_id ='{gmlid_}'"
+                        request = QgsFeatureRequest(QgsExpression(expression))
+                        wynik_ = lyr.getFeatures(request)
+                        for feature in lyr.getFeatures(request):
+                            if i < len(walidowanePliki_df) and i < len(wiersze_df) and i < len(opisyBledow_df) and i < len(komunikatyBledow_df):
+                                feature.setAttributes([walidowanePliki_df[i], wiersze_df[i], opisyBledow_df[i], komunikatyBledow_df[i]]) # TODO
+                                geometry = feature.geometry()
+                                typ_geometrii = QgsWkbTypes.displayString(geometry.wkbType())
+                                if typ_geometrii == 'Point':
+                                  warstwa_punktowa_walidacja = warstwyBledowWalidacji['Point']
+                                  warstwa_punktowa_walidacja.dataProvider().addFeatures([feature])
+                                elif typ_geometrii == 'LineString':
+                                  warstwa_liniowa_walidacja = warstwyBledowWalidacji['LineString']
+                                  warstwa_liniowa_walidacja.dataProvider().addFeatures([feature])
+                                elif typ_geometrii == 'Polygon':
+                                  warstwa_powierzchniowa_walidacja = warstwyBledowWalidacji['Polygon']
+                                  warstwa_powierzchniowa_walidacja.dataProvider().addFeatures([feature])
+                                else:
+                                  continue
+            i += 1 #tworzenie warstw z błędami walidacji
+            if warstwa_punktowa_walidacja != None and len(warstwa_punktowa_walidacja) > 0:
+                QgsProject.instance().addMapLayer(warstwa_punktowa_walidacja)
+            if warstwa_liniowa_walidacja != None and len(warstwa_liniowa_walidacja) > 0:
+                QgsProject.instance().addMapLayer(warstwa_liniowa_walidacja)
+            if warstwa_powierzchniowa_walidacja != None and len(warstwa_powierzchniowa_walidacja) > 0:
+                QgsProject.instance().addMapLayer(warstwa_powierzchniowa_walidacja)
+        
+        if walidacjaZWynikiemPozytywnym and kontrolaZWynikiemPozytywnym:
+            widget = iface.messageBar().createMessage("Walidacja pliku " + str(pathlib.Path(plik[0]).name) + " zakończona z wynikiem pozytywnym.")
+            button = QPushButton(widget)
+            button.setText("Pozytywny raport z kontroli / walidacji")
+            button.pressed.connect(self.otwarcieRaportuZWalidacji)
+            widget.layout().addWidget(button)
+            self.iface.messageBar().pushWidget(widget,Qgis.Success)
+        else:
+            if walidacjaZWynikiemPozytywnym == False and kontrolaZWynikiemPozytywnym == False:
+                msg = "Walidacja i kontrola atrybutów zakończona z wynikiem negatywnym: "
+            elif walidacjaZWynikiemPozytywnym == False:
+                msg = "Walidacja pliku zakończona z wynikiem negatywnym: "
+            else:
+                msg = "Kontrola atrybutów zakończona z wynikiem negatywnym: "
+            widget = iface.messageBar().createMessage(msg, str(pathlib.Path(plik[0]).name))
+            
+            button = QPushButton(widget)
+            button.setText("Raporty z kontroli / walidacji")
+            button.pressed.connect(self.otwarcieRaportuZWalidacji)
+            widget.layout().addWidget(button)
+            self.iface.messageBar().pushWidget(widget, Qgis.Warning)
         
         if 'pdf' in self.dlg.mComboBox.checkedItems():
              nazwaPliku = str(pathlib.Path(plik[0]).name)
              bledyWalidacji = {'WALIDOWANY PLIK': walidowanePliki_df, 'WIERSZ': wiersze_df, 'OPIS BŁĘDU': opisyBledow_df, 'KOMUNIKAT BŁĘDU': komunikatyBledow_df,'GMLID':gmlid_df_w}
              bledyKontroli = {'KLASA':klasy_df, 'GMLID':gmlid_df_k, 'KOMUNIKAT BŁĘDU':komunikatyBledowKontroli_df}
-             dfWalidcaji = pd.DataFrame(bledyWalidacji)
+             dfWalidacji = pd.DataFrame(bledyWalidacji)
              dfKontroli = pd.DataFrame(bledyKontroli)
-             datawalidacja = dfWalidcaji.values.tolist()
+             datawalidacja = dfWalidacji.values.tolist()
              datakontrola = dfKontroli.values.tolist()
-             
+             grupy_str = {klucz: (wartosc[1], str(wartosc[0])) for klucz, wartosc in slownik_grupa.items()} # Zamiana wartości w słowniku liczba błędów na stringi, choć powinno być ze slownik_rupa
+             slownik_liczba_bledow_str = {klucz: (wartosc[1], str(wartosc[0])) for klucz, wartosc in slownik_liczba_bledow.items()}
+             lista_grup = [[klucz, wartosc[0], wartosc[1]] for klucz, wartosc in grupy_str.items()]
+             lista_bledow = [[klucz, wartosc[0], wartosc[1]] for klucz, wartosc in slownik_liczba_bledow_str.items()]
+             # Łączenie obu list
+             dataSlownik = lista_grup + lista_bledow
              if len(str(bledyWalidacji["WIERSZ"])) == 0:
                  bledyWalidacji["WIERSZ"] = 0
              
@@ -488,7 +675,7 @@ class walidatorPlikowGML:
                      logging.getLogger('fontTools.subset').setLevel(logging.ERROR) # Nie będzie wyswietlał ostrzeżeń
                      self.add_font('Verdana', '', os.path.dirname(os.path.realpath(__file__)) + "\\fpdf\\Verdana.ttf", uni = True)
                      self.set_font('Verdana', size = 5)
-                     self.cell(0,-5,"Raport został wygenerowany przy pomocy wtyczki QGIS – „Walidator plików GML” w wersji 1.0.8 - udostępnionej przez GUGiK",0,0,"L")
+                     self.cell(0,-5,f'Raport został wygenerowany przy pomocy wtyczki QGIS – „Walidator plików GML” w wersji {version} - udostępnionej przez GUGiK',0,0,"L")
                  def footer(self):
                      self.set_y(-15)
                      self.cell(0, 10, f'Strona {self.page_no()}', 0, 0, 'C')
@@ -513,12 +700,16 @@ class walidatorPlikowGML:
                  
                  pdf.set_font("Verdana", "", 10)
                  pdf.cell(100,0, "Wynik kontroli:", align = 'R', ln = 0)
-                 if len(bledyKontroli["KLASA"]) == 0 and len(bledyWalidacji["WIERSZ"]) == 0:
-                    wynik = "Pozytywny"
-                    pdf.set_text_color(0,153,0)
+                 if liczbaKontroliWykonanych == 0:
+                     wynik = "Pozytywny" if len(bledyWalidacji["WIERSZ"]) == 0 else "Negatywny"
                  else:
-                    wynik = "Negatywny"
-                    pdf.set_text_color(255,0,0)
+                     wynik = "Pozytywny" if len(bledyKontroli["KLASA"]) == 0 and len(bledyWalidacji["WIERSZ"]) == 0 else "Negatywny"
+                 
+                 # Ustaw kolor tekstu w zależności od wyniku
+                 if wynik == "Pozytywny":
+                     pdf.set_text_color(0, 153, 0)
+                 else:
+                     pdf.set_text_color(255, 0, 0)
                  pdf.cell(100,0, wynik, align = "L")
                  pdf.cell(0,6, ln = 1)
                  pdf.set_text_color(0,0,0)
@@ -537,12 +728,16 @@ class walidatorPlikowGML:
                  pdf.cell(0,5,ln = 1)
                  pdf.set_text_color(0,0,0)
                  pdf.cell(100,0, "Wynik kontroli dodatkowych:", align = "R", ln = 0)
-                 if len(bledyKontroli["KLASA"]) == 0:
-                    wynikon = "Pozytywny"
-                    pdf.set_text_color(0,153,0)
+                 if liczbaKontroliWykonanych != 0:
+                     if len(bledyKontroli["KLASA"]) == 0:
+                         wynikon = "Pozytywny"
+                         pdf.set_text_color(0,153,0)
+                     else:
+                         wynikon = "Negatywny"
+                         pdf.set_text_color(255,0,0)
                  else:
-                    wynikon = "Negatywny"
-                    pdf.set_text_color(255,0,0)
+                     wynikon = "Nie dotyczy"
+                     pdf.set_text_color(0,0,0)
                  pdf.cell(100,0, wynikon, align = "L")
                  pdf.cell(0,5, ln = 1)
                  pdf.set_text_color(0,0,0)
@@ -590,6 +785,23 @@ class walidatorPlikowGML:
                       pdf.cell(0,0, "Nie wykonano kontroli dodatkowych", align = "C")
                  pdf.set_fill_color(255,255,255)
                  pdf.set_font("Verdana", "" , 6)
+                 pdf.cell(0,12,ln = 1)
+                 # tabela statystyk
+                 if len(dataSlownik)> 0:
+                     pdf.set_font("Verdana", "B", 10)
+                     pdf.cell(0,0,"Statystyki Kontroli", align = "C")
+                     pdf.cell(0,5,ln = 1)
+                     pdf.set_font("Verdana", "", 8)
+                     pdf.set_fill_color(lightblue)
+                     with pdf.table(col_widths=(16,80,12), text_align = "C",padding = (1)) as table:
+                         pdf.set_font("Verdana", "", 5)
+                         headings = table.row()
+                         headings.cell("IDENTYFIKATOR KONTROLI")
+                         headings.cell("NAZWA KONTROLI")
+                         headings.cell("LICZBA BŁĘDÓW")
+                         pdf.set_fill_color(gray)
+                     with pdf.table(dataSlownik, col_widths=(16,80,12), first_row_as_headings = False, text_align = "L", padding = (1)):
+                          pass
                  pdf.cell(0,12,ln = 1)
                  # tabela walidacji
                  if len(bledyWalidacji["WIERSZ"]) > 0:
@@ -640,16 +852,16 @@ class walidatorPlikowGML:
         if 'xls' in self.dlg.mComboBox.checkedItems():
             progressMessageBar = iface.messageBar().createMessage("Generowanie raportu xls...")
             bledyWalidacji = {'WALIDOWANY PLIK': walidowanePliki_df, 'GMLID': gmlid_df_w, 'WIERSZ': wiersze_df, 'OPIS BŁĘDU': opisyBledow_df, 'KOMUNIKAT BŁĘDU': komunikatyBledow_df}
-            bledyKontroli = {'KLASA':klasy_df, 'GMLID':gmlid_df_k, 'KOMUNIKAT BŁĘDU':komunikatyBledowKontroli_df}
+            bledyKontroli = {'KLASA':klasy_df, 'GMLID':gmlid_df_k, 'KOMUNIKAT BŁĘDU':komunikatyBledowKontroli_df, 'GRUPA KONTROLI': grupyKontroli_df}
             if len(bledyWalidacji["WIERSZ"]) == 0:
                 bledyWalidacji["WIERSZ"] = 0
             dataFrameWalidacja = pd.DataFrame(bledyWalidacji)
             dataFrameKontrola = pd.DataFrame(bledyKontroli)
             
             try:
-                kolumna = 3
                 strony = xlwt.Workbook()
                 arkuszDaneWstepne = strony.add_sheet('Podsumowanie kontroli')
+                arkuszStatystyk = strony.add_sheet('Statystyki')
                 arkuszWalidacji = strony.add_sheet('Raport z walidacji')
                 arkuszKontroli = strony.add_sheet('Raport z kontroli dodatkowych')
                 styl1 = xlwt.easyxf('align: wrap on, vert center;  borders: left thin, right thin, top thin, bottom thin')
@@ -657,6 +869,7 @@ class walidatorPlikowGML:
                 styl3 = xlwt.easyxf("align: horz left, vert center; font: bold on; align: wrap on; borders: left thin, right thin, top thin, bottom thin")
                 neg = xlwt.easyxf("align: horz left, vert center; font: bold on, color red; align: wrap on; borders: left thin, right thin, top thin, bottom thin")
                 poz = xlwt.easyxf("align: horz left, vert center; font: bold on, color green; align: wrap on; borders: left thin, right thin, top thin, bottom thin")
+                czr = xlwt.easyxf("align: horz left, vert center; font: bold on, color black; align: wrap on; borders: left thin, right thin, top thin, bottom thin")
                 arkuszDaneWstepne.write(0,0,"Data kontroli i wskazany plik", styl3)
                 arkuszDaneWstepne.write(1,0,"Suma kontrolna szablonu kontroli (CRC32)", styl3)
                 arkuszDaneWstepne.write(2,0,"Wersja szablonu kontroli", styl3)
@@ -685,6 +898,21 @@ class walidatorPlikowGML:
                 arkuszDaneWstepne.write(4,2,schematPath, styl1)
                 arkuszDaneWstepne.write(5,2,'', styl1)
                 arkuszDaneWstepne.write(6,2,'', styl1)
+                arkuszStatystyk.write(0,0,"IDENTYFIKATOR KONTROLI", styl2)
+                arkuszStatystyk.write(0,1,"NAZWA KONTROLI", styl2)
+                arkuszStatystyk.write(0,2,"LICZBA BŁĘDÓW", styl2)
+                arkuszStatystyk.col(0).width = 5000
+                arkuszStatystyk.col(1).width = 15000
+                arkuszStatystyk.col(2).width = 4000
+                start_row = len(slownik_grupa) + 2
+                for i, (k, (w, n)) in enumerate(slownik_grupa.items()):
+                    arkuszStatystyk.write(i+1,0, k, styl1)
+                    arkuszStatystyk.write(i+1,1, n, styl1)
+                    arkuszStatystyk.write(i+1,2, w, styl1)
+                for j,(klucz, (wartosc, nazwa)) in enumerate(slownik_liczba_bledow.items()):
+                    arkuszStatystyk.write(j+start_row,0, klucz, styl1)
+                    arkuszStatystyk.write(j+start_row,1, nazwa, styl1)
+                    arkuszStatystyk.write(j+start_row,2, wartosc, styl1)
                 arkuszWalidacji.write(0,0,"WALIDOWANY PLIK", styl2)
                 arkuszWalidacji.write(0,1,"GMLID", styl2)
                 arkuszWalidacji.write(0,2,"WIERSZ", styl2)
@@ -698,10 +926,11 @@ class walidatorPlikowGML:
                 arkuszKontroli.write(0,0,"KLASA", styl2)
                 arkuszKontroli.write(0,1,"GMLID", styl2)
                 arkuszKontroli.write(0,2,"KOMUNIKAT BŁĘDU", styl2)
+                arkuszKontroli.write(0,3,"GRUPA KONTROLI", styl2)
                 arkuszKontroli.col(0).width = 4000
                 arkuszKontroli.col(1).width = 12500
                 arkuszKontroli.col(2).width = 27500
-                
+                arkuszKontroli.col(3).width = 10000
                 for i, row in enumerate(dataFrameWalidacja.values):
                     if i > 65500:
                         QMessageBox.critical(QMessageBox(), 'Ograniczenie xls', 'Liczba wierszy xls została ograniczona do 65535 błędów.', QMessageBox.Ok)
@@ -718,83 +947,104 @@ class walidatorPlikowGML:
                         kontrolaZWynikiemPozytywnym = False
                         for j, val in enumerate(row):
                             arkuszKontroli.write(i + 1, j, str(val), styl1)
-                
-                if walidacjaZWynikiemPozytywnym and kontrolaZWynikiemPozytywnym:
-                    arkuszDaneWstepne.write(5,1,"Pozytywny", poz)
-                    arkuszDaneWstepne.write(6,1,"Pozytywny", poz)
-                    arkuszDaneWstepne.write(7,1,"Pozytywny", poz)
+                wynik_5_6_7 = "Pozytywny" if walidacjaZWynikiemPozytywnym and kontrolaZWynikiemPozytywnym else "Negatywny"
+                wynik_6 = "Pozytywny" if walidacjaZWynikiemPozytywnym else "Negatywny"
+                wynik_7 = "Pozytywny" if kontrolaZWynikiemPozytywnym else "Negatywny"
+                if liczbaKontroliWykonanych != 0:
+                    arkuszDaneWstepne.write(5, 1, wynik_5_6_7, poz if wynik_5_6_7 == "Pozytywny" else neg)
+                    arkuszDaneWstepne.write(6, 1, wynik_6, poz if wynik_6 == "Pozytywny" else neg)
+                    arkuszDaneWstepne.write(7, 1, wynik_7, poz if wynik_7 == "Pozytywny" else neg)
                 else:
-                    arkuszDaneWstepne.write(5,1,"Negatywny", neg)
-                    if not walidacjaZWynikiemPozytywnym and kontrolaZWynikiemPozytywnym == True:
-                        arkuszDaneWstepne.write(6,1,"Negatywny", neg)
-                        arkuszDaneWstepne.write(7,1,"Pozytywny", poz)
-                    elif not kontrolaZWynikiemPozytywnym and walidacjaZWynikiemPozytywnym == True:
-                        arkuszDaneWstepne.write(6,1,"Pozytywny", poz)
-                        arkuszDaneWstepne.write(7,1,"Negatywny", neg)
+                    arkuszDaneWstepne.write(7, 1, "Nie dotyczy", czr)
+                    if walidacjaZWynikiemPozytywnym and kontrolaZWynikiemPozytywnym:
+                        arkuszDaneWstepne.write(5, 1, "Pozytywny", poz)
+                        arkuszDaneWstepne.write(6, 1, "Pozytywny", poz)
                     else:
-                        arkuszDaneWstepne.write(6,1,"Negatywny", neg)
-                        arkuszDaneWstepne.write(7,1,"Negatywny", neg)
-                
+                        arkuszDaneWstepne.write(5, 1, "Negatywny", neg)
+                        arkuszDaneWstepne.write(6, 1, "Negatywny" if not walidacjaZWynikiemPozytywnym else "Pozytywny", neg if not walidacjaZWynikiemPozytywnym else poz)
                 strony.save(pathXLS)
             except Exception as e:
                 print(f'Błąd : {e}')
                 return
+            # koniec tworzenia xls
         
-        if not walidacjaZWynikiemPozytywnym:
-            i = 0
-            warstwa_punktowa_walidacja = None
-            warstwa_liniowa_walidacja = None
-            warstwa_powierzchniowa_walidacja = None
-            for gmlid_ in gmlid_df_w:
-                for lyr in QgsProject.instance().mapLayers().values():
-                    if lyr.type() == QgsMapLayer.VectorLayer:
-                        expression = f"gml_id ='{gmlid_}'"
-                        request = QgsFeatureRequest(QgsExpression(expression))
-                        wynik_ = lyr.getFeatures(request)
-                        for feature in lyr.getFeatures(request):
-                            feature.setAttributes([walidowanePliki_df[i], wiersze_df[i], opisyBledow_df[i], komunikatyBledow_df[i]]) # TODO
-                            geometry = feature.geometry()
-                            typ_geometrii = QgsWkbTypes.displayString(geometry.wkbType())
-                            if typ_geometrii == 'Point':
-                                  warstwa_punktowa_walidacja = warstwyBledowWalidacji['Point']
-                                  warstwa_punktowa_walidacja.dataProvider().addFeatures([feature])
-                            elif typ_geometrii == 'LineString':
-                                  warstwa_liniowa_walidacja = warstwyBledowWalidacji['LineString']
-                                  warstwa_liniowa_walidacja.dataProvider().addFeatures([feature])
-                            elif typ_geometrii == 'Polygon':
-                                  warstwa_powierzchniowa_walidacja = warstwyBledowWalidacji['Polygon']
-                                  warstwa_powierzchniowa_walidacja.dataProvider().addFeatures([feature])
-                            else:
-                                continue
-            i += 1
-            if warstwa_punktowa_walidacja != None and len(warstwa_punktowa_walidacja) > 0:
-                QgsProject.instance().addMapLayer(warstwa_punktowa_walidacja)
-            if warstwa_liniowa_walidacja != None and len(warstwa_liniowa_walidacja) > 0:
-                QgsProject.instance().addMapLayer(warstwa_liniowa_walidacja)
-            if warstwa_powierzchniowa_walidacja != None and len(warstwa_powierzchniowa_walidacja) > 0:
-                QgsProject.instance().addMapLayer(warstwa_powierzchniowa_walidacja)
+        if 'shp' in self.dlg.mComboBox.checkedItems():
+            created_layers = {
+                QgsWkbTypes.PointGeometry: False,
+                QgsWkbTypes.LineGeometry: False,
+                QgsWkbTypes.PolygonGeometry: False
+                }
+            for layer in QgsProject.instance().mapLayers().values():
+                if layer.isValid() and isinstance(layer, QgsVectorLayer) and layer.featureCount() > 0:
+                    if "błędy z kontroli atrybutów" in layer.name() or "błędy z walidacji" in layer.name():
+                        typ_geometrii = layer.geometryType()
+                        # Jeśli warstwa dla tego typu geometrii została już stworzona, pomiń
+                        if created_layers[typ_geometrii]:
+                            continue
+                        # Ustaw flagę na True, aby oznaczyć, że warstwa tego typu została już przetworzona
+                        created_layers[typ_geometrii] = True
+                        layerName = layer.name()
+                        suffix = ''
+                        if "błędy z kontroli atrybutów" in layer.name():
+                            suffix_prefix = ""
+                        else:  # Błędy z walidacji
+                            suffix_prefix = "_walidacja"
+                        
+                        if typ_geometrii == QgsWkbTypes.PointGeometry:
+                            suffix = f"{suffix_prefix}_Punkt"
+                        elif typ_geometrii == QgsWkbTypes.LineGeometry:
+                            suffix = f"{suffix_prefix}_Linia"
+                        elif typ_geometrii == QgsWkbTypes.PolygonGeometry:
+                            suffix = f"{suffix_prefix}_Poligon"
+                        else:
+                            suffix = f"{suffix_prefix}_InnyTypGeometrii"
+                        outSHP = pathSHP.replace('.shp', f'{suffix}.shp')
+                        
+                        options = QgsVectorFileWriter.SaveVectorOptions()
+                        options.driverName = 'ESRI Shapefile'
+                        options.layerName = layerName
+                        options.fileEncoding = 'UTF-8'
+                        options.destCRS = QgsCoordinateReferenceSystem('EPSG:' + str(2180))
+                        error =  QgsVectorFileWriter.writeAsVectorFormatV3(layer, outSHP, QgsCoordinateTransformContext(), options)
         
-        if walidacjaZWynikiemPozytywnym and kontrolaZWynikiemPozytywnym:
-            widget = iface.messageBar().createMessage("Walidacja pliku " + str(pathlib.Path(plik[0]).name) + " zakończona z wynikiem pozytywnym.")
-            button = QPushButton(widget)
-            button.setText("Pozytywny raport z kontroli / walidacji")
-            button.pressed.connect(self.otwarcieRaportuZWalidacji)
-            widget.layout().addWidget(button)
-            self.iface.messageBar().pushWidget(widget,Qgis.Success)
-        else:
-            if walidacjaZWynikiemPozytywnym == False and kontrolaZWynikiemPozytywnym == False:
-                msg = "Walidacja i kontrola atrybutów zakończona z wynikiem negatywnym: "
-            elif walidacjaZWynikiemPozytywnym == False:
-                msg = "Walidacja pliku zakończona z wynikiem negatywnym: "
-            else:
-                msg = "Kontrola atrybutów zakończona z wynikiem negatywnym: "
-            widget = iface.messageBar().createMessage(msg, str(pathlib.Path(plik[0]).name))
-            
-            button = QPushButton(widget)
-            button.setText("Raporty z kontroli / walidacji")
-            button.pressed.connect(self.otwarcieRaportuZWalidacji)
-            widget.layout().addWidget(button)
-            self.iface.messageBar().pushWidget(widget, Qgis.Warning)
+        if 'gpkg' in self.dlg.mComboBox.checkedItems():
+            created_layers = {
+                QgsWkbTypes.PointGeometry: False,
+                QgsWkbTypes.LineGeometry: False,
+                QgsWkbTypes.PolygonGeometry: False
+                }
+            for layer in QgsProject.instance().mapLayers().values():
+                if layer.isValid() and isinstance(layer, QgsVectorLayer) and layer.featureCount() > 0:
+                    if "błędy z kontroli atrybutów" in layer.name() or "błędy z walidacji" in layer.name():
+                        typ_geometrii = layer.geometryType()
+                        # Jeśli warstwa dla tego typu geometrii została już stworzona, pomiń
+                        if created_layers[typ_geometrii]:
+                            continue
+                        # Ustaw flagę na True, aby oznaczyć, że warstwa tego typu została już przetworzona
+                        created_layers[typ_geometrii] = True
+                        layerName = layer.name()
+                        suffix = ''
+                        if "błędy z kontroli atrybutów" in layer.name():
+                            suffix_prefix = ""
+                        elif "błędy z walidacji" in layer.name():  # Błędy z walidacji
+                            suffix_prefix = "_walidacja"
+                        if typ_geometrii == QgsWkbTypes.PointGeometry:
+                            suffix = f"{suffix_prefix}_Punkt"
+                        elif typ_geometrii == QgsWkbTypes.LineGeometry:
+                            suffix = f"{suffix_prefix}_Linia"
+                        elif typ_geometrii == QgsWkbTypes.PolygonGeometry:
+                            suffix = f"{suffix_prefix}_Poligon"
+                        else:
+                            suffix = f"{suffix_prefix}_InnyTypGeometrii"
+                        outGPKG = pathGPKG.replace('.gpkg', f'{suffix}.gpkg')
+                        
+                        options = QgsVectorFileWriter.SaveVectorOptions()
+                        options.driverName = 'GPKG'
+                        options.layerName = layerName
+                        options.fileEncoding = 'UTF-8'
+                        options.destCRS = QgsCoordinateReferenceSystem('EPSG:' + str(2180))
+                        
+                        error =  QgsVectorFileWriter.writeAsVectorFormatV3(layer, outGPKG, QgsCoordinateTransformContext(), options)
 
 
     # walidacja pliku GML z conajmniej jednym obiektem
@@ -863,6 +1113,7 @@ class walidatorPlikowGML:
                  "is not a valid value of the local atomic type":"nie jest poprawną wartością lokalnego typu podstawowego"
                  }
         if value != None:
+            formats_to_check = ['xls', 'pdf', 'shp', 'gpkg']
             for errors in value['error']:
                 if isinstance(errors, lxml.etree.XMLSyntaxError):
                     opisBledu = str(errors)
@@ -870,7 +1121,7 @@ class walidatorPlikowGML:
                         opisBledu = opisBledu.replace(key,frazy[key])
                     msg = 'Błąd w składni pliku XML: ' + str(value['plikGML']) + '\n' + \
                         '- komunikat błędu: ' + opisBledu + '\n\n'
-                    if 'xls' in self.dlg.mComboBox.checkedItems() or 'pdf' in self.dlg.mComboBox.checkedItems():
+                    if any(format in self.dlg.mComboBox.checkedItems() for format in formats_to_check): 
                         walidowanePliki_df.append(str(value['plikGML']))
                         wiersze_df.append("-")
                         opisyBledow_df.append("Błąd w składni pliku XML")
@@ -880,7 +1131,7 @@ class walidatorPlikowGML:
                     opisBledu = str(errors)
                     for key in frazy:
                         opisBledu = opisBledu.replace(key,frazy[key])
-                    if 'xls' in self.dlg.mComboBox.checkedItems() or 'pdf' in self.dlg.mComboBox.checkedItems():
+                    if any(format in self.dlg.mComboBox.checkedItems() for format in formats_to_check): 
                         walidowanePliki_df.append(str(value['plikGML']))
                         wiersze_df.append("-")
                         opisyBledow_df.append("-")
@@ -895,7 +1146,7 @@ class walidatorPlikowGML:
                               '- ' + config['KodyWalidacji'][error.type_name] + '\n' + \
                               '- wiersz: ' + str(error.line) + '\n' + \
                               '- komunikat błędu: ' + opisBledu + '\n\n'
-                        if 'xls' in self.dlg.mComboBox.checkedItems() or 'pdf' in self.dlg.mComboBox.checkedItems():
+                        if any(format in self.dlg.mComboBox.checkedItems() for format in formats_to_check): 
                             walidowanePliki_df.append(str(value['plikGML']))
                             wiersze_df.append(str(error.line))
                             opisyBledow_df.append(config['KodyWalidacji'][error.type_name])
@@ -1049,25 +1300,79 @@ class walidatorPlikowGML:
         modelKontroli.itemChanged.connect(self.zmianaStatusuKontroli)
 
 
+    def zaznaczKontroleNaPodstawieDanych(self):
+        try:
+            self.odznaczWszystkieKontrole()
+            files_str = ", ".join(files)
+            for i in range(modelKontroli.rowCount()):
+                item = modelKontroli.item(i)
+                if item.checkState() in (0,1):
+                    for child in range(item.rowCount()):
+                        if files_str.__contains__(item.child(child).data(3)):
+                            item.child(child).setCheckState(2)
+        except:
+            pass
+
+
     def zaznaczWszystkieKontrole(self):
-        for i in range(modelKontroli.rowCount()):
-            item = modelKontroli.item(i)
-            if item.checkState() in (0,1):
-                item.setCheckState(2)
+        try:
+            for i in range(modelKontroli.rowCount()):
+                item = modelKontroli.item(i)
+                if item.checkState() in (0,1):
+                    item.setCheckState(2)
+        except:
+            pass
 
 
     def odznaczWszystkieKontrole(self):
-        for i in range(modelKontroli.rowCount()):
-            item = modelKontroli.item(i)
-            if item.checkState() in (1,2):
-                item.setCheckState(0)
+        try:
+            for i in range(modelKontroli.rowCount()):
+                item = modelKontroli.item(i)
+                if item.checkState() in (1,2):
+                    item.setCheckState(0)
+        except:
+            pass
 
 
     def zmianaStatusuKontroli(self, item):
+        global blokady
         statusParent = item.checkState()
+        if not item.hasChildren() and self.dlg.comboBox.currentText() == 'BDOT10k' and \
+        (item.data(6).__contains__("Granice_powiatow") or item.data(6).__contains__("czyObiektyWewnatrzPowiatu")):
+            granicePowiatow = config['DEFAULT']['granicePowiatow']
+            if granicePowiatow == "" and item.checkState() == 2:
+                blokady[2] = 1
+                self.dlg.button_box.buttons()[0].setEnabled(False)
+            else:
+                blokady[2] = 0
+        
+        if not item.hasChildren() and self.dlg.comboBox.currentText() == 'BDOT10k' and item.data(6).__contains__("Granice_gmin"):
+            graniceGmin = config['DEFAULT']['graniceGmin']
+            if graniceGmin == "" and item.checkState() == 2:
+               blokady[3] = 1
+               self.dlg.button_box.buttons()[0].setEnabled(False)
+            else:
+               blokady[3] = 0
+        
+        if not item.hasChildren() and self.dlg.comboBox.currentText() == 'BDOT10k' and item.data(6).__contains__("Granice_jednostek_ewidencyjnych"):
+            if graniceJednostekEwidencyjnych == "" and item.checkState() == 2:
+                blokady[4] = 1
+                self.dlg.button_box.buttons()[0].setEnabled(False)
+            else:
+                blokady[4] = 0
+        
+        if not item.hasChildren() and self.dlg.comboBox.currentText() == 'BDOT10k' and item.data(6).__contains__("(gml,gml)"):
+            if len(self.dlg.mQgsFileWidget_dz.filePath()) == 0 and item.checkState() == 2:
+                blokady[5] = 1
+                self.dlg.button_box.buttons()[0].setEnabled(False)
+            else:
+                blokady[5] = 0
+        
+        if sum(blokady) == 0:
+            self.dlg.button_box.buttons()[0].setEnabled(True)
+        
         if item.rowCount() > 0:
             for j in range(item.rowCount()):
-                statusChild = item.child(j).checkState()
                 if statusParent == 2:
                     item.child(j).setCheckState(2)
                 if statusParent == 0:
@@ -1086,7 +1391,8 @@ class walidatorPlikowGML:
 
     # kontrola atrybutów
     def kontrolaAtrybutow(self, zparsowanyPlik):
-        global liczbaKontroliWykonanych, progress, slownikBledow, warstwyBledowKontroliAtrybutow, czySpawdzonowPokrycie
+        global liczbaKontroliWykonanych, progress, slownikBledow, warstwyBledowKontroliAtrybutow, kontroleWykonaniePojedyncze
+        global idkontroli_LiczbaBledow, warstwa
         geometryType = {0:'Point',1:'Line',2:'Polygon'}
         
         QgsProjectInstance = QgsProject().instance()
@@ -1100,6 +1406,7 @@ class walidatorPlikowGML:
                     if parent.child(j).checkState() == 2 and parent.child(j).data(1) != '' and parent.child(j).data(2) != '' and \
                         parent.child(j).data(3) != '' and  parent.child(j).data(4) != '' and \
                         parent.child(j).data(5) in ('QgsExpression','QgsExpressionWithJoin','pythonFunction','PyExpression','MgrExpression') and parent.child(j).data(6) != '':
+                        nazwaKontroli = parent.data(2)
                         errorPhrase = parent.child(j).data(4)
                         idKontroli = parent.child(j).data(1)
                         sqltxt = parent.child(j).data(6)
@@ -1122,67 +1429,70 @@ class walidatorPlikowGML:
                             layerL1 = QgsProjectInstance.mapLayersByName(nazwaWarstwyJ1)[0]
                         except:
                             layerL1 = None
-                            pass
-                        if parent.child(j).data(5) in ('QgsExpression','QgsExpressionWithJoin','pythonFunction','PyExpression','MgrExpression') and layerL1 != None:
-                            
+                        if parent.child(j).data(5) in ('QgsExpression','QgsExpressionWithJoin','pythonFunction','PyExpression','MgrExpression'): 
                             # join dwóch warstw
                             if parent.child(j).data(7) != None and parent.child(j).data(8) != None and parent.child(j).data(9) != None and parent.child(j).data(11) != None:
-                                klasa2 = parent.child(j).data(7)
-                                warstwa_w_memory_nazwa = parsedFileBaseName + '_' + klasa + "_" + klasa2
-                                
-                                #czy jest warstwa złączonych warstw
-                                if len(QgsProjectInstance.mapLayersByName(warstwa_w_memory_nazwa)) == 0:
-                                    if parsedFileBaseName.find(klasa2) != -1:
-                                        nazwaWarstwyJ2 = parsedFileBaseName
-                                    else:
-                                        nazwaWarstwyJ2 = parsedFileBaseName + '_' + klasa2
-                                    layerL2 = QgsProjectInstance.mapLayersByName(nazwaWarstwyJ2)[0]
-                                    joinFieldName = parent.child(j).data(8)
-                                    targetFieldName = parent.child(j).data(9)
-                                    joinFieldNamesSubset = parent.child(j).data(11).split(",")
-                                    noweAtrybuty = {}
+                                try:
+                                    klasa2 = parent.child(j).data(7)
+                                    warstwa_w_memory_nazwa = parsedFileBaseName + '_' + klasa + "_" + klasa2
                                     
-                                    definicje_pol = layerL1.fields()
-                                    
-                                    for nowyAtrybut in joinFieldNamesSubset:
-                                        pole_lista = QgsField(klasa2 + '_' + nowyAtrybut, 11)
-                                        definicje_pol.append(pole_lista)
-                                       
-                                    warstwa_w_memory = QgsVectorLayer(geometryType[layerL1.geometryType()] + "?crs=" + layerL1.crs().authid(), warstwa_w_memory_nazwa, "memory")
-                                    warstwa_w_memory.dataProvider().addAttributes(definicje_pol)
-                                    warstwa_w_memory.updateFields()
-                                    QgsProject.instance().addMapLayer(warstwa_w_memory)
-                                    warstwa_w_memory.startEditing()
-                                   
-                                    for feature1 in layerL1.getFeatures():
-                                        nowyRekord = QgsFeature(definicje_pol)
-                                        nowyRekord.setGeometry(feature1.geometry())
+                                    #czy jest warstwa złączonych warstw
+                                    if len(QgsProjectInstance.mapLayersByName(warstwa_w_memory_nazwa)) == 0:
+                                        if parsedFileBaseName.find(klasa2) != -1:
+                                            nazwaWarstwyJ2 = parsedFileBaseName
+                                        else:
+                                            nazwaWarstwyJ2 = parsedFileBaseName + '_' + klasa2
                                         
-                                        # dodaje wartoci atrybutów klasy
-                                        for attr in feature1.fields():
-                                            fieldIdx = warstwa_w_memory.fields().indexFromName(attr.name())
-                                            nowyRekord.setAttribute(fieldIdx, QVariant(feature1[attr.name()]))
-                                     
-                                        # join
+                                        layerL2 = QgsProjectInstance.mapLayersByName(nazwaWarstwyJ2)[0]
+                                        
+                                        joinFieldName = parent.child(j).data(8)
+                                        targetFieldName = parent.child(j).data(9)
+                                        joinFieldNamesSubset = parent.child(j).data(11).split(",")
+                                        noweAtrybuty = {}
+                                        
+                                        definicje_pol = layerL1.fields()
+                                        
                                         for nowyAtrybut in joinFieldNamesSubset:
-                                            noweAtrybuty[nowyAtrybut] = []
-                                        for x in feature1[joinFieldName]:
-                                            for feature2 in layerL2.getFeatures():
-                                                if x == feature2[targetFieldName]:
-                                                    for nowyAtrybut in joinFieldNamesSubset:
-                                                        noweAtrybuty[nowyAtrybut].append(feature2[nowyAtrybut])
-                                                        
-                                        for nowyAtrybut in joinFieldNamesSubset:
-                                            fieldIdx = warstwa_w_memory.fields().indexFromName(klasa2 + '_' + nowyAtrybut)
-                                            nowyRekord.setAttribute(fieldIdx, QVariant(noweAtrybuty[nowyAtrybut]))
+                                            pole_lista = QgsField(klasa2 + '_' + nowyAtrybut, 11)
+                                            definicje_pol.append(pole_lista)
                                            
-                                        warstwa_w_memory.addFeature(nowyRekord)
-                                        warstwa_w_memory.updateFeature(nowyRekord)
+                                        warstwa_w_memory = QgsVectorLayer(geometryType[layerL1.geometryType()] + "?crs=" + layerL1.crs().authid(), warstwa_w_memory_nazwa, "memory")
+                                        warstwa_w_memory.dataProvider().addAttributes(definicje_pol)
+                                        warstwa_w_memory.updateFields()
+                                        QgsProject.instance().addMapLayer(warstwa_w_memory)
+                                        warstwa_w_memory.startEditing()
                                        
-                                    warstwa_w_memory.commitChanges()
-                                   
-                                # zmiana nazwy klasy
-                                klasa = klasa + "_" + klasa2
+                                        for feature1 in layerL1.getFeatures():
+                                            nowyRekord = QgsFeature(definicje_pol)
+                                            nowyRekord.setGeometry(feature1.geometry())
+                                            
+                                            # dodaje wartoci atrybutów klasy
+                                            for attr in feature1.fields():
+                                                fieldIdx = warstwa_w_memory.fields().indexFromName(attr.name())
+                                                nowyRekord.setAttribute(fieldIdx, QVariant(feature1[attr.name()]))
+                                            
+                                            # join
+                                            for nowyAtrybut in joinFieldNamesSubset:
+                                                noweAtrybuty[nowyAtrybut] = []
+                                            for x in feature1[joinFieldName]:
+                                                for feature2 in layerL2.getFeatures():
+                                                    if x == feature2[targetFieldName]:
+                                                        for nowyAtrybut in joinFieldNamesSubset:
+                                                            noweAtrybuty[nowyAtrybut].append(feature2[nowyAtrybut])
+                                                            
+                                            for nowyAtrybut in joinFieldNamesSubset:
+                                                fieldIdx = warstwa_w_memory.fields().indexFromName(klasa2 + '_' + nowyAtrybut)
+                                                nowyRekord.setAttribute(fieldIdx, QVariant(noweAtrybuty[nowyAtrybut]))
+                                               
+                                            warstwa_w_memory.addFeature(nowyRekord)
+                                            warstwa_w_memory.updateFeature(nowyRekord)
+                                           
+                                        warstwa_w_memory.commitChanges()
+                                       
+                                    # zmiana nazwy klasy
+                                    klasa = klasa + "_" + klasa2
+                                except:
+                                    pass
                             try:
                                 if parsedFileBaseName.find(klasa) != -1:
                                     nazwaWarstwy = parsedFileBaseName
@@ -1207,47 +1517,58 @@ class walidatorPlikowGML:
                                 requestFeatures = []
                                 if parent.child(j).data(5) in ('QgsExpression','QgsExpressionWithJoin'):
                                     start_time = datetime.now()
-                                    if self.dlg.checkBox_3.isChecked():
-                                        print (f'{start_time}  1: {parent.child(j).data(1)}', end='')
                                     request = QgsFeatureRequest(QgsExpression(sqltxt))
                                     requestFeatures = layer.getFeatures(request)
                                     end_time = datetime.now()
                                     czas_przetwarzania = end_time - start_time
                                     if self.dlg.checkBox_3.isChecked():
-                                        print (f' - {czas_przetwarzania}')
+                                        if klasa == 'OT':
+                                            print (f'{start_time}  1: {parent.child(j).data(1)} - {klasa + parsedFileName[-11:-4]} - {czas_przetwarzania}')
+                                        else:
+                                            print (f'{start_time}  1: {parent.child(j).data(1)} - {klasa} - {czas_przetwarzania}')
                                 else:
                                     start_time = datetime.now()
-                                    if self.dlg.checkBox_3.isChecked():
-                                        print (f'{start_time}  2: {parent.child(j).data(1)}', end='')
                                     layerTMP = QgsProjectInstance.mapLayersByName(nazwaWarstwyJ1)
                                     if sqltxt.count('(teryt)') > 0:
                                         requestFeatures = globals().get(sqltxt.replace('(teryt)', ''))(layerTMP[0], teryt)
                                     elif sqltxt.count('(gml)') > 0:
                                         requestFeatures = globals().get(sqltxt.replace('(gml)', ''))(layerTMP[0], lxml.etree.parse(zparsowanyPlik))
+                                    elif sqltxt.count('(gml,gml)') > 0:
+                                        plikGMLzrodlowy = self.zwrocPlikZrodlowy(parsedFileName[-11:-4])
+                                        requestFeatures = globals().get(sqltxt.replace('(gml,gml)', ''))(layerTMP[0], plikGMLzrodlowy, zparsowanyPlik)
                                     elif parent.child(j).data(5) == 'PyExpression':
                                         requestFeatures = pyExpression(layerTMP[0], sqltxt)
                                     elif parent.child(j).data(5) == 'MgrExpression':
                                         requestFeatures = mgrExpression(layerTMP[0], lxml.etree.parse(zparsowanyPlik), sqltxt)
+                                    elif idKontroli in kontroleWykonaniePojedyncze:
+                                        if not kontroleWykonaniePojedyncze[idKontroli]:
+                                            requestFeatures = kompletnoscPlikowBDOT10k(files)
+                                            kontroleWykonaniePojedyncze[idKontroli] = True
+                                        else:
+                                            break
                                     elif klasa == 'OT_PT':
-                                        if not czySpawdzonowPokrycie:
+                                        if not kontroleWykonaniePojedyncze[idKontroli]:
                                             requestFeatures = fullCoverage(layerTMP[0])
-                                            czySpawdzonowPokrycie = True
+                                            kontroleWykonaniePojedyncze[idKontroli] = True
                                         else:
                                             continue
                                     else:
                                         requestFeatures = globals().get(sqltxt)(layerTMP[0])
-                                
+                                    
                                     end_time = datetime.now()
                                     czas_przetwarzania = end_time - start_time
                                     if self.dlg.checkBox_3.isChecked():
-                                        print (f' - {czas_przetwarzania}')
+                                        if klasa == 'OT':
+                                            print (f'{start_time}  2: {parent.child(j).data(1)} - {klasa + parsedFileName[-11:-4]} - {czas_przetwarzania}')
+                                        else:
+                                            print (f'{start_time}  2: {parent.child(j).data(1)} - {klasa} - {czas_przetwarzania}')
                                 
                                 selected_features = []  # lista z wybranymi obiektami
-                                
                                 kontrolePojedynczyKomunikat = {"topo_e3_k6":False,"topo_e4_k27":False,"topo_e4_k25":False}
+                                liczbaBledow = 0
                                 for feature in requestFeatures:
+                                    liczbaBledow += 1
                                     gmlid = feature['gml_id']
-                                    
                                     # Sprawdzenie czy klucz errorPhrase już istnieje w słowniku
                                     if errorPhrase not in slownikBledow:
                                         slownikBledow[errorPhrase] = []
@@ -1263,27 +1584,63 @@ class walidatorPlikowGML:
                                         warstwa = warstwyBledowKontroliAtrybutow['Polygon']
                                     else:
                                         continue
+                                    if idKontroli == 'topo_e5_k1':
+                                        klasa = gmlid
+                                        gmlid = 'nie dotyczy'
+                                        #nazwaKontroli = 'Kontrole inne'
                                     if klasa == 'OT': # zmiana konieczna w przypadku funkcji używanej przez wiele klas
                                         klasa = klasa + parsedFileName[-11:-4]
-                                    feature.setAttributes([gmlid, klasa, errorPhrase])
+                                    if klasa == 'OT_PT':
+                                        klasa = klasa + parsedFileName[-8:-4]
+                                        gmlid = 'nie dotyczy'
+                                    if feature['gml_id'].__contains__("|"):
+                                        gmlid = feature['gml_id'].split("|")[0]
+                                        errorPhrase_fin = errorPhrase + feature['gml_id'].split("|")[1]
+                                    else:
+                                        errorPhrase_fin = errorPhrase
+                                    
+                                    feature.setAttributes([gmlid, klasa, errorPhrase_fin])
                                     warstwa.dataProvider().addFeatures([feature])
                                     QgsProject.instance().addMapLayer(warstwa)
                                     
                                     if idKontroli not in kontrolePojedynczyKomunikat or not kontrolePojedynczyKomunikat[idKontroli]:
-                                        komunikatyBledowKontroli_df.append(errorPhrase)
+                                        komunikatyBledowKontroli_df.append(errorPhrase_fin)
                                         kontrolowanePliki_df.append(parsedFileName)
                                         gmlid_df_k.append(gmlid)
                                         klasy_df.append(klasa)
+                                        grupyKontroli_df.append(nazwaKontroli)
                                         if idKontroli in kontrolePojedynczyKomunikat and not kontrolePojedynczyKomunikat[idKontroli]:
                                             kontrolePojedynczyKomunikat[idKontroli] = True
-                                    
+                                
+                                if liczbaBledow > 0:
+                                    if parent.child(j).data(1) not in idkontroli_LiczbaBledow:
+                                        idkontroli_LiczbaBledow[parent.child(j).data(1)] = liczbaBledow
+                                    else:
+                                        idkontroli_LiczbaBledow[parent.child(j).data(1)] += liczbaBledow
+                                
                             except Exception as e:
-                                print(f'Błąd : {e} | {parent.child(j).data(1)}')
+                                print(f'Błąd przy wykonaniu {parent.child(j).data(1)}: {e}')
                             liczbaKontroliWykonanych += 1
                             progress.setValue(liczbaKontroliWykonanych)
                             QCoreApplication.processEvents()
 
 
     def kontrolaWybranychFormatowRaportow(self, txt):
+        global blokady
         if txt == []:
             QMessageBox.critical(QMessageBox(),'Formaty raportów','Musi być wybrany co najmniej jeden format raportu.', QMessageBox.Ok)
+            blokady[1] = 1
+            self.dlg.button_box.buttons()[0].setEnabled(False)
+        else:
+            blokady[1] = 0
+            if sum(blokady) == 0:
+                self.dlg.button_box.buttons()[0].setEnabled(True)
+
+
+    def zwrocPlikZrodlowy(self, klasa):
+        if len(sciezkiPlikowZrodlowych) > 0:
+            for sciezkaPlikuZrodlowego in sciezkiPlikowZrodlowych:
+                if sciezkaPlikuZrodlowego.__contains__(klasa):
+                    plikGMLzrodlowy = plikZIPzrodlowy.extract(sciezkaPlikuZrodlowego, os.path.join(sciezkaGML,"daneZrodlowe"))
+        
+        return plikGMLzrodlowy
