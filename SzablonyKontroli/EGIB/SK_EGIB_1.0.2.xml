@@ -63,10 +63,18 @@
 		</Kontrola>
 	</GrupaKontroli>
 	<!-- ....................................................................................................................................................... -->
+	<GrupaKontroli id="egib_e2" name="Kontrole geometryczne">
+		<Kontrola id="egib_e2_k1" name="Kontrola pokrycia pomiędzy jednostkami ewidencyjnymi - dziury i nakładania" class="EGB_JednostkaEwidencyjna" errorPhrase="Błąd pomiędzy jednostkami ewidencyjnymi - dziura lub nakładanie">
+			<Parametr typ="pythonFunction" sql="jednostkaEwidencyjnaFullCoverage"/>
+		</Kontrola>
+	</GrupaKontroli>
 </SzablonKontroli>
 
 <!-- ChangeLog
 1.0.2	dodano ChangeLog
+        dodano grupę - Kontrole geometryczne
+		dodano kontrole:
+			egib_e2_k1
 1.0.1	wprowadzono kontrole:
 			egib_e1_k1
 			egib_e1_k2
