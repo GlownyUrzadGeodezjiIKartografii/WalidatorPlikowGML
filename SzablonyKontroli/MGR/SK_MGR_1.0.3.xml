@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SzablonKontroli xmlns="http://www.gugik.gov.pl" id="mgr" version="1.0.3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<GrupaKontroli id="mgr_m1" name="Kontrole atrybutowe">
+		<Kontrola id="mgr_m1_k1" name="GR_KonturGlebowy Kontrola poprawnego wpisania wartości przestrzenNazw" class="GR_KonturGlebowy" errorPhrase="Zła wartość atrybutu przestrzenNazw">
+			<Parametr typ="QgsExpression" sql="przestrzenNazw != 'PL.PZGiK.9171.MGR'"/>
+		</Kontrola>
+		<Kontrola id="mgr_m1_k2" name="GR_KonturGlebowy Kontrola w zakresie błędnego wspisania numeru podłoża" class="GR_KonturGlebowy" errorPhrase="Wartość numeru podłoża przekracza dopuszczalny zakres">
+			<Parametr typ="pythonFunction" sql="numerPodloza(gml)"/>
+		</Kontrola>
+		<Kontrola id="mgr_m1_k3" name="GR_KonturGlebowy Kontrola w zakresie błędnego przyporządkowania miąższości do numeru podłoża dla atrybutu miazszosc w atrybucie opisPodloza" class="GR_KonturGlebowy" errorPhrase="Błąd przyporządkowania miąższości do odpowiedniego numeru podłoża">
+			<Parametr typ="MgrExpression" sql="(numerPodloza2 is not null and miazszosc2 != '-') or (numerPodloza3 is not null and miazszosc3 not in ('.','=')) or (numerPodloza4 is not null and miazszosc4 != ':') or (numerPodloza5 is not null and miazszosc5 != ':.')"/>
+		</Kontrola>
+		<Kontrola id="mgr_m1_k4" name="GR_KonturGlebowy Kontrola w zakresie prawidłowego przypisania Tnk" class="GR_KonturGlebowy" errorPhrase="Błąd atrybutu kompleks: Teren nieskasyfikowany (Tnk) nie może mieć określonego atrybutu typPodtyp oraz Podłoża i numeru Podłoża">
+			<Parametr typ="pythonFunction" sql="podlozeKompleks(gml)"/>
+		</Kontrola>
+		<Kontrola id="mgr_m1_k5" name="GR_KonturGlebowy Kontrola wypełnienia atrybutów podłoży, szkieletowosci, garunku rędzin i mad" class="GR_KonturGlebowy" errorPhrase="Jednoczesne wystepowanie wartości w podłożu i gatunku rędzin lub mad, szkieletowosci (r,sz,sk), rodzajuGlebyOrganicznej">
+			<Parametr typ="MgrExpression" sql="(podloze1 is  not NULL and szkieletowosc1 in ('r','sz','sk')) or (podloze2 is  not NULL and szkieletowosc2 in ('r','sz','sk')) or (podloze3 is  not NULL and szkieletowosc3 in ('r','sz','sk')) or (podloze4 is not NULL and szkieletowosc4 in ('r','sz','sk')) or (podloze5 is not NULL and szkieletowosc5 in ('r','sz','sk')) or (podloze1 is not NULL and gatunekMady1 is not null) or (podloze2 is not NULL and gatunekMady2 is not null) or (podloze3 is not NULL and gatunekMady3 is not null) or (podloze4 is not NULL and gatunekMady4 is not null) or (podloze5 is not NULL and gatunekMady5 is not null) or (podloze1 is not NULL and gatunekRedziny1 is not null) or (podloze2 is not NULL and gatunekRedziny2 is not null) or (podloze3 is not NULL and gatunekRedziny3 is not null) or (podloze4 is not NULL and gatunekRedziny4 is not null) or (podloze5 is not NULL and gatunekRedziny5 is not null) or (podloze1 is not NULL and rodzajGlebyOrganicznej1 is not null) or (podloze2 is not NULL and rodzajGlebyOrganicznej2 is not null) or (podloze3 is not NULL and rodzajGlebyOrganicznej3 is not null) or (podloze4 is not NULL and rodzajGlebyOrganicznej4 is not null) or (podloze5 is not NULL and rodzajGlebyOrganicznej5 is not null)"/>
+		</Kontrola>
+		<Kontrola id="mgr_m1_k6" name="GR_KonturGlebowy Kontrola w zakresie błędnego wpisania wartości do atrybutu aktualnosc przy braku rastra" class="GR_KonturGlebowy" errorPhrase="Podana aktualnosc w przypadku braku rastra">
+			<Parametr typ="QgsExpression" sql="aktualnosc is not null and kompleks = 'Tnk' and uwagi like '%brak rastra%'"/>
+		</Kontrola>
+		<Kontrola id="mgr_m1_k7" name="GR_KonturGlebowy Kontrola w zakresie błędnego wpisania wartości do atrybutu kompleks w przypadku PGL lub ALP" class="GR_KonturGlebowy" errorPhrase="Błędny kompleks dla PGL lub ALP">
+			<Parametr typ="QgsExpression" sql="kompleks != 'Ls' and (uwagi like '%PGL%' or uwagi like '%ALP%')"/>
+		</Kontrola>
+		<Kontrola id="mgr_m1_k8" name="GR_KonturGlebowy Kontrola w zakresie wypełnienia numeru podłoża i braku wypełnienia pozostałych atrybutów opisu podłoża" class="GR_KonturGlebowy" errorPhrase="Błąd przypisania numeru podłoża bez wypełnienia pozostałych atrybutów opisu podłoża">
+			<Parametr typ="MgrExpression" sql="(numerPodloza1 is not null and podloze1 is null and miazszosc1 is null and szkieletowosc1 is null and rodzajGlebyOrganicznej1 is null and gatunekMady1 is null and gatunekRedziny1 is null and informacjeDodatkowe1 is null) or (numerPodloza2 is not null and podloze2 is null and miazszosc2 is null and szkieletowosc2 is null and rodzajGlebyOrganicznej2 is null and gatunekMady2 is null and gatunekRedziny2 is null and informacjeDodatkowe2 is null) or (numerPodloza3 is not null and podloze3 is null and miazszosc3 is null and szkieletowosc3 is null and rodzajGlebyOrganicznej3 is null and gatunekMady3 is null and gatunekRedziny3 is null and informacjeDodatkowe3 is null) or (numerPodloza4 is not null and podloze4 is null and miazszosc4 is null and szkieletowosc4 is null and rodzajGlebyOrganicznej4 is null and gatunekMady4 is null and gatunekRedziny4 is null and informacjeDodatkowe4 is null) or (numerPodloza5 is not null and podloze5 is null and miazszosc5 is null and szkieletowosc5 is null and rodzajGlebyOrganicznej5 is null and gatunekMady5 is null and gatunekRedziny5 is null and informacjeDodatkowe5 is null)"/>
+		</Kontrola>
+		<Kontrola id="mgr_m1_k9" name="GR_OdkrywkaGlebowa Kontrola poprawnego wpisania wartości przestrzenNazw" class="GR_OdkrywkaGlebowa" errorPhrase="Zła wartość atrybutu przestrzenNazw">
+			<Parametr typ="QgsExpression" sql="przestrzenNazw != 'PL.PZGiK.9171.MGR'"/>
+		</Kontrola>
+		<Kontrola id="mgr_m1_k10" name="GR_OdkrywkaGlebowa Kontrola w zakresie błędnego wpisania wartości do atrybutu numerOdkrywkiGlebowej" class="GR_OdkrywkaGlebowa" errorPhrase="Podana liczba jest ujemna">
+			<Parametr typ="QgsExpression" sql="numerOdkrywkiGlebowej &lt; 0"/>
+		</Kontrola>
+		<Kontrola id="mgr_m1_k11" name="GR_OdkrywkaGlebowa Kontrola w zakresie przypadkowego wpisania innej informacji niż 'nie odnaleziono analizy glebowej' w atrybucie uwagi dla analizowanej odkrywki glebowej" class="GR_OdkrywkaGlebowa" errorPhrase="Wpisano inną wartość niż 'nie odnaleziono analizy glebowej' w atrybucie uwagi dla analizowanej odkrywki glebowej, dla której nie odnaleziono analizy glebowej">
+			<Parametr typ="QgsExpression" sql="analiza is true and URL is NULL and aktualnosc is NULL and uwagi not like '%nie odnaleziono analizy glebowej%'"/>
+		</Kontrola>
+		<Kontrola id="mgr_m1_k12" name="GR_OdkrywkaGlebowa Kontrola w zakresie prawidłowego wypełnienia 'nie odnaleziono analizy glebowej' w atrybucie uwagi dla analizowanej odkrywki glebowej" class="GR_OdkrywkaGlebowa" errorPhrase="Brak wypełnienia 'nie odnaleziono analizy glebowej' w atrybucie uwagi dla analizowanej odkrywki glebowej">
+			<Parametr typ="QgsExpression" sql="analiza is true and URL is NULL and aktualnosc is NULL and uwagi is NULL"/>
+		</Kontrola>
+		<Kontrola id="mgr_m1_k13" name="GR_OdkrywkaGlebowa Kontrola w zakresie przypadkowego wpisania innej informacji niż 'brak oznaczenia analizy na rastrze' w atrybucie uwagi" class="GR_OdkrywkaGlebowa" errorPhrase="Wpisano inną wartość niż 'brak oznaczenia analizy na rastrze' w atrybucie uwagi">
+			<Parametr typ="QgsExpression" sql="analiza is false and URL is not NULL and aktualnosc is not NULL and uwagi not like '%brak oznaczenia analizy na rastrze%'"/>
+		</Kontrola>
+		<Kontrola id="mgr_m1_k14" name="GR_OdkrywkaGlebowa Kontrola w zakresie prawidłowego wypełnienia 'brak oznaczenia analizy na rastrze' w atrybucie uwagi" class="GR_OdkrywkaGlebowa" errorPhrase="Brak wypełnienia 'brak oznaczenia analizy na rastrze' w atrybucie uwagi">
+			<Parametr typ="QgsExpression" sql="analiza is false and URL is not NULL and aktualnosc is not NULL and uwagi is NULL"/>
+		</Kontrola>
+		<Kontrola id="mgr_m1_k15" name="GR_OdkrywkaGlebowa Kontrola w zakresie prawidłowego wypełnienia przynajmniej jednego atrybutu uzytekGruntowy, jeśli atrybut klasaBonitacyjna nie posiada informacji dla analizowanej odkrywki glebowej" class="GR_OdkrywkaGlebowa" errorPhrase="Brak wypełnienia stosownej informacji w atrybucie uzytekGruntowy, jeśli przynajmniej atrybut klasaBonitacyjna nie posiada informacji w wykazie dla analizowanej odkrywki glebowej">
+			<Parametr typ="QgsExpression" sql="analiza is true and URL is not NULL and uzytekGruntowy is NULL"/>
+		</Kontrola>
+		<Kontrola id="mgr_m1_k16" name="GR_OdkrywkaGlebowa Kontrola w zakresie prawidłowego wypełnienia atrybutu aktualnosc w sytuacji kiedy jest oznaczenie w atrybucie uwagi 'brak oznaczenia analizy na rastrze'" class="GR_OdkrywkaGlebowa" errorPhrase="Brak wypełnienia daty w atrybucie aktualnosc">
+			<Parametr typ="QgsExpression" sql="analiza is false and URL is not NULL and uwagi like '%brak oznaczenia analizy na rastrze%' and aktualnosc is NULL"/>
+		</Kontrola>
+		<Kontrola id="mgr_m1_k17" name="GR_OdkrywkaGlebowa Kontrola w zakresie pustej wartości atrybutu aktualnosc dla braku analizy glebowej" class="GR_OdkrywkaGlebowa" errorPhrase="Wypełniona data aktualności dla braku analizy glebowej">
+			<Parametr typ="QgsExpression" sql="analiza is false and URL is NULL and aktualnosc is not NULL"/>
+		</Kontrola>
+	</GrupaKontroli>
+	<!-- ....................................................................................................................................................... -->
+	<GrupaKontroli id="mgr_m2" name="Kontrole geometryczne">
+		<Kontrola id="mgr_m2_k1" name="GR_KonturGlebowy Kontrola występowania błędnych geometrii dla konturów glebowych" class="GR_KonturGlebowy" errorPhrase="Błędna geometria (np. zdublowane werteksy lub samoprzecięcia) w klasie GR_KonturGlebowy">
+			<Parametr typ="pythonFunction" sql="validateGeometry"/>
+		</Kontrola>
+		<Kontrola id="mgr_m2_k2" name="GR_KonturGlebowy Kontrola występowania zduplikowanych obiektów" class="GR_KonturGlebowy" errorPhrase="Błąd zduplikowanych obiektów dla klasy GR_KonturGlebowy">
+			<Parametr typ="pythonFunction" sql="findDuplicates"/>
+		</Kontrola>
+		<Kontrola id="mgr_m2_k3" name="GR_OdkrywkaGlebowa Kontrola występowania zduplikowanych obiektów" class="GR_OdkrywkaGlebowa" errorPhrase="Błąd zduplikowanych obiektów dla klasy GR_OdkrywkaGlebowa">
+			<Parametr typ="pythonFunction" sql="findDuplicates"/>
+		</Kontrola>
+	</GrupaKontroli>
+</SzablonKontroli>
+
+<!-- ChangeLog
+1.0.3   zmodyfikowano kontrole:
+            mgr_m1_k11
+1.0.2	dodano ChangeLog
+		zmodyfikowano kontrole:
+			mgr_m1_k7
+			mgr_m1_k8
+		usunięto kontrole:
+			mgr_m2_k4
+1.0.1	wprowadzono kontrole:
+			mgr_m1_k5
+			mgr_m1_k6
+			mgr_m1_k7
+			mgr_m1_k8
+			mgr_m1_k9
+			mgr_m1_k10
+			mgr_m1_k11
+			mgr_m1_k12
+			mgr_m1_k13
+			mgr_m1_k14
+			mgr_m1_k15
+			mgr_m1_k16
+			mgr_m1_k17
+			mgr_m2_k1
+			mgr_m2_k2
+			mgr_m2_k3
+			mgr_m2_k4
+		zmodyfikowano kontrole:
+			mgr_m1_k2
+			mgr_m1_k3
+			mgr_m1_k4
+-->
