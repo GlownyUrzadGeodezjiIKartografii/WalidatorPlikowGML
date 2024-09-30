@@ -287,7 +287,7 @@ class walidatorPlikowGML:
 
 
     def wyborPlikuULIC(self, txt):
-        config.set('DEFAULT', 'ulic_gus ', txt)
+        config.set('DEFAULT', 'ulic_gus', txt)
         with open(str(mainPath)+'/Walidator_plikow_gml.ini', 'w') as configfile:
             config.write(configfile)
 
