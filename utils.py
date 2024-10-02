@@ -2226,8 +2226,9 @@ def kompletnoscObiektowBDOT10k(layer, plikGMLzrodlowy, plikGML):
 
 def kontrolaZmianAtrybutowWzgledemWersji(layer, plikGMLzrodlowy, plikGML):
     obiektyZbledami = set()
-    k = lxml.etree.parse(plikGML).getroot()
-    z = lxml.etree.parse(plikGMLzrodlowy).getroot()
+    parser = etree.XMLParser(remove_blank_text=True)
+    k = lxml.etree.parse(plikGML, parser).getroot()
+    z = lxml.etree.parse(plikGMLzrodlowy, parser).getroot()
     
     # usuwanie gml:id
     for elem in k.xpath('//*[@gml:id]', namespaces={'gml': 'http://www.opengis.net/gml/3.2'}):
@@ -2253,30 +2254,31 @@ def kontrolaZmianAtrybutowWzgledemWersji(layer, plikGMLzrodlowy, plikGML):
     del fMembers_K, fMembers_Z
     
     for fMember_Z_dic in fMembers_Z_dic:
-        if etree.tostring(fMembers_K_dic[fMember_Z_dic], pretty_print=True) != etree.tostring(fMembers_Z_dic[fMember_Z_dic], pretty_print=True):
+        if etree.tostring(fMembers_K_dic[fMember_Z_dic], method="c14n", exclusive=True) != etree.tostring(fMembers_Z_dic[fMember_Z_dic], method="c14n", exclusive=True):
             if fMembers_K_dic[fMember_Z_dic].find('.//ot:wersja', namespaces=ns).text == fMembers_Z_dic[fMember_Z_dic].find('.//ot:wersja', namespaces=ns).text:
                 atrybutyZRoznica = set()
-                
                 for element in fMembers_Z_dic[fMember_Z_dic].iter():
                     elementyIdentyczne = False
                     for fM_K_dic_element in fMembers_K_dic[fMember_Z_dic].findall('.//' + element.tag):
                         if fM_K_dic_element.text == element.text:
                             elementyIdentyczne = True
                     if not elementyIdentyczne and element.tag != '{http://www.opengis.net/gml/3.2}featureMember':
-                        if not element.tag.split("}")[1] in ['posList','LinearRing','exterior','interior','Polygon','segments','LineStringSegment','Curve','pos','Point'] \
-                            and not element.tag.split("}")[1].startswith('OT_'):
-                            atrybutyZRoznica.add(element.tag.split("}")[1])
-                
+                        if not element.tag.split("}")[1].startswith('OT_'):
+                            if element.tag.split("}")[1] in ['posList','LinearRing','exterior','interior','Polygon','segments','LineStringSegment','Curve','pos','Point']:
+                                atrybutyZRoznica.add('geometria')
+                            else:
+                                atrybutyZRoznica.add(element.tag.split("}")[1])
                 for element in fMembers_K_dic[fMember_Z_dic].iter():
                     elementyIdentyczne = False
                     for fM_Z_dic_element in fMembers_Z_dic[fMember_Z_dic].findall('.//' + element.tag):
                         if fM_Z_dic_element.text == element.text:
                             elementyIdentyczne = True
                     if not elementyIdentyczne and element.tag != '{http://www.opengis.net/gml/3.2}featureMember':
-                        if not element.tag.split("}")[1] in ['posList','LinearRing','exterior','interior','Polygon','segments','LineStringSegment','Curve','pos','Point'] \
-                            and not element.tag.split("}")[1].startswith('OT_'):
-                            atrybutyZRoznica.add(element.tag.split("}")[1])
-                
+                        if not element.tag.split("}")[1].startswith('OT_'):
+                            if element.tag.split("}")[1] in ['posList','LinearRing','exterior','interior','Polygon','segments','LineStringSegment','Curve','pos','Point']:
+                                atrybutyZRoznica.add('geometria')
+                            else:
+                                atrybutyZRoznica.add(element.tag.split("}")[1])
                 if len(atrybutyZRoznica) > 0:
                     badfMember_Z_dic[fMember_Z_dic] = atrybutyZRoznica
     
