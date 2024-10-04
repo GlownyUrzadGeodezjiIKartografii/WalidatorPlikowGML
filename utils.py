@@ -2264,7 +2264,7 @@ def kontrolaZmianAtrybutowWzgledemWersji(layer, plikGMLzrodlowy, plikGML):
                             elementyIdentyczne = True
                     if not elementyIdentyczne and element.tag != '{http://www.opengis.net/gml/3.2}featureMember':
                         if not element.tag.split("}")[1].startswith('OT_'):
-                            if element.tag.split("}")[1] in ['posList','LinearRing','exterior','interior','Polygon','segments','LineStringSegment','Curve','pos','Point']:
+                            if element.tag.split("}")[1] in ['posList','LinearRing','LineString','exterior','interior','Polygon','segments','LineStringSegment','Curve','pos','Point']:
                                 # atrybutyZRoznica.add('geometria')
                                 pass
                             else:
@@ -2276,7 +2276,7 @@ def kontrolaZmianAtrybutowWzgledemWersji(layer, plikGMLzrodlowy, plikGML):
                             elementyIdentyczne = True
                     if not elementyIdentyczne and element.tag != '{http://www.opengis.net/gml/3.2}featureMember':
                         if not element.tag.split("}")[1].startswith('OT_'):
-                            if element.tag.split("}")[1] in ['posList','LinearRing','exterior','interior','Polygon','segments','LineStringSegment','Curve','pos','Point']:
+                            if element.tag.split("}")[1] in ['posList','LinearRing','LineString','exterior','interior','Polygon','segments','LineStringSegment','Curve','pos','Point']:
                                 # atrybutyZRoznica.add('geometria')
                                 pass
                             else:
