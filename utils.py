@@ -2263,9 +2263,16 @@ def kontrolaZmianAtrybutowWzgledemWersji(layer, plikGMLzrodlowy, plikGML):
     # usuwanie gml:id
     for elem in k.xpath('//*[@gml:id]', namespaces={'gml': 'http://www.opengis.net/gml/3.2'}):
         del elem.attrib['{http://www.opengis.net/gml/3.2}id']
-    # usuwanie gml:id
     for elem in z.xpath('//*[@gml:id]', namespaces={'gml': 'http://www.opengis.net/gml/3.2'}):
         del elem.attrib['{http://www.opengis.net/gml/3.2}id']
+    
+    # usuwanie zbędnych spacji z gml:posList
+    for posList_elem in k.xpath('//gml:posList', namespaces={'gml': 'http://www.opengis.net/gml/3.2'}):
+        if posList_elem.text:
+            posList_elem.text = posList_elem.text.strip()
+    for posList_elem in z.xpath('//gml:posList', namespaces={'gml': 'http://www.opengis.net/gml/3.2'}):
+        if posList_elem.text:
+            posList_elem.text = posList_elem.text.strip()
     
     ns = {'gml': 'http://www.opengis.net/gml/3.2', 'ot': 'urn:gugik:specyfikacje:gmlas:bazaDanychObiektowTopograficznych10k:2.0'}
     fMembers_K = k.findall('.//gml:featureMember', namespaces=ns)
