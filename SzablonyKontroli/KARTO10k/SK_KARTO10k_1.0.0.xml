@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SzablonKontroli xmlns="http://www.gugik.gov.pl" id="karto10k" version="1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<GrupaKontroli id="karto10k_g1" name="Kontrole atrybutowe">
+		<Kontrola id="karto10k_g1_k1" name="Kontrola wypełnienia obligatoryjnego atrybutu godło" class="OK_ObiektKarto_L" errorPhrase="karto10k_g1_k1 Brak atrybutu godło">
+			<Parametr typ="QgsExpression" sql="godlo IS NULL"/>
+		</Kontrola>
+	</GrupaKontroli>
+	<!-- ....................................................................................................................................................... -->
+	<GrupaKontroli id="karto10k_g2" name="Kontrole geometryczne">
+		<Kontrola id="karto10k_g2_k1" name="Kontrola przecinania się warstwic o różnych kodach" class="OK_ObiektKarto_L" errorPhrase="karto10k_g2_k1 Błąd przecinania się warstwic o różnych kodach">
+			<Parametr typ="QgsExpression" sql="kodKartograficzny = '0010_805' AND overlay_intersects(layer:='OK_ObiektKarto_L', filter:=zrodlo = 'baza BDOT10k:OT_RTLW_L' AND kodKartograficzny != '0010_805')"/>
+		</Kontrola>
+	</GrupaKontroli>
+</SzablonKontroli>
+
+<!-- ChangeLog
+1.0.0   dodano kontrole :
+            karto10k_g1_k1
+			karto10k_g2_k1
+-->
