@@ -157,18 +157,9 @@ class walidatorPlikowGML:
 
 
     def run(self):
-        global xsdPaths
-        walidowanaBaza = ['EGIB','GESUT','BDOT500','RCN','PRNG','BDOT10k','BDOO','MGR']
-        formatRaportu = ['xls', 'pdf', 'shp', 'gpkg']
-        xsdPaths = {'BDOO':"/XSD/BDOT10kBDOO/BDOT10k_BDOO.xsd",
-                    'BDOT10k':"/XSD/BDOT10kBDOO/BDOT10k_BDOO.xsd",
-                    'PRNG':"/XSD/PRNG/NG_PRNG.xsd",
-                    'BDOT500':"/XSD/BDOT500/BDOT500_1.3tech.xsd",
-                    'GESUT':"/XSD/GESUT/GESUT_1.3tech.xsd",
-                    'EGIB':"/XSD/EGIB/EGIB_1.9.xsd",
-                    'RCN':"/XSD/RCN/RCN_1.4.xsd",
-                    'MGR':"/XSD/MGR/MapaGlebowoRolnicza.xsd"
-                   }
+        global walidowanaBaza
+        walidowanaBaza = ['EGIB','GESUT','BDOT500','RCN','PRNG','BDOT10k','BDOO','MGR','KARTO10k']
+        formatRaportu = ['xls', 'pdf', 'txt', 'shp', 'gpkg']
         
         self.dlg = walidatorPlikowGMLDialog()
         self.dlg.comboBox.addItems(walidowanaBaza)
@@ -177,6 +168,9 @@ class walidatorPlikowGML:
         self.dlg.pushButton.clicked.connect(self.zaznaczKontroleNaPodstawieDanych)
         self.dlg.pushButton_1.clicked.connect(self.zaznaczWszystkieKontrole)
         self.dlg.pushButton_2.clicked.connect(self.odznaczWszystkieKontrole)
+        self.dlg.comboBox.currentIndexChanged.connect(self.wyborXSD)
+        self.dlg.comboBox_xsd.currentIndexChanged.connect(self.zmianaXSD)
+        self.wyborXSD(0)
         self.walidacjaIKontrolaAtrybutow()
 
 
@@ -202,6 +196,22 @@ class walidatorPlikowGML:
                 wersjaSzablonuKontroli = et.parse(os.path.join(szablonPath, file)).getroot().get('version')
                 if wersjaSzablonuKontroli == wskazanaWersjaSzablonu:
                     return os.path.join(szablonPath, file)
+
+
+    def wyborXSD(self, txt):
+        global xsdPath
+        nazwaBazyDanych = walidowanaBaza[txt]
+        xsdPath_tmp = os.path.join(mainPath, 'XSD', nazwaBazyDanych)
+        self.dlg.comboBox_xsd.clear()
+        for file in sorted(os.listdir(xsdPath_tmp), reverse = True):
+            if file.lower().endswith('.xsd'):
+                self.dlg.comboBox_xsd.addItem(file)
+
+
+    def zmianaXSD(self, txt):
+        global xsdPath
+        xsdPath_tmp = os.path.join(mainPath, 'XSD', self.dlg.comboBox.currentText())
+        xsdPath = os.path.join(xsdPath_tmp, self.dlg.comboBox_xsd.currentText())
 
 
     def wyborPliku(self, txt):
@@ -236,7 +246,7 @@ class walidatorPlikowGML:
                     if os.path.getsize(plikDoWeryfikacji.name) > 2147483648:
                         QMessageBox.critical(QMessageBox(),'Uwaga!','Występuje problem z walidacją plików większych niż 2GB', QMessageBox.Ok)
                 except:
-                    QMessageBox.critical(QMessageBox(),'Uwaga!','Brak uprawnień do zapisu w katalogu wskaanego pliku.', QMessageBox.Ok)
+                    QMessageBox.critical(QMessageBox(),'Uwaga!','Brak uprawnień do zapisu w katalogu wskazanego pliku.', QMessageBox.Ok)
                 
             for i in range(50):
                 try:
@@ -244,13 +254,10 @@ class walidatorPlikowGML:
                 except:
                     line = ''
                 
-                if '<ot2021:OT_' in line:
-                    self.dlg.comboBox.setCurrentIndex(self.dlg.comboBox.findText('BDOT500'))
-                    break
-                elif 'BDOT10k_BDOO' in line:
+                if 'BDOT10k_BDOO' in line:
                     self.dlg.comboBox.setCurrentIndex(self.dlg.comboBox.findText('BDOT10k'))
                     break
-                elif '<ges2021:GES_' in line:
+                elif '<ges2021:GES_' in line or '<ges:GES' in line:
                     self.dlg.comboBox.setCurrentIndex(self.dlg.comboBox.findText('GESUT'))
                     break
                 elif '<ogr:A' in line:
@@ -258,6 +265,12 @@ class walidatorPlikowGML:
                     break
                 elif 'MapaGlebowoRolnicza.xsd' in line:
                     self.dlg.comboBox.setCurrentIndex(self.dlg.comboBox.findText('MGR'))
+                    break
+                elif '<ok:OK' in line or 'urn:gugik:specyfikacje:gmlas:karto:1.0' in line:
+                    self.dlg.comboBox.setCurrentIndex(self.dlg.comboBox.findText('KARTO10k'))
+                    break
+                elif '<ot2021:OT_' in line or '<ot:OT_' in line:
+                    self.dlg.comboBox.setCurrentIndex(self.dlg.comboBox.findText('BDOT500'))
                     break
                 
             self.wczytanieWersjiSzablonow(self.dlg.comboBox.currentText())
@@ -641,14 +654,11 @@ class walidatorPlikowGML:
         namespace = self.dlg.comboBox.currentText()
         
         try:
-            xsdPath = parse(str(mainPath) + xsdPaths[namespace])
-        except:
-            self.iface.messageBar().pushMessage("Uwaga!", "Brak dostępu do pliku XSD.", level = Qgis.Critical)
-            return
-        
-        try:
-            xmlschema = XMLSchema(xsdPath)
+            with open(xsdPath, 'rb') as schema_file:
+                schema_root = etree.XML(schema_file.read())
+                xmlschema = XMLSchema(schema_root)
         except Exception as a:
+            print(a)
             self.iface.messageBar().pushMessage("Uwaga!", "Występuje problem z pobraniem schematu ze strony http://schemas.opengis.net. Proszę sprawdzić czy jest dostępu do internetu.", level = Qgis.Critical)
             return
         
@@ -847,6 +857,27 @@ class walidatorPlikowGML:
             button.pressed.connect(self.otwarcieRaportuZWalidacji)
             widget.layout().addWidget(button)
             self.iface.messageBar().pushWidget(widget, Qgis.Warning)
+            
+        if 'txt' in self.dlg.mComboBox.checkedItems(): 
+           try:
+               if len(walidowanePliki_df) > 0:
+                   for i in range(len(walidowanePliki_df)):
+                       plikRaportu.write(f'Walidacja pliku: {walidowanePliki_df[i]} z wynikiem negatywnym.\n')
+                       plikRaportu.write(f'- {opisyBledow_df[i]}\n')
+                       plikRaportu.write (f'- wiersz: {wiersze_df[i]}\n')
+                       plikRaportu.write(f'- komunikat błędu: {komunikatyBledow_df[i]}\n')
+               else:
+                   plikRaportu.write('------------------------------------------------Brak błędów walidacji-----------------------------------------------------\n')
+               if len(kontrolowanePliki_df) > 0:
+                   plikRaportu.write('------------------------------------------------ KONTROLE ATRYBUTÓW ------------------------------------------------\n')
+                   for i in range(len(kontrolowanePliki_df)):
+                       opisBledu = 'KONTROLOWANIE PLIKI: ' + kontrolowanePliki_df[i] + ', KLASA: ' + klasy_df[i] + ', GMLID: '+ gmlid_df_k[i] + ', KOMUNIKAT BŁĘDU: '+ komunikatyBledowKontroli_df[i] + '\n'
+                       plikRaportu.write(opisBledu)
+               else:
+                   plikRaportu.write('------------------------------------------------ Brak błędów atrybutowych ------------------------------------------------\n')
+               plikRaportu.close()
+           except:
+               self.iface.messageBar().pushMessage("Uwaga!", "Brak uprawnień do zapisu raportu.", level=Qgis.Critical)
         
         if 'pdf' in self.dlg.mComboBox.checkedItems():
              nazwaPliku = str(pathlib.Path(plik[0]).name)
@@ -954,7 +985,7 @@ class walidatorPlikowGML:
                  with pdf.table(first_row_as_headings = False, col_widths = (105,95), borders_layout = "NONE", v_align = "TOP") as tabelaskp:
                      rzad = tabelaskp.row()
                      rzad.cell("Schemat aplikacyjny GML:", align = "R", padding = (1,1,1,1))
-                     rzad.cell(schematPath, align = "J", padding = (1,5,1,1))
+                     rzad.cell(xsdPath, align = "J", padding = (1,5,1,1))
                  pdf.cell(0,1,ln = 1)
                  pdf.cell(100,0,"Suma kontrolna schematu (CRC32):", align = "R", ln = 0)
                  pdf.cell(100,0, sumaKontrolaSchemat, align = "L", ln = 1)
@@ -1085,7 +1116,7 @@ class walidatorPlikowGML:
                 arkuszDaneWstepne.write(4,1,sumaKontrolaSchemat, styl1)
                 arkuszDaneWstepne.write(4,2,'', styl1)
                 arkuszDaneWstepne.write(5,1,wersjaSchematu, styl1)
-                arkuszDaneWstepne.write(5,2,schematPath, styl1)
+                arkuszDaneWstepne.write(5,2,xsdPath, styl1)
                 arkuszDaneWstepne.write(6,2,'', styl1)
                 arkuszDaneWstepne.write(7,2,'', styl1)
                 arkuszDaneWstepne.write(8,2,'', styl1)
@@ -1312,7 +1343,7 @@ class walidatorPlikowGML:
                  "is not a valid value of the local atomic type":"nie jest poprawną wartością lokalnego typu podstawowego"
                  }
         if value != None:
-            formats_to_check = ['xls', 'pdf', 'shp', 'gpkg']
+            formats_to_check = ['xls', 'pdf', 'txt', 'shp', 'gpkg']
             for errors in value['error']:
                 
                 if isinstance(errors, lxml.etree.XMLSyntaxError):
@@ -1444,13 +1475,12 @@ class walidatorPlikowGML:
 
     # wczytanie szablonu kontroli
     def wczytanieSzablonuKontroli(self):
-        global modelKontroli, wersjaSzablonuKontroli, wersjaSchematu, sumaKontrolaSchemat, metaSchemat, schematPath, szablonKontroliPath, sumaKontrolaSzablonKontroli
+        global modelKontroli, wersjaSzablonuKontroli, wersjaSchematu, sumaKontrolaSchemat, metaSchemat, szablonKontroliPath, sumaKontrolaSzablonKontroli
         
         szablonKontroliPath = self.sciezkaDoWskazanegoSzablonuKontroli(self.dlg.comboBox_2.currentText(), self.dlg.comboBox.currentText())
-        schematPath = str(mainPath) + xsdPaths.get(self.dlg.comboBox.currentText())
         buf_size = 5000000 # 65536  # Czytaj plik w blokach o rozmiarze 64KB
         crc = 0
-        with open(schematPath, 'rb') as f:
+        with open(xsdPath, 'rb') as f:
             while True:
                 data = f.read(buf_size)
                 if not data:
@@ -1460,11 +1490,11 @@ class walidatorPlikowGML:
         sumaKontrolaSchemat = "%08X" % (crc & 0xFFFFFFFF) # tworzenie sumu kontrolnej dla schematu
         tree = et.parse(szablonKontroliPath)
         root = tree.getroot()
-        tree1 = et.parse(schematPath)
+        tree1 = et.parse(xsdPath)
         root1 = tree1.getroot()
         wersjaSzablonuKontroli = root.get('version')
         wersjaSchematu = root1.get('version')
-        filename = os.path.basename(schematPath) # pobiera sama nazwę pliku
+        filename = os.path.basename(xsdPath) # pobiera sama nazwę pliku
         metaSchemat = os.path.splitext(filename)[0] + " " +  wersjaSchematu
         crc = 0
         with open(szablonKontroliPath, 'rb') as f:
@@ -1653,11 +1683,12 @@ class walidatorPlikowGML:
                             parsedFileName = str(pathlib.Path(plikiZparsowane[0]).name)
                             parsedFileBaseName = parsedFileName[:-4]
                         
-                        for w in QgsProject.instance().mapLayers().values():
+                        layers_in_group = [node.layer() for node in groupaGlowna.children() if isinstance(node, QgsLayerTreeLayer)]
+                        for w in layers_in_group:
                             if klasa in w.name() and not kontrolePojedynczyKomunikat.get(idKontroli, False):
                                 nazwaWarstwy = w.name()
-                                
-                                if len(plikiZparsowane) > 1:
+                                zparsowanyPlik = None
+                                if len(plikiZparsowane) > 0:
                                     for plikZparsowany in plikiZparsowane:
                                         parsedFileName_TMP = str(pathlib.Path(plikZparsowany).name)
                                         if klasa in parsedFileName_TMP and nazwaWarstwy in parsedFileName_TMP:
@@ -1665,7 +1696,12 @@ class walidatorPlikowGML:
                                             parsedFileName = parsedFileName_TMP
                                             parsedFileBaseName = parsedFileName[:-4]
                                             break
-                                teryt = parsedFileName[:-15][-4:]
+                                    if zparsowanyPlik == None:
+                                        zparsowanyPlik = plikZparsowany
+                                if self.dlg.comboBox.currentText == 'BDOT10k':
+                                    teryt = parsedFileName[:-15][-4:]
+                                else:
+                                    teryt = None
                                 try:
                                     for warstwaWsqltext in re.findall(r"layer:='(.*?)'", sqltxt):
                                         sqltxt = sqltxt.replace("layer:='" + warstwaWsqltext,"layer:='" + parsedFileName[:-13] + warstwaWsqltext + '_' + warstwaWsqltext)
@@ -1710,6 +1746,8 @@ class walidatorPlikowGML:
                                                 requestFeatures = globals().get(sqltxt.replace('(teryt)', ''))(layerTMP[0], teryt)
                                             elif sqltxt.count('(gml)') > 0:
                                                 requestFeatures = globals().get(sqltxt.replace('(gml)', ''))(layerTMP[0], lxml.etree.parse(zparsowanyPlik))
+                                            elif sqltxt.count('(gml,klasa)') > 0:
+                                                requestFeatures = globals().get(sqltxt.replace('(gml,klasa)', ''))(layerTMP[0], lxml.etree.parse(zparsowanyPlik), klasa)
                                             elif sqltxt.count('(gml,gml)') > 0:
                                                 plikGMLzrodlowy = self.zwrocPlikZrodlowy(parsedFileName[-11:-4])
                                                 requestFeatures = globals().get(sqltxt.replace('(gml,gml)', ''))(layerTMP[0], plikGMLzrodlowy, zparsowanyPlik)
@@ -1764,13 +1802,13 @@ class walidatorPlikowGML:
                                                 
                                                 if typ_geometrii == 'Point':
                                                     warstwa = warstwyBledowKontroliAtrybutow['Point']
-                                                elif typ_geometrii == 'LineString':
+                                                elif typ_geometrii == 'LineString' or typ_geometrii == 'CompoundCurve' or typ_geometrii == 'CurvePolygon':
                                                     warstwa = warstwyBledowKontroliAtrybutow['LineString']
                                                 elif typ_geometrii == 'Polygon':
                                                     warstwa = warstwyBledowKontroliAtrybutow['Polygon']
                                                 else:
                                                     continue
-                                                if idKontroli == 'topo_e5_k1':
+                                                if idKontroli in ['topo_e5_k1']:
                                                     klasaDoRaportowania = gmlid
                                                     gmlid = 'nie dotyczy'
                                                 if klasa == 'OT':
