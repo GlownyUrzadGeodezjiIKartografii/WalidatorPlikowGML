@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--GUGiK 28.07.2021-->
+<schema xmlns="http://www.w3.org/2001/XMLSchema" xmlns:ok="urn:gugik:specyfikacje:gmlas:karto:1.0" xmlns:gml="http://www.opengis.net/gml/3.2" targetNamespace="urn:gugik:specyfikacje:gmlas:karto:1.0" elementFormDefault="qualified" attributeFormDefault="unqualified" version="1.0">
+	<import namespace="http://www.opengis.net/gml/3.2" schemaLocation="http://schemas.opengis.net/gml/3.2.1/gml.xsd"/>
+	<element name="OK_ObiektKarto" type="ok:OK_ObiektKartoType" substitutionGroup="gml:AbstractFeature" abstract="true"/>
+	<complexType name="OK_ObiektKartoType" abstract="true">
+		<complexContent>
+			<extension base="gml:AbstractFeatureType">
+				<sequence>
+					<element name="kodKartograficzny" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="szerokoscZnaku" type="double" minOccurs="0" maxOccurs="1"/>
+					<element name="katObrotuZnaku" type="double" minOccurs="0" maxOccurs="1"/>
+					<element name="poziom" type="integer"/>
+					<element name="godlo" type="string"/>
+					<element name="zrodlo" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="lokalnyIdentyfikator" type="string" minOccurs="0" maxOccurs="1"/>	
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OK_ObiektKartoPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ok:OK_ObiektKarto"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OK_OpisKarto" type="ok:OK_OpisKartoType" substitutionGroup="gml:AbstractFeature" abstract="true"/>
+	<complexType name="OK_OpisKartoType" abstract="true">
+		<complexContent>
+			<extension base="gml:AbstractFeatureType">
+				<sequence>
+					<element name="kodKartograficzny" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="tekst" type="string"/>
+					<element name="stopienPisma" type="integer"/>
+					<element name="godlo" type="string"/>
+					<element name="zrodlo" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="lokalnyIdentyfikator" type="string" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OK_OpisKartoPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ok:OK_OpisKarto"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>	
+	<element name="OK_ObiektKarto_A" type="ok:OK_ObiektKarto_AType" substitutionGroup="ok:OK_ObiektKarto"/>
+	<complexType name="OK_ObiektKarto_AType">
+		<complexContent>
+			<extension base="ok:OK_ObiektKartoType">
+				<sequence>
+					<element name="geometria" type="gml:MultiSurfacePropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OK_ObiektKarto_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ok:OK_ObiektKarto_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OK_ObiektKarto_L" type="ok:OK_ObiektKarto_LType" substitutionGroup="ok:OK_ObiektKarto"/>
+	<complexType name="OK_ObiektKarto_LType">
+		<complexContent>
+			<extension base="ok:OK_ObiektKartoType">
+				<sequence>
+					<element name="geometria" type="gml:MultiCurvePropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OK_ObiektKarto_LPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ok:OK_ObiektKarto_L"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OK_ObiektKarto_P" type="ok:OK_ObiektKarto_PType" substitutionGroup="ok:OK_ObiektKarto"/>
+	<complexType name="OK_ObiektKarto_PType">
+		<complexContent>
+			<extension base="ok:OK_ObiektKartoType">
+				<sequence>
+					<element name="geometria" type="gml:PointPropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OK_ObiektKarto_PPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ok:OK_ObiektKarto_P"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OK_OpisKarto_A" type="ok:OK_OpisKarto_AType" substitutionGroup="ok:OK_OpisKarto"/>
+	<complexType name="OK_OpisKarto_AType">
+		<complexContent>
+			<extension base="ok:OK_OpisKartoType">
+				<sequence>
+					<element name="geometria" type="gml:MultiSurfacePropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OK_OpisKarto_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ok:OK_OpisKarto_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OK_OpisKarto_L" type="ok:OK_OpisKarto_LType" substitutionGroup="ok:OK_OpisKarto"/>
+	<complexType name="OK_OpisKarto_LType">
+		<complexContent>
+			<extension base="ok:OK_OpisKartoType">
+				<sequence>
+					<element name="geometria" type="gml:MultiCurvePropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OK_OpisKarto_LPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ok:OK_OpisKarto_L"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+</schema>
