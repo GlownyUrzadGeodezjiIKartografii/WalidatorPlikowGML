@@ -1410,6 +1410,7 @@ class walidatorPlikowGML:
                           4: 'MultiPoint',
                           5: 'MultiLineString',
                           6: 'MultiPolygon',
+                          8: 'CircularString',
                           9: 'CompoundCurve',
                           10: 'CurvePolygon',
                           11: 'MultiCurve',
