@@ -1803,9 +1803,9 @@ class walidatorPlikowGML:
                                                 
                                                 if typ_geometrii == 'Point':
                                                     warstwa = warstwyBledowKontroliAtrybutow['Point']
-                                                elif typ_geometrii == 'LineString' or typ_geometrii == 'CompoundCurve' or typ_geometrii == 'CurvePolygon':
+                                                elif typ_geometrii == 'LineString' or typ_geometrii == 'CompoundCurve' or typ_geometrii == 'CircularString':
                                                     warstwa = warstwyBledowKontroliAtrybutow['LineString']
-                                                elif typ_geometrii == 'Polygon':
+                                                elif typ_geometrii == 'Polygon' or typ_geometrii == 'CurvePolygon':
                                                     warstwa = warstwyBledowKontroliAtrybutow['Polygon']
                                                 else:
                                                     continue
