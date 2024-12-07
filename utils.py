@@ -1707,7 +1707,10 @@ def kontrolaZgodnosciIdentyfikatoraUlicyZNazwa(layer, plikcsv):
                 nazwa2 = f.attribute('placNazwa2')
             except:
                 nazwa2 = 'NULL'
-            cecha = f.attribute('placCecha')
+            try:
+                cecha = f.attribute('placCecha')
+            except:
+                cecha = 'NULL'
             t = 'placCecha:' + cecha + ',placNazwa1:' + nazwa1 + ',placNazwa2:' + nazwa2
         else:
             nazwa1 = str(f.attribute('ulicaNazwa1'))

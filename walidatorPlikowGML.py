@@ -1699,7 +1699,7 @@ class walidatorPlikowGML:
                                             break
                                     if zparsowanyPlik == None:
                                         zparsowanyPlik = plikZparsowany
-                                if self.dlg.comboBox.currentText == 'BDOT10k':
+                                if self.dlg.comboBox.currentText() == 'BDOT10k':
                                     teryt = parsedFileName[:-15][-4:]
                                 else:
                                     teryt = None
