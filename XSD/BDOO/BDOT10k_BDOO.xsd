@@ -1,0 +1,2584 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--GUGiK 20.10.2021-->
+<schema xmlns="http://www.w3.org/2001/XMLSchema" xmlns:ot="urn:gugik:specyfikacje:gmlas:bazaDanychObiektowTopograficznych10k:2.0" xmlns:gml="http://www.opengis.net/gml/3.2" targetNamespace="urn:gugik:specyfikacje:gmlas:bazaDanychObiektowTopograficznych10k:2.0" elementFormDefault="qualified" attributeFormDefault="unqualified" version="1.4">
+	<import namespace="http://www.opengis.net/gml/3.2" schemaLocation="http://schemas.opengis.net/gml/3.2.1/gml.xsd"/>
+	<element name="OT_ObiektTopograficzny" type="ot:OT_ObiektTopograficznyType" abstract="true" substitutionGroup="gml:AbstractFeature"/>
+	<complexType name="OT_ObiektTopograficznyType" abstract="true">
+		<complexContent>
+			<extension base="gml:AbstractFeatureType">
+				<sequence>
+					<element name="lokalnyId" type="string"/>
+					<element name="przestrzenNazw" type="string"/>
+					<element name="wersja" type="dateTime"/>
+					<element name="poczatekWersjiObiektu" type="dateTime"/>
+					<element name="koniecWersjiObiektu" type="dateTime" minOccurs="0" maxOccurs="1"/>
+					<element name="oznaczenieZmiany" type="string"/>
+					<element name="zrodloDanychGeometrycznych" type="ot:OT_ZrodloDanychType"/>
+					<element name="kategoriaIstnienia" type="ot:OT_KatIstnieniaType" minOccurs="0" maxOccurs="1"/>
+					<element name="uwagi" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="informacjaDodatkowa" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="kodKarto10k" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="kodKarto250k" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="skrotKartograficzny" type="string" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_ObiektTopograficznyPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_ObiektTopograficzny"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_ReferencjaDoObiektu" type="ot:OT_ReferencjaDoObiektuType" substitutionGroup="gml:AbstractFeature"/>
+	<complexType name="OT_ReferencjaDoObiektuType">
+		<complexContent>
+			<extension base="gml:AbstractFeatureType">
+				<sequence>
+					<element name="lokalnyId" type="string"/>
+					<element name="przestrzenNazw" type="string"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_ReferencjaDoObiektuPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_ReferencjaDoObiektu"/>
+		</sequence>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<!--sieć wodna-->
+	<element name="OT_SiecWodna" type="ot:OT_SiecWodnaType" abstract="true" substitutionGroup="ot:OT_ObiektTopograficzny"/>
+	<complexType name="OT_SiecWodnaType" abstract="true">
+		<complexContent>
+			<extension base="ot:OT_ObiektTopograficznyType">
+				<sequence>
+					<element name="identyfikatorPRNG" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="polozenie" type="ot:OT_PolozenieCiekuType" minOccurs="0" maxOccurs="1"/>
+					<element name="szerokosc" type="gml:LengthType" minOccurs="0" maxOccurs="1"/>
+					<element name="nazwa" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="geometria" type="gml:CurvePropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_SiecWodnaPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_SiecWodna"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_SWKN_L" type="ot:OT_SWKN_LType" substitutionGroup="ot:OT_SiecWodna"/>
+	<complexType name="OT_SWKN_LType">
+		<complexContent>
+			<extension base="ot:OT_SiecWodnaType">
+				<sequence>
+					<element name="statusEksploatacji" type="ot:OT_StatusEksploatacjiType"/>
+					<element name="cechaGeometrii" type="ot:OT_RodzajRepGeomType" minOccurs="0" maxOccurs="1"/>
+					<element name="identyfikatorMPHP" type="string" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_SWKN_LPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_SWKN_L"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_SWRM_L" type="ot:OT_SWRM_LType" substitutionGroup="ot:OT_SiecWodna"/>
+	<complexType name="OT_SWRM_LType">
+		<complexContent>
+			<extension base="ot:OT_SiecWodnaType">
+				<sequence>
+					<element name="BDOT500" type="ot:OT_ReferencjaDoObiektuPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_SWRM_LPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_SWRM_L"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_SWRS_L" type="ot:OT_SWRS_LType" substitutionGroup="ot:OT_SiecWodna"/>
+	<complexType name="OT_SWRS_LType">
+		<complexContent>
+			<extension base="ot:OT_SiecWodnaType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajRzekiType"/>
+					<element name="statusEksploatacji" type="ot:OT_StatusEksploatacjiType"/>
+					<element name="przebieg" type="ot:OT_PrzebiegCiekuType" minOccurs="0" maxOccurs="1"/>
+					<element name="cechaGeometrii" type="ot:OT_RodzajRepGeomType" minOccurs="0" maxOccurs="1"/>
+					<element name="identyfikatorMPHP" type="string" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_SWRS_LPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_SWRS_L"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<!--sieć komunikacyjna-->
+	<element name="OT_CharakterystykaDrogi" type="ot:OT_CharakterystykaDrogiType" abstract="true" substitutionGroup="ot:OT_ObiektTopograficzny"/>
+	<complexType name="OT_CharakterystykaDrogiType" abstract="true">
+		<complexContent>
+			<extension base="ot:OT_ObiektTopograficznyType">
+				<sequence>
+					<element name="kategoriaZarzadzania" type="ot:OT_KatZarzadzaniaDrogiType" minOccurs="0" maxOccurs="1"/>
+					<element name="klasaDrogi" type="ot:OT_KlasaDrogiType" minOccurs="0" maxOccurs="1"/>
+					<element name="materialNawierzchni" type="ot:OT_MaterialNawierzchniType" minOccurs="0" maxOccurs="1"/>
+					<element name="nazwaDrogi" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="liczbaJezdniDrogi" type="integer" minOccurs="0" maxOccurs="1"/>
+					<element name="polozenie" type="ot:OT_PolozenieObiektuSieciTransportowejType" minOccurs="0" maxOccurs="1"/>
+					<element name="szerokoscNawierzchni" type="gml:LengthType" minOccurs="0" maxOccurs="1"/>
+					<element name="numerDrogi" type="string" minOccurs="0" maxOccurs="unbounded"/>
+					<element name="geometria" type="gml:CurvePropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_CharakterystykaDrogiPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_CharakterystykaDrogi"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_SKDR_L" type="ot:OT_SKDR_LType" substitutionGroup="ot:OT_CharakterystykaDrogi"/>
+	<complexType name="OT_SKDR_LType">
+		<complexContent>
+			<extension base="ot:OT_CharakterystykaDrogiType">
+				<sequence/>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_SKDR_LPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_SKDR_L"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_SKJZ_L" type="ot:OT_SKJZ_LType" substitutionGroup="ot:OT_CharakterystykaDrogi"/>
+	<complexType name="OT_SKJZ_LType">
+		<complexContent>
+			<extension base="ot:OT_CharakterystykaDrogiType">
+				<sequence>
+					<element name="cechaGeometrii" type="ot:OT_RodzajRepGeomType" minOccurs="0"/>
+					<element name="identyfikatorULIC" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="identyfikatorSIMC" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="ulicaCecha" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="ulicaNazwa1" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="ulicaNazwa2" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="BDOT500" type="ot:OT_ReferencjaDoObiektuPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_SKJZ_LPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_SKJZ_L"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_SKPP_L" type="ot:OT_SKPP_LType" substitutionGroup="ot:OT_ObiektTopograficzny"/>
+	<complexType name="OT_SKPP_LType">
+		<complexContent>
+			<extension base="ot:OT_ObiektTopograficznyType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajPrzeprawyType" minOccurs="0" maxOccurs="1"/>
+					<element name="geometria" type="gml:CurvePropertyType"/>
+					<element name="BDOT500" type="ot:OT_ReferencjaDoObiektuPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_SKPP_LPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_SKPP_L"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_SKRP_L" type="ot:OT_SKRP_LType" substitutionGroup="ot:OT_ObiektTopograficzny"/>
+	<complexType name="OT_SKRP_LType">
+		<complexContent>
+			<extension base="ot:OT_ObiektTopograficznyType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajCiaguRuchuPieszegoType" minOccurs="0" maxOccurs="1"/>
+					<element name="materialNawierzchni" type="ot:OT_MaterialNawierzchniType" minOccurs="0" maxOccurs="1"/>
+					<element name="polozenie" type="ot:OT_PolozenieObiektuSieciTransportowejType" minOccurs="0" maxOccurs="1"/>
+					<element name="identyfikatorSIMC" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="identyfikatorULIC" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="nazwa" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="szerokosc" type="gml:LengthType" minOccurs="0" maxOccurs="1"/>
+					<element name="ulicaCecha" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="ulicaNazwa1" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="ulicaNazwa2" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="geometria" type="gml:CurvePropertyType"/>
+					<element name="BDOT500" type="ot:OT_ReferencjaDoObiektuPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_SKRP_LPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_SKRP_L"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_SKTR_L" type="ot:OT_SKTR_LType" substitutionGroup="ot:OT_ObiektTopograficzny"/>
+	<complexType name="OT_SKTR_LType">
+		<complexContent>
+			<extension base="ot:OT_ObiektTopograficznyType">
+				<sequence>
+					<element name="funkcjaToru" type="ot:OT_FunkcjaToruType" minOccurs="0" maxOccurs="1"/>
+					<element name="liczbaTorow" type="integer" minOccurs="0" maxOccurs="1"/>
+					<element name="polozenie" type="ot:OT_PolozenieObiektuSieciTransportowejType" minOccurs="0" maxOccurs="1"/>
+					<element name="rodzajPojazduSzynowego" type="ot:OT_RodzajPojazduSzynowegoType" minOccurs="0" maxOccurs="1"/>
+					<element name="rodzajTorow" type="ot:OT_RodzajToruType" minOccurs="0" maxOccurs="1"/>
+					<element name="rodzajTrakcji" type="ot:OT_RodzajTrakcjiType" minOccurs="0" maxOccurs="1"/>
+					<element name="numerLinii" type="string" minOccurs="0" maxOccurs="unbounded"/>
+					<element name="nazwaStacjiPoczatkowej" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="nazwaStacjiKoncowej" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="geometria" type="gml:CurvePropertyType"/>
+					<element name="BDOT500" type="ot:OT_ReferencjaDoObiektuPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_SKTR_LPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_SKTR_L"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_SKRW_P" type="ot:OT_SKRW_PType" substitutionGroup="ot:OT_ObiektTopograficzny"/>
+	<complexType name="OT_SKRW_PType">
+		<complexContent>
+			<extension base="ot:OT_ObiektTopograficznyType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajSkrzyzowaniaType"/>
+					<element name="numerWezlaDrogowego" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="nazwaWezlaDrogowego" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="geometria" type="gml:PointPropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_SKRW_PPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_SKRW_P"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<!--sieć uzbrojenia terenu-->
+	<element name="OT_SiecUzbrojeniaTerenu" type="ot:OT_SiecUzbrojeniaTerenuType" abstract="true" substitutionGroup="ot:OT_ObiektTopograficzny"/>
+	<complexType name="OT_SiecUzbrojeniaTerenuType" abstract="true">
+		<complexContent>
+			<extension base="ot:OT_ObiektTopograficznyType">
+				<sequence>
+					<element name="geometria" type="gml:CurvePropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_SiecUzbrojeniaTerenuPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_SiecUzbrojeniaTerenu"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_SULN_L" type="ot:OT_SULN_LType" substitutionGroup="ot:OT_SiecUzbrojeniaTerenu"/>
+	<complexType name="OT_SULN_LType">
+		<complexContent>
+			<extension base="ot:OT_SiecUzbrojeniaTerenuType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajLiniiElektroenergetycznejType" minOccurs="0" maxOccurs="1"/>
+					<element name="GESUT" type="ot:OT_ReferencjaDoObiektuPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_SULN_LPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_SULN_L"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_SUPR_L" type="ot:OT_SUPR_LType" substitutionGroup="ot:OT_SiecUzbrojeniaTerenu"/>
+	<complexType name="OT_SUPR_LType">
+		<complexContent>
+			<extension base="ot:OT_SiecUzbrojeniaTerenuType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajPrzewoduRurowegoType" minOccurs="0" maxOccurs="1"/>
+					<element name="GESUT" type="ot:OT_ReferencjaDoObiektuPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_SUPR_LPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_SUPR_L"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<!--pokrycie terenu-->
+	<element name="OT_PokrycieTerenu" type="ot:OT_PokrycieTerenuType" abstract="true" substitutionGroup="ot:OT_ObiektTopograficzny"/>
+	<complexType name="OT_PokrycieTerenuType" abstract="true">
+		<complexContent>
+			<extension base="ot:OT_ObiektTopograficznyType">
+				<sequence>
+					<element name="geometria" type="gml:SurfacePropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_PokrycieTerenuPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_PokrycieTerenu"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_PTGN_A" type="ot:OT_PTGN_AType" substitutionGroup="ot:OT_PokrycieTerenu"/>
+	<complexType name="OT_PTGN_AType">
+		<complexContent>
+			<extension base="ot:OT_PokrycieTerenuType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajGruntuNieuzytkowanegoType" minOccurs="0" maxOccurs="1"/>
+					<element name="BDOT500" type="ot:OT_ReferencjaDoObiektuPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_PTGN_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_PTGN_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_PTKM_A" type="ot:OT_PTKM_AType" substitutionGroup="ot:OT_PokrycieTerenu"/>
+	<complexType name="OT_PTKM_AType">
+		<complexContent>
+			<extension base="ot:OT_PokrycieTerenuType">
+				<sequence/>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_PTKM_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_PTKM_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_PTLZ_A" type="ot:OT_PTLZ_AType" substitutionGroup="ot:OT_PokrycieTerenu"/>
+	<complexType name="OT_PTLZ_AType">
+		<complexContent>
+			<extension base="ot:OT_PokrycieTerenuType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajTerenuLesnegoLubZadrzewionegoType" minOccurs="0" maxOccurs="1"/>
+					<element name="kategoria" type="ot:OT_KategoriaDrzewostanuType" minOccurs="0" maxOccurs="1"/>
+					<element name="BDOT500" type="ot:OT_ReferencjaDoObiektuPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_PTLZ_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_PTLZ_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_PTNZ_A" type="ot:OT_PTNZ_AType" substitutionGroup="ot:OT_PokrycieTerenu"/>
+	<complexType name="OT_PTNZ_AType">
+		<complexContent>
+			<extension base="ot:OT_PokrycieTerenuType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajTerenuNiezabudowanegoType" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_PTNZ_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_PTNZ_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_PTPL_A" type="ot:OT_PTPL_AType" substitutionGroup="ot:OT_PokrycieTerenu"/>
+	<complexType name="OT_PTPL_AType">
+		<complexContent>
+			<extension base="ot:OT_PokrycieTerenuType">
+				<sequence>
+					<element name="materialNawierzchni" type="ot:OT_MaterialNawierzchniType" minOccurs="0" maxOccurs="1"/>
+					<element name="identyfikatorULIC" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="identyfikatorSIMC" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="placCecha" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="placNazwa1" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="placNazwa2" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="BDOT500" type="ot:OT_ReferencjaDoObiektuPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_PTPL_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_PTPL_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_PTRK_A" type="ot:OT_PTRK_AType" substitutionGroup="ot:OT_PokrycieTerenu"/>
+	<complexType name="OT_PTRK_AType">
+		<complexContent>
+			<extension base="ot:OT_PokrycieTerenuType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajTerenuKrzewiastegoType" minOccurs="0" maxOccurs="1"/>
+					<element name="BDOT500" type="ot:OT_ReferencjaDoObiektuPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_PTRK_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_PTRK_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_PTSO_A" type="ot:OT_PTSO_AType" substitutionGroup="ot:OT_PokrycieTerenu"/>
+	<complexType name="OT_PTSO_AType">
+		<complexContent>
+			<extension base="ot:OT_PokrycieTerenuType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajOdpadowType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_PTSO_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_PTSO_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_PTTR_A" type="ot:OT_PTTR_AType" substitutionGroup="ot:OT_PokrycieTerenu"/>
+	<complexType name="OT_PTTR_AType">
+		<complexContent>
+			<extension base="ot:OT_PokrycieTerenuType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajRoslinnosciTerenuRolnegoType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_PTTR_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_PTTR_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_PTUT_A" type="ot:OT_PTUT_AType" substitutionGroup="ot:OT_PokrycieTerenu"/>
+	<complexType name="OT_PTUT_AType">
+		<complexContent>
+			<extension base="ot:OT_PokrycieTerenuType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajTerenuUprawTrwalychType" minOccurs="0" maxOccurs="1"/>
+					<element name="BDOT500" type="ot:OT_ReferencjaDoObiektuPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_PTUT_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_PTUT_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_PTWP_A" type="ot:OT_PTWP_AType" substitutionGroup="ot:OT_PokrycieTerenu"/>
+	<complexType name="OT_PTWP_AType">
+		<complexContent>
+			<extension base="ot:OT_PokrycieTerenuType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajObszaruWodyType"/>
+					<element name="identyfikatorMPHP" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="nazwa" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="identyfikatorPRNG" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="BDOT500" type="ot:OT_ReferencjaDoObiektuPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_PTWP_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_PTWP_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_PTWZ_A" type="ot:OT_PTWZ_AType" substitutionGroup="ot:OT_PokrycieTerenu"/>
+	<complexType name="OT_PTWZ_AType">
+		<complexContent>
+			<extension base="ot:OT_PokrycieTerenuType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajZwalowiskaWyrobiskaType"/>
+					<element name="surowiec" type="ot:OT_RodzajSurowcaType" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_PTWZ_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_PTWZ_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_PTZB_A" type="ot:OT_PTZB_AType" substitutionGroup="ot:OT_PokrycieTerenu"/>
+	<complexType name="OT_PTZB_AType">
+		<complexContent>
+			<extension base="ot:OT_PokrycieTerenuType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajZabudowyType" minOccurs="0" maxOccurs="1"/>
+					<element name="charakter" type="ot:OT_RodzajCharakteruZabudowyType" minOccurs="0" maxOccurs="1"/>
+					<element name="roslinnosc" type="ot:OT_RodzajRoslinnosciTerenuZabudowyType" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_PTZB_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_PTZB_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<!--budynki, budowle i urządzenia-->
+	<element name="OT_BudynkiBudowleIUrzadzenia" type="ot:OT_BudynkiBudowleIUrzadzeniaType" abstract="true" substitutionGroup="ot:OT_ObiektTopograficzny"/>
+	<complexType name="OT_BudynkiBudowleIUrzadzeniaType" abstract="true">
+		<complexContent>
+			<extension base="ot:OT_ObiektTopograficznyType">
+				<sequence/>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_BudynkiBudowleIUrzadzeniaPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_BudynkiBudowleIUrzadzenia"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_BUBD_A" type="ot:OT_BUBD_AType" substitutionGroup="ot:OT_BudynkiBudowleIUrzadzenia"/>
+	<complexType name="OT_BUBD_AType">
+		<complexContent>
+			<extension base="ot:OT_BudynkiBudowleIUrzadzeniaType">
+				<sequence>
+					<element name="kodKst" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="funkcjaOgolnaBudynku" type="ot:OT_FunOgolnaBudynkuType" minOccurs="0" maxOccurs="1"/>
+					<element name="funkcjaSzczegolowaBudynku" type="ot:OT_FunSzczegolowaBudynkuType" minOccurs="0" maxOccurs="unbounded"/>
+					<element name="przewazajacaFunkcjaBudynku" type="ot:OT_FunSzczegolowaBudynkuType" minOccurs="0" maxOccurs="1"/>
+					<element name="liczbaKondygnacji" type="integer" minOccurs="0" maxOccurs="1"/>
+					<element name="nazwa" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="identyfikatorEGiB" type="string" minOccurs="0" maxOccurs="unbounded"/>
+					<element name="geometria" type="gml:SurfacePropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_BUBD_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_BUBD_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_BUHD" type="ot:OT_BUHDType" abstract="true" substitutionGroup="ot:OT_BudynkiBudowleIUrzadzenia"/>
+	<complexType name="OT_BUHDType" abstract="true">
+		<complexContent>
+			<extension base="ot:OT_BudynkiBudowleIUrzadzeniaType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajBudowliHydrotechnicznejType"/>
+					<element name="wysokoscZapory" type="gml:LengthType" minOccurs="0" maxOccurs="1"/>
+					<element name="BDOT500" type="ot:OT_ReferencjaDoObiektuPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_BUHDPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_BUHD"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_BUHD_A" type="ot:OT_BUHD_AType" substitutionGroup="ot:OT_BUHD"/>
+	<complexType name="OT_BUHD_AType">
+		<complexContent>
+			<extension base="ot:OT_BUHDType">
+				<sequence>
+					<element name="geometria" type="gml:SurfacePropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_BUHD_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_BUHD_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_BUHD_L" type="ot:OT_BUHD_LType" substitutionGroup="ot:OT_BUHD"/>
+	<complexType name="OT_BUHD_LType">
+		<complexContent>
+			<extension base="ot:OT_BUHDType">
+				<sequence>
+					<element name="geometria" type="gml:CurvePropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_BUHD_LPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_BUHD_L"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_BUIB" type="ot:OT_BUIBType" abstract="true" substitutionGroup="ot:OT_BudynkiBudowleIUrzadzenia"/>
+	<complexType name="OT_BUIBType" abstract="true">
+		<complexContent>
+			<extension base="ot:OT_BudynkiBudowleIUrzadzeniaType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajInnejBudowliType"/>
+					<element name="BDOT500" type="ot:OT_ReferencjaDoObiektuPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_BUIBPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_BUIB"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_BUIB_A" type="ot:OT_BUIB_AType" substitutionGroup="ot:OT_BUIB"/>
+	<complexType name="OT_BUIB_AType">
+		<complexContent>
+			<extension base="ot:OT_BUIBType">
+				<sequence>
+					<element name="geometria" type="gml:SurfacePropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_BUIB_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_BUIB_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_BUIB_L" type="ot:OT_BUIB_LType" substitutionGroup="ot:OT_BUIB"/>
+	<complexType name="OT_BUIB_LType">
+		<complexContent>
+			<extension base="ot:OT_BUIBType">
+				<sequence>
+					<element name="geometria" type="gml:CurvePropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_BUIB_LPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_BUIB_L"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_BUIT" type="ot:OT_BUITType" abstract="true" substitutionGroup="ot:OT_BudynkiBudowleIUrzadzenia"/>
+	<complexType name="OT_BUITType" abstract="true">
+		<complexContent>
+			<extension base="ot:OT_BudynkiBudowleIUrzadzeniaType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajUrzadzeniaTechnicznegoType"/>
+					<element name="GESUT" type="ot:OT_ReferencjaDoObiektuPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_BUITPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_BUIT"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_BUIT_A" type="ot:OT_BUIT_AType" substitutionGroup="ot:OT_BUIT"/>
+	<complexType name="OT_BUIT_AType">
+		<complexContent>
+			<extension base="ot:OT_BUITType">
+				<sequence>
+					<element name="geometria" type="gml:SurfacePropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_BUIT_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_BUIT_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_BUIT_P" type="ot:OT_BUIT_PType" substitutionGroup="ot:OT_BUIT"/>
+	<complexType name="OT_BUIT_PType">
+		<complexContent>
+			<extension base="ot:OT_BUITType">
+				<sequence>
+					<element name="geometria" type="gml:PointPropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_BUIT_PPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_BUIT_P"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_BUIN_L" type="ot:OT_BUIN_LType" substitutionGroup="ot:OT_BudynkiBudowleIUrzadzenia"/>
+	<complexType name="OT_BUIN_LType">
+		<complexContent>
+			<extension base="ot:OT_BudynkiBudowleIUrzadzeniaType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajBudowliInzynierskiejType"/>
+					<element name="konstrukcja" type="ot:OT_KonstrukcjaBudowliInzynierskiejType" minOccurs="0" maxOccurs="1"/>
+					<element name="nosnosc" type="double" minOccurs="0" maxOccurs="1"/>
+					<element name="szerokosc" type="gml:LengthType" minOccurs="0" maxOccurs="1"/>
+					<element name="nazwa" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="geometria" type="gml:CurvePropertyType"/>
+					<element name="BDOT500" type="ot:OT_ReferencjaDoObiektuPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_BUIN_LPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_BUIN_L"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_BUSP" type="ot:OT_BUSPType" abstract="true" substitutionGroup="ot:OT_BudynkiBudowleIUrzadzenia"/>
+	<complexType name="OT_BUSPType" abstract="true">
+		<complexContent>
+			<extension base="ot:OT_BudynkiBudowleIUrzadzeniaType">
+				<sequence>
+					<element name="nazwa" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="rodzaj" type="ot:OT_RodzajBudowliSportowejType" minOccurs="0" maxOccurs="1"/>
+					<element name="BDOT500" type="ot:OT_ReferencjaDoObiektuPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_BUSPPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_BUSP"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_BUSP_A" type="ot:OT_BUSP_AType" substitutionGroup="ot:OT_BUSP"/>
+	<complexType name="OT_BUSP_AType">
+		<complexContent>
+			<extension base="ot:OT_BUSPType">
+				<sequence>
+					<element name="geometria" type="gml:SurfacePropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_BUSP_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_BUSP_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_BUSP_L" type="ot:OT_BUSP_LType" substitutionGroup="ot:OT_BUSP"/>
+	<complexType name="OT_BUSP_LType">
+		<complexContent>
+			<extension base="ot:OT_BUSPType">
+				<sequence>
+					<element name="geometria" type="gml:CurvePropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_BUSP_LPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_BUSP_L"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_BUTR" type="ot:OT_BUTRType" abstract="true" substitutionGroup="ot:OT_BudynkiBudowleIUrzadzenia"/>
+	<complexType name="OT_BUTRType" abstract="true">
+		<complexContent>
+			<extension base="ot:OT_BudynkiBudowleIUrzadzeniaType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajUrzadzeniaTransportowegoType"/>
+					<element name="szerokosc" type="gml:LengthType" minOccurs="0" maxOccurs="1"/>
+					<element name="BDOT500" type="ot:OT_ReferencjaDoObiektuPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_BUTRPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_BUTR"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_BUTR_L" type="ot:OT_BUTR_LType" substitutionGroup="ot:OT_BUTR"/>
+	<complexType name="OT_BUTR_LType">
+		<complexContent>
+			<extension base="ot:OT_BUTRType">
+				<sequence>
+					<element name="geometria" type="gml:CurvePropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_BUTR_LPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_BUTR_L"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_BUTR_P" type="ot:OT_BUTR_PType" substitutionGroup="ot:OT_BUTR"/>
+	<complexType name="OT_BUTR_PType">
+		<complexContent>
+			<extension base="ot:OT_BUTRType">
+				<sequence>
+					<element name="geometria" type="gml:PointPropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_BUTR_PPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_BUTR_P"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_BUUO_L" type="ot:OT_BUUO_LType" substitutionGroup="ot:OT_BudynkiBudowleIUrzadzenia"/>
+	<complexType name="OT_BUUO_LType">
+		<complexContent>
+			<extension base="ot:OT_BudynkiBudowleIUrzadzeniaType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajUmocnieniaType"/>
+					<element name="geometria" type="gml:CurvePropertyType"/>
+					<element name="BDOT500" type="ot:OT_ReferencjaDoObiektuPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_BUUO_LPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_BUUO_L"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_BUWT" type="ot:OT_BUWTType" abstract="true" substitutionGroup="ot:OT_BudynkiBudowleIUrzadzenia"/>
+	<complexType name="OT_BUWTType" abstract="true">
+		<complexContent>
+			<extension base="ot:OT_BudynkiBudowleIUrzadzeniaType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajBudowliTechnicznejType" minOccurs="0" maxOccurs="1"/>
+					<element name="wysokosc" type="double" minOccurs="0" maxOccurs="1"/>
+					<element name="BDOT500" type="ot:OT_ReferencjaDoObiektuPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_BUWTPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_BUWT"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_BUWT_A" type="ot:OT_BUWT_AType" substitutionGroup="ot:OT_BUWT"/>
+	<complexType name="OT_BUWT_AType">
+		<complexContent>
+			<extension base="ot:OT_BUWTType">
+				<sequence>
+					<element name="geometria" type="gml:SurfacePropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_BUWT_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_BUWT_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_BUWT_P" type="ot:OT_BUWT_PType" substitutionGroup="ot:OT_BUWT"/>
+	<complexType name="OT_BUWT_PType">
+		<complexContent>
+			<extension base="ot:OT_BUWTType">
+				<sequence>
+					<element name="geometria" type="gml:PointPropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_BUWT_PPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_BUWT_P"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_BUZM_L" type="ot:OT_BUZM_LType" substitutionGroup="ot:OT_BudynkiBudowleIUrzadzenia"/>
+	<complexType name="OT_BUZM_LType">
+		<complexContent>
+			<extension base="ot:OT_BudynkiBudowleIUrzadzeniaType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajBudowliZiemnejType"/>
+					<element name="szerokoscKorony" type="gml:LengthType" minOccurs="0" maxOccurs="1"/>
+					<element name="szerokoscPodstawy" type="gml:LengthType" minOccurs="0" maxOccurs="1"/>
+					<element name="wysokosc" type="double" minOccurs="0" maxOccurs="1"/>
+					<element name="geometria" type="gml:CurvePropertyType"/>
+					<element name="BDOT500" type="ot:OT_ReferencjaDoObiektuPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_BUZM_LPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_BUZM_L"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_BUZT" type="ot:OT_BUZTType" abstract="true" substitutionGroup="ot:OT_BudynkiBudowleIUrzadzenia"/>
+	<complexType name="OT_BUZTType" abstract="true">
+		<complexContent>
+			<extension base="ot:OT_BudynkiBudowleIUrzadzeniaType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajZbiornikaTechnicznegoType" minOccurs="0" maxOccurs="1"/>
+					<element name="BDOT500" type="ot:OT_ReferencjaDoObiektuPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_BUZTPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_BUZT"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_BUZT_A" type="ot:OT_BUZT_AType" substitutionGroup="ot:OT_BUZT"/>
+	<complexType name="OT_BUZT_AType">
+		<complexContent>
+			<extension base="ot:OT_BUZTType">
+				<sequence>
+					<element name="geometria" type="gml:SurfacePropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_BUZT_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_BUZT_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_BUZT_P" type="ot:OT_BUZT_PType" substitutionGroup="ot:OT_BUZT"/>
+	<complexType name="OT_BUZT_PType">
+		<complexContent>
+			<extension base="ot:OT_BUZTType">
+				<sequence>
+					<element name="geometria" type="gml:PointPropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_BUZT_PPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_BUZT_P"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<!--kompleksy użytkowania terenu-->
+	<element name="OT_KUHU_A" type="ot:OT_KUHU_AType" substitutionGroup="ot:OT_ObiektTopograficzny"/>
+	<complexType name="OT_KUHU_AType">
+		<complexContent>
+			<extension base="ot:OT_ObiektTopograficznyType">
+				<sequence>
+					<element name="nazwa" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="geometria" type="gml:SurfacePropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_KUHU_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_KUHU_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_KUPW_A" type="ot:OT_KUPW_AType" substitutionGroup="ot:OT_ObiektTopograficzny"/>
+	<complexType name="OT_KUPW_AType">
+		<complexContent>
+			<extension base="ot:OT_ObiektTopograficznyType">
+				<sequence>
+					<element name="geometria" type="gml:SurfacePropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_KUPW_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_KUPW_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_KUHO_A" type="ot:OT_KUHO_AType" substitutionGroup="ot:OT_ObiektTopograficzny"/>
+	<complexType name="OT_KUHO_AType">
+		<complexContent>
+			<extension base="ot:OT_ObiektTopograficznyType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajKompleksuUslugHotelarskichType" minOccurs="0" maxOccurs="1"/>
+					<element name="nazwa" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="geometria" type="gml:SurfacePropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_KUHO_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_KUHO_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_KUKO_A" type="ot:OT_KUKO_AType" substitutionGroup="ot:OT_ObiektTopograficzny"/>
+	<complexType name="OT_KUKO_AType">
+		<complexContent>
+			<extension base="ot:OT_ObiektTopograficznyType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajKompleksuKomunikacyjnegoType" minOccurs="0" maxOccurs="1"/>
+					<element name="typLotniska" type="ot:OT_RodzajLotniskaType" minOccurs="0" maxOccurs="1"/>
+					<element name="typPortu" type="ot:OT_RodzajPortuType" minOccurs="0" maxOccurs="1"/>
+					<element name="nazwa" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="idIata" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="idIcao" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="geometria" type="gml:SurfacePropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_KUKO_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_KUKO_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_KUKO_P" type="ot:OT_KUKO_PType" substitutionGroup="ot:OT_ObiektTopograficzny"/>
+	<complexType name="OT_KUKO_PType">
+		<complexContent>
+			<extension base="ot:OT_ObiektTopograficznyType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajKompleksuKomunikacyjnegoType" minOccurs="0" maxOccurs="1"/>
+					<element name="typLotniska" type="ot:OT_RodzajLotniskaType" minOccurs="0" maxOccurs="1"/>
+					<element name="typPortu" type="ot:OT_RodzajPortuType" minOccurs="0" maxOccurs="1"/>
+					<element name="nazwa" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="idIata" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="idIcao" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="geometria" type="gml:PointPropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_KUKO_PPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_KUKO_P"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_KUMN_A" type="ot:OT_KUMN_AType" substitutionGroup="ot:OT_ObiektTopograficzny"/>
+	<complexType name="OT_KUMN_AType">
+		<complexContent>
+			<extension base="ot:OT_ObiektTopograficznyType">
+				<sequence>
+					<element name="nazwa" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="geometria" type="gml:SurfacePropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_KUMN_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_KUMN_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_KUOS_A" type="ot:OT_KUOS_AType" substitutionGroup="ot:OT_ObiektTopograficzny"/>
+	<complexType name="OT_KUOS_AType">
+		<complexContent>
+			<extension base="ot:OT_ObiektTopograficznyType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajKompleksuOswiatowegoType" minOccurs="0" maxOccurs="1"/>
+					<element name="nazwa" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="geometria" type="gml:SurfacePropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_KUOS_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_KUOS_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_KUOZ_A" type="ot:OT_KUOZ_AType" substitutionGroup="ot:OT_ObiektTopograficzny"/>
+	<complexType name="OT_KUOZ_AType">
+		<complexContent>
+			<extension base="ot:OT_ObiektTopograficznyType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajKompleksuOchronyZdrowiaType" minOccurs="0" maxOccurs="1"/>
+					<element name="nazwa" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="geometria" type="gml:SurfacePropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_KUOZ_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_KUOZ_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_KUPG_A" type="ot:OT_KUPG_AType" substitutionGroup="ot:OT_ObiektTopograficzny"/>
+	<complexType name="OT_KUPG_AType">
+		<complexContent>
+			<extension base="ot:OT_ObiektTopograficznyType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajKompleksuPrzemyslowoGospodarczegoType" minOccurs="0" maxOccurs="1"/>
+					<element name="nazwa" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="rodzajElektrowni" type="ot:OT_RodzajElektrowniType" minOccurs="0" maxOccurs="1"/>
+					<element name="kopalina" type="ot:OT_KopalinaType" minOccurs="0" maxOccurs="1"/>
+					<element name="geometria" type="gml:SurfacePropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_KUPG_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_KUPG_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_KUPG_P" type="ot:OT_KUPG_PType" substitutionGroup="ot:OT_ObiektTopograficzny"/>
+	<complexType name="OT_KUPG_PType">
+		<complexContent>
+			<extension base="ot:OT_ObiektTopograficznyType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajKompleksuPrzemyslowoGospodarczegoType" minOccurs="0" maxOccurs="1"/>
+					<element name="nazwa" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="rodzajElektrowni" type="ot:OT_RodzajElektrowniType" minOccurs="0" maxOccurs="1"/>
+					<element name="kopalina" type="ot:OT_KopalinaType" minOccurs="0" maxOccurs="1"/>
+					<element name="geometria" type="gml:PointPropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_KUPG_PPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_KUPG_P"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_KUSC_A" type="ot:OT_KUSC_AType" substitutionGroup="ot:OT_ObiektTopograficzny"/>
+	<complexType name="OT_KUSC_AType">
+		<complexContent>
+			<extension base="ot:OT_ObiektTopograficznyType">
+				<sequence>
+					<element name="nazwa" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="rodzaj" type="ot:OT_RodzajKompleksuSakralnegoType" minOccurs="0" maxOccurs="1"/>
+					<element name="wyznanie" type="ot:OT_RodzajWyznaniaType" minOccurs="0" maxOccurs="1"/>
+					<element name="geometria" type="gml:SurfacePropertyType"/>
+					<element name="BDOT500" type="ot:OT_ReferencjaDoObiektuPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_KUSC_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_KUSC_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_KUSK_A" type="ot:OT_KUSK_AType" substitutionGroup="ot:OT_ObiektTopograficzny"/>
+	<complexType name="OT_KUSK_AType">
+		<complexContent>
+			<extension base="ot:OT_ObiektTopograficznyType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajKompleksuSportowoRekreacyjnegoType" minOccurs="0" maxOccurs="1"/>
+					<element name="nazwa" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="geometria" type="gml:SurfacePropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_KUSK_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_KUSK_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_KUZA_A" type="ot:OT_KUZA_AType" substitutionGroup="ot:OT_ObiektTopograficzny"/>
+	<complexType name="OT_KUZA_AType">
+		<complexContent>
+			<extension base="ot:OT_ObiektTopograficznyType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajKompleksuZabytkowoHistorycznegoType" minOccurs="0" maxOccurs="1"/>
+					<element name="nazwa" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="geometria" type="gml:SurfacePropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_KUZA_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_KUZA_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<!--jednostki podziału terytorialnego-->
+	<element name="OT_PodzialTerytorialny" type="ot:OT_PodzialTerytorialnyType" abstract="true" substitutionGroup="ot:OT_ObiektTopograficzny"/>
+	<complexType name="OT_PodzialTerytorialnyType" abstract="true">
+		<complexContent>
+			<extension base="ot:OT_ObiektTopograficznyType">
+				<sequence>
+					<element name="nazwa" type="string"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_PodzialTerytorialnyPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_PodzialTerytorialny"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_ADJA_A" type="ot:OT_ADJA_AType" substitutionGroup="ot:OT_PodzialTerytorialny"/>
+	<complexType name="OT_ADJA_AType">
+		<complexContent>
+			<extension base="ot:OT_PodzialTerytorialnyType">
+				<sequence>
+					<element name="identyfikatorPRG" type="string"/>
+					<element name="identyfikatorTERYTjednostki" type="string"/>
+					<element name="idTERYTjednostkiNadrzednej" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="rodzaj" type="ot:OT_RodzajJednostkiAdministracyjnejType"/>
+					<element name="geometria" type="gml:SurfacePropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_ADJA_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_ADJA_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_ADMS_A" type="ot:OT_ADMS_AType" substitutionGroup="ot:OT_PodzialTerytorialny"/>
+	<complexType name="OT_ADMS_AType">
+		<complexContent>
+			<extension base="ot:OT_PodzialTerytorialnyType">
+				<sequence>
+					<element name="identyfikatorSIMC" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="identyfikatorTERC" type="string"/>
+					<element name="rodzaj" type="ot:OT_RodzajMiejscowosciType"/>
+					<element name="liczbaMieszkancow" type="integer" minOccurs="0" maxOccurs="1"/>
+					<element name="identyfikatorPRNG" type="string"/>
+					<element name="geometria" type="gml:SurfacePropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_ADMS_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_ADMS_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_ADMS_P" type="ot:OT_ADMS_PType" substitutionGroup="ot:OT_PodzialTerytorialny"/>
+	<complexType name="OT_ADMS_PType">
+		<complexContent>
+			<extension base="ot:OT_PodzialTerytorialnyType">
+				<sequence>
+					<element name="identyfikatorSIMC" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="identyfikatorTERC" type="string"/>
+					<element name="rodzaj" type="ot:OT_RodzajMiejscowosciType"/>
+					<element name="liczbaMieszkancow" type="integer" minOccurs="0" maxOccurs="1"/>
+					<element name="identyfikatorPRNG" type="string"/>
+					<element name="geometria" type="gml:PointPropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_ADMS_PPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_ADMS_P"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<!--tereny chronione-->
+	<element name="OT_TerenyChronione" type="ot:OT_TerenyChronioneType" abstract="true" substitutionGroup="ot:OT_ObiektTopograficzny"/>
+	<complexType name="OT_TerenyChronioneType" abstract="true">
+		<complexContent>
+			<extension base="ot:OT_ObiektTopograficznyType">
+				<sequence>
+					<element name="geometria" type="gml:SurfacePropertyType"/>
+					<element name="numerCRFOP" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="nazwa" type="string" minOccurs="0" maxOccurs="1"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_TerenyChronionePropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_TerenyChronione"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_TCON_A" type="ot:OT_TCON_AType" substitutionGroup="ot:OT_TerenyChronione"/>
+	<complexType name="OT_TCON_AType">
+		<complexContent>
+			<extension base="ot:OT_TerenyChronioneType">
+				<sequence>
+					<element name="kodNatura2000" type="string"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_TCON_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_TCON_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_TCPK_A" type="ot:OT_TCPK_AType" substitutionGroup="ot:OT_TerenyChronione"/>
+	<complexType name="OT_TCPK_AType">
+		<complexContent>
+			<extension base="ot:OT_TerenyChronioneType">
+				<sequence/>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_TCPK_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_TCPK_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_TCPN_A" type="ot:OT_TCPN_AType" substitutionGroup="ot:OT_TerenyChronione"/>
+	<complexType name="OT_TCPN_AType">
+		<complexContent>
+			<extension base="ot:OT_TerenyChronioneType">
+				<sequence/>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_TCPN_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_TCPN_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_TCRZ_A" type="ot:OT_TCRZ_AType" substitutionGroup="ot:OT_TerenyChronione"/>
+	<complexType name="OT_TCRZ_AType">
+		<complexContent>
+			<extension base="ot:OT_TerenyChronioneType">
+				<sequence/>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_TCRZ_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_TCRZ_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<!--obiekty inne-->
+	<element name="OT_OIKM" type="ot:OT_OIKMType" abstract="true" substitutionGroup="ot:OT_ObiektTopograficzny"/>
+	<complexType name="OT_OIKMType" abstract="true">
+		<complexContent>
+			<extension base="ot:OT_ObiektTopograficznyType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajObiektuKomunikacyjnegoType" minOccurs="0" maxOccurs="1"/>
+					<element name="nazwa" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="BDOT500" type="ot:OT_ReferencjaDoObiektuPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_OIKMPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_OIKM"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_OIKM_A" type="ot:OT_OIKM_AType" substitutionGroup="ot:OT_OIKM"/>
+	<complexType name="OT_OIKM_AType">
+		<complexContent>
+			<extension base="ot:OT_OIKMType">
+				<sequence>
+					<element name="geometria" type="gml:SurfacePropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_OIKM_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_OIKM_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_OIKM_L" type="ot:OT_OIKM_LType" substitutionGroup="ot:OT_OIKM"/>
+	<complexType name="OT_OIKM_LType">
+		<complexContent>
+			<extension base="ot:OT_OIKMType">
+				<sequence>
+					<element name="geometria" type="gml:CurvePropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_OIKM_LPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_OIKM_L"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_OIKM_P" type="ot:OT_OIKM_PType" substitutionGroup="ot:OT_OIKM"/>
+	<complexType name="OT_OIKM_PType">
+		<complexContent>
+			<extension base="ot:OT_OIKMType">
+				<sequence>
+					<element name="geometria" type="gml:PointPropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_OIKM_PPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_OIKM_P"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_OIMK_A" type="ot:OT_OIMK_AType" substitutionGroup="ot:OT_ObiektTopograficzny"/>
+	<complexType name="OT_OIMK_AType">
+		<complexContent>
+			<extension base="ot:OT_ObiektTopograficznyType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajMokradlaType" minOccurs="0" maxOccurs="1"/>
+					<element name="geometria" type="gml:SurfacePropertyType"/>
+					<element name="BDOT500" type="ot:OT_ReferencjaDoObiektuPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_OIMK_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_OIMK_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_OIOR" type="ot:OT_OIORType" abstract="true" substitutionGroup="ot:OT_ObiektTopograficzny"/>
+	<complexType name="OT_OIORType" abstract="true">
+		<complexContent>
+			<extension base="ot:OT_ObiektTopograficznyType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajObiektuOrientacyjnegoType"/>
+					<element name="nazwa" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="BDOT500" type="ot:OT_ReferencjaDoObiektuPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_OIORPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_OIOR"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_OIOR_A" type="ot:OT_OIOR_AType" substitutionGroup="ot:OT_OIOR"/>
+	<complexType name="OT_OIOR_AType">
+		<complexContent>
+			<extension base="ot:OT_OIORType">
+				<sequence>
+					<element name="geometria" type="gml:SurfacePropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_OIOR_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_OIOR_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_OIOR_L" type="ot:OT_OIOR_LType" substitutionGroup="ot:OT_OIOR"/>
+	<complexType name="OT_OIOR_LType">
+		<complexContent>
+			<extension base="ot:OT_OIORType">
+				<sequence>
+					<element name="geometria" type="gml:CurvePropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_OIOR_LPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_OIOR_L"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_OIOR_P" type="ot:OT_OIOR_PType" substitutionGroup="ot:OT_OIOR"/>
+	<complexType name="OT_OIOR_PType">
+		<complexContent>
+			<extension base="ot:OT_OIORType">
+				<sequence>
+					<element name="geometria" type="gml:PointPropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_OIOR_PPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_OIOR_P"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_OIPR" type="ot:OT_OIPRType" abstract="true" substitutionGroup="ot:OT_ObiektTopograficzny"/>
+	<complexType name="OT_OIPRType" abstract="true">
+		<complexContent>
+			<extension base="ot:OT_ObiektTopograficznyType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajObiektuPrzyrodniczegoType"/>
+					<element name="nazwa" type="string" minOccurs="0" maxOccurs="1"/>
+					<element name="pomnikPrzyrody" type="ot:OT_PomnikPrzyrodyType"/>
+					<element name="BDOT500" type="ot:OT_ReferencjaDoObiektuPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_OIPRPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_OIPR"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_OIPR_L" type="ot:OT_OIPR_LType" substitutionGroup="ot:OT_OIPR"/>
+	<complexType name="OT_OIPR_LType">
+		<complexContent>
+			<extension base="ot:OT_OIPRType">
+				<sequence>
+					<element name="geometria" type="gml:CurvePropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_OIPR_LPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_OIPR_L"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_OIPR_P" type="ot:OT_OIPR_PType" substitutionGroup="ot:OT_OIPR"/>
+	<complexType name="OT_OIPR_PType">
+		<complexContent>
+			<extension base="ot:OT_OIPRType">
+				<sequence>
+					<element name="geometria" type="gml:PointPropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_OIPR_PPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_OIPR_P"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_OISZ_A" type="ot:OT_OISZ_AType" substitutionGroup="ot:OT_ObiektTopograficzny"/>
+	<complexType name="OT_OISZ_AType">
+		<complexContent>
+			<extension base="ot:OT_ObiektTopograficznyType">
+				<sequence>
+					<element name="geometria" type="gml:SurfacePropertyType"/>
+					<element name="BDOT500" type="ot:OT_ReferencjaDoObiektuPropertyType" minOccurs="0" maxOccurs="unbounded"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_OISZ_APropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_OISZ_A"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<!--rzeźba terenu-->
+	<element name="OT_RTLW_L" type="ot:OT_RTLW_LType" substitutionGroup="ot:OT_ObiektTopograficzny"/>
+	<complexType name="OT_RTLW_LType">
+		<complexContent>
+			<extension base="ot:OT_ObiektTopograficznyType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajLiniiWysokosciowejType"/>
+					<element name="wysokosc" type="gml:LengthType"/>
+					<element name="geometria" type="gml:CurvePropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_RTLW_LPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_RTLW_L"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<element name="OT_RTPW_P" type="ot:OT_RTPW_PType" substitutionGroup="ot:OT_ObiektTopograficzny"/>
+	<complexType name="OT_RTPW_PType">
+		<complexContent>
+			<extension base="ot:OT_ObiektTopograficznyType">
+				<sequence>
+					<element name="rodzaj" type="ot:OT_RodzajPunktuWysokosciowegoType"/>
+					<element name="wysokosc" type="gml:LengthType"/>
+					<element name="geometria" type="gml:PointPropertyType"/>
+				</sequence>
+			</extension>
+		</complexContent>
+	</complexType>
+	<complexType name="OT_RTPW_PPropertyType">
+		<sequence minOccurs="0">
+			<element ref="ot:OT_RTPW_P"/>
+		</sequence>
+		<attributeGroup ref="gml:AssociationAttributeGroup"/>
+		<attributeGroup ref="gml:OwnershipAttributeGroup"/>
+	</complexType>
+	<!--słowniki-->
+	<simpleType name="OT_RodzajBudowliTechnicznejType">
+		<union memberTypes="ot:OT_RodzajBudowliTechnicznejEnumerationType ot:OT_RodzajBudowliTechnicznejOtherType"/>
+	</simpleType>
+	<simpleType name="OT_RodzajBudowliTechnicznejEnumerationType">
+		<restriction base="string">
+			<enumeration value="chłodnia kominowa"/>
+			<enumeration value="komin"/>
+			<enumeration value="maszt"/>
+			<enumeration value="maszt lub wieża telekomunikacyjna"/>
+			<enumeration value="podpora kolei linowej"/>
+			<enumeration value="słup energetyczny"/>
+			<enumeration value="turbina wiatrowa"/>
+			<enumeration value="wieża ciśnień"/>
+			<enumeration value="wieża obserwacyjna"/>
+			<enumeration value="wieża przeciwpożarowa"/>
+			<enumeration value="wieża szybu kopalnianego"/>
+			<enumeration value="wieża widokowa"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajBudowliTechnicznejOtherType">
+		<restriction base="string">
+			<pattern value="other: \w{2,}"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajKompleksuPrzemyslowoGospodarczegoType">
+		<union memberTypes="ot:OT_RodzajKompleksuPrzemyslowoGospodarczegoEnumerationType ot:OT_RodzajKompleksuPrzemyslowoGospodarczegoOtherType"/>
+	</simpleType>
+	<simpleType name="OT_RodzajKompleksuPrzemyslowoGospodarczegoEnumerationType">
+		<restriction base="string">
+			<enumeration value="baza paliw"/>
+			<enumeration value="elektrociepłownia"/>
+			<enumeration value="elektrownia"/>
+			<enumeration value="gazownia"/>
+			<enumeration value="gospodarstwo hodowlane"/>
+			<enumeration value="huta"/>
+			<enumeration value="kopalnia"/>
+			<enumeration value="oczyszczalnia ścieków"/>
+			<enumeration value="podstacja elektroenergetyczna"/>
+			<enumeration value="przepompownia"/>
+			<enumeration value="rafineria"/>
+			<enumeration value="składowisko odpadów"/>
+			<enumeration value="teren ujęcia wody"/>
+			<enumeration value="zakład metalurgiczny"/>
+			<enumeration value="zakład produkcyjny, usługowy lub remontowy"/>
+			<enumeration value="zakład utylizacji"/>
+			<enumeration value="zakład wodociągowy"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajKompleksuPrzemyslowoGospodarczegoOtherType">
+		<restriction base="string">
+			<pattern value="other: \w{2,}"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajObiektuOrientacyjnegoType">
+		<union memberTypes="ot:OT_RodzajObiektuOrientacyjnegoEnumerationType ot:OT_RodzajObiektuOrientacyjnegoOtherType"/>
+	</simpleType>
+	<simpleType name="OT_RodzajObiektuOrientacyjnegoEnumerationType">
+		<restriction base="string">
+			<enumeration value="bunkier lub schron"/>
+			<enumeration value="figura, kapliczka lub krzyż"/>
+			<enumeration value="fontanna"/>
+			<enumeration value="mur historyczny"/>
+			<enumeration value="odosobniona mogiła"/>
+			<enumeration value="pomnik"/>
+			<enumeration value="pomost lub molo"/>
+			<enumeration value="ruina zabytkowa"/>
+			<enumeration value="studnia głębinowa"/>
+			<enumeration value="szklarnia niebędąca budynkiem"/>
+			<enumeration value="wapiennik"/>
+			<enumeration value="wiata lub altana"/>
+			<enumeration value="wiatrak niebędący budynkiem"/>
+			<enumeration value="wodowskaz"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajObiektuOrientacyjnegoOtherType">
+		<restriction base="string">
+			<pattern value="other: \w{2,}"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajLiniiWysokosciowejType">
+		<union memberTypes="ot:OT_RodzajLiniiWysokosciowejEnumerationType ot:OT_RodzajLiniiWysokosciowejOtherType"/>
+	</simpleType>
+	<simpleType name="OT_RodzajLiniiWysokosciowejEnumerationType">
+		<restriction base="string">
+			<enumeration value="poziomica"/>
+			<enumeration value="skarpa"/>
+			<enumeration value="wąwóz"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajLiniiWysokosciowejOtherType">
+		<restriction base="string">
+			<pattern value="other: \w{2,}"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajPunktuWysokosciowegoType">
+		<union memberTypes="ot:OT_RodzajPunktuWysokosciowegoEnumerationType ot:OT_RodzajPunktuWysokosciowegoOtherType"/>
+	</simpleType>
+	<simpleType name="OT_RodzajPunktuWysokosciowegoEnumerationType">
+		<restriction base="string">
+			<enumeration value="dół"/>
+			<enumeration value="kopiec lub hałda"/>
+			<enumeration value="punkt wysokościowy w terenie"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajPunktuWysokosciowegoOtherType">
+		<restriction base="string">
+			<pattern value="other: \w{2,}"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_FunkcjaToruType">
+		<restriction base="string">
+			<enumeration value="tor szlakowy"/>
+			<enumeration value="tor szlakowy stacyjny"/>
+			<enumeration value="tor zwykły"/>
+			<enumeration value="tor zwykły stacyjny"/>
+			<enumeration value="bocznica"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_KategoriaDrzewostanuType">
+		<restriction base="string">
+			<enumeration value="iglasty"/>
+			<enumeration value="liściasty"/>
+			<enumeration value="mieszany"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_KonstrukcjaBudowliInzynierskiejType">
+		<restriction base="string">
+			<enumeration value="ruchoma"/>
+			<enumeration value="stała"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_KopalinaType">
+		<restriction base="string">
+			<enumeration value="gaz ziemny"/>
+			<enumeration value="miedź"/>
+			<enumeration value="ropa naftowa"/>
+			<enumeration value="siarka"/>
+			<enumeration value="sól kamienna"/>
+			<enumeration value="surowce chemiczne"/>
+			<enumeration value="surowce metaliczne"/>
+			<enumeration value="surowce skalne"/>
+			<enumeration value="węgiel brunatny"/>
+			<enumeration value="węgiel kamienny"/>
+			<enumeration value="inna"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_PolozenieCiekuType">
+		<restriction base="string">
+			<enumeration value="nad powierzchnią"/>
+			<enumeration value="na powierzchni"/>
+			<enumeration value="pod powierzchnią"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_FunSzczegolowaBudynkuType">
+		<restriction base="string">
+			<enumeration value="apteka"/>
+			<enumeration value="archiwum"/>
+			<enumeration value="areszt śledczy"/>
+			<enumeration value="bacówka"/>
+			<enumeration value="bank"/>
+			<enumeration value="basen kąpielowy"/>
+			<enumeration value="biblioteka"/>
+			<enumeration value="budynek gospodarczy"/>
+			<enumeration value="budynek jednorodzinny"/>
+			<enumeration value="budynek kontroli ruchu kolejowego"/>
+			<enumeration value="budynek kontroli ruchu powietrznego"/>
+			<enumeration value="budynek ogrodu zoologicznego lub botanicznego"/>
+			<enumeration value="budynek produkcyjny zwierząt hodowlanych"/>
+			<enumeration value="budynek spedycji"/>
+			<enumeration value="budynek wielorodzinny"/>
+			<enumeration value="budynki cmentarne"/>
+			<enumeration value="centrum handlowe"/>
+			<enumeration value="centrum informacyjne"/>
+			<enumeration value="centrum konferencyjne"/>
+			<enumeration value="centrum telekomunikacyjne"/>
+			<enumeration value="cerkiew"/>
+			<enumeration value="chłodnia"/>
+			<enumeration value="dom dla bezdomnych"/>
+			<enumeration value="dom dziecka"/>
+			<enumeration value="dom kultury"/>
+			<enumeration value="dom letniskowy"/>
+			<enumeration value="dom opieki społecznej"/>
+			<enumeration value="dom parafialny"/>
+			<enumeration value="dom pogrzebowy"/>
+			<enumeration value="dom rekolekcyjny"/>
+			<enumeration value="dom studencki"/>
+			<enumeration value="dom towarowy lub handlowy"/>
+			<enumeration value="dom weselny"/>
+			<enumeration value="dom wypoczynkowy"/>
+			<enumeration value="dom zakonny"/>
+			<enumeration value="domek kempingowy"/>
+			<enumeration value="dworzec autobusowy"/>
+			<enumeration value="dworzec kolejowy"/>
+			<enumeration value="dworzec lotniczy"/>
+			<enumeration value="dzwonnica"/>
+			<enumeration value="elektrociepłownia"/>
+			<enumeration value="elektrownia"/>
+			<enumeration value="elewator"/>
+			<enumeration value="filharmonia"/>
+			<enumeration value="galeria sztuki"/>
+			<enumeration value="garaż"/>
+			<enumeration value="hala sportowa"/>
+			<enumeration value="hala targowa"/>
+			<enumeration value="hala widowiskowa"/>
+			<enumeration value="hala wystawowa"/>
+			<enumeration value="halowy tor gokartowy"/>
+			<enumeration value="hangar"/>
+			<enumeration value="hipermarket lub supermarket"/>
+			<enumeration value="hospicjum"/>
+			<enumeration value="hotel"/>
+			<enumeration value="hotel robotniczy"/>
+			<enumeration value="inna placówka edukacyjna"/>
+			<enumeration value="inny budynek kultu religijnego"/>
+			<enumeration value="inny urząd administracji publicznej"/>
+			<enumeration value="internat lub bursa szkolna"/>
+			<enumeration value="izba wytrzeźwień"/>
+			<enumeration value="jednostka ratownictwa medycznego"/>
+			<enumeration value="kapitanat lub bosmanat portu"/>
+			<enumeration value="kaplica"/>
+			<enumeration value="kasyno"/>
+			<enumeration value="kino"/>
+			<enumeration value="klasztor"/>
+			<enumeration value="klinika weterynaryjna"/>
+			<enumeration value="klub sportowy"/>
+			<enumeration value="klub, dyskoteka"/>
+			<enumeration value="korty tenisowe"/>
+			<enumeration value="koszary"/>
+			<enumeration value="kościół"/>
+			<enumeration value="kotłownia"/>
+			<enumeration value="krematorium"/>
+			<enumeration value="kręgielnia"/>
+			<enumeration value="kuria metropolitalna"/>
+			<enumeration value="latarnia morska"/>
+			<enumeration value="leśniczówka"/>
+			<enumeration value="lokomotywownia lub wagonownia"/>
+			<enumeration value="magazyn"/>
+			<enumeration value="meczet"/>
+			<enumeration value="ministerstwo"/>
+			<enumeration value="młyn"/>
+			<enumeration value="motel"/>
+			<enumeration value="muzeum"/>
+			<enumeration value="myjnia samochodowa"/>
+			<enumeration value="obserwatorium lub planetarium"/>
+			<enumeration value="opera"/>
+			<enumeration value="ośrodek pomocy społecznej"/>
+			<enumeration value="ośrodek szkoleniowo-wypoczynkowy"/>
+			<enumeration value="parking wielopoziomowy"/>
+			<enumeration value="obiekt handlowo-usługowy"/>
+			<enumeration value="pawilon ogrodowy lub oranżeria"/>
+			<enumeration value="pensjonat"/>
+			<enumeration value="placówka badawcza"/>
+			<enumeration value="placówka dyplomatyczna lub konsularna"/>
+			<enumeration value="placówka ochrony zdrowia"/>
+			<enumeration value="placówka operatora pocztowego"/>
+			<enumeration value="placówka opiekuńczo-wychowawcza"/>
+			<enumeration value="policja"/>
+			<enumeration value="produkcyjny"/>
+			<enumeration value="prokuratura"/>
+			<enumeration value="przedszkole"/>
+			<enumeration value="przejście graniczne"/>
+			<enumeration value="rafineria"/>
+			<enumeration value="restauracja"/>
+			<enumeration value="rezydencja ambasadora"/>
+			<enumeration value="rezydencja biskupia"/>
+			<enumeration value="rezydencja prezydencka"/>
+			<enumeration value="sala gimnastyczna"/>
+			<enumeration value="sanatorium"/>
+			<enumeration value="sąd"/>
+			<enumeration value="schronisko dla nieletnich"/>
+			<enumeration value="schronisko dla zwierząt"/>
+			<enumeration value="schronisko turystyczne"/>
+			<enumeration value="siedziba firmy lub firm"/>
+			<enumeration value="silos"/>
+			<enumeration value="spalarnia śmieci"/>
+			<enumeration value="stacja gazowa"/>
+			<enumeration value="stacja hydrologiczna"/>
+			<enumeration value="stacja kolejki górskiej lub wyciągu krzesełkowego"/>
+			<enumeration value="stacja krwiodawstwa"/>
+			<enumeration value="stacja meteorologiczna"/>
+			<enumeration value="stacja nadawcza radia i telewizji"/>
+			<enumeration value="stacja nautyczna"/>
+			<enumeration value="stacja obsługi pojazdów"/>
+			<enumeration value="stacja paliw"/>
+			<enumeration value="stacja pomp"/>
+			<enumeration value="stacja sanitarno-epidemiologiczna"/>
+			<enumeration value="stacja transformatorowa"/>
+			<enumeration value="stajnia"/>
+			<enumeration value="starostwo powiatowe"/>
+			<enumeration value="straż graniczna"/>
+			<enumeration value="straż pożarna"/>
+			<enumeration value="strzelnica"/>
+			<enumeration value="synagoga"/>
+			<enumeration value="szklarnia lub cieplarnia"/>
+			<enumeration value="szkoła podstawowa"/>
+			<enumeration value="szkoła ponadpodstawowa"/>
+			<enumeration value="szkoła wyższa"/>
+			<enumeration value="szpital"/>
+			<enumeration value="sztuczne lodowisko"/>
+			<enumeration value="teatr"/>
+			<enumeration value="terminal portowy"/>
+			<enumeration value="toaleta publiczna"/>
+			<enumeration value="ujeżdżalnia"/>
+			<enumeration value="urząd celny"/>
+			<enumeration value="urząd gminy"/>
+			<enumeration value="urząd marszałkowski"/>
+			<enumeration value="urząd miasta"/>
+			<enumeration value="urząd miasta i gminy"/>
+			<enumeration value="urząd wojewódzki"/>
+			<enumeration value="warsztat remontowo-naprawczy"/>
+			<enumeration value="wiatrak"/>
+			<enumeration value="zabudowania koszarowe"/>
+			<enumeration value="zabytek niepełniący żadnej funkcji użytkowej"/>
+			<enumeration value="zajazd"/>
+			<enumeration value="zajezdnia autobusowa"/>
+			<enumeration value="zajezdnia tramwajowa"/>
+			<enumeration value="zajezdnia trolejbusowa"/>
+			<enumeration value="zakład karny"/>
+			<enumeration value="zakład karny lub poprawczy"/>
+			<enumeration value="zakład poprawczy"/>
+			<enumeration value="zbiornik na ciecz"/>
+			<enumeration value="zbiornik na gaz"/>
+			<enumeration value="żłobek"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_PolozenieObiektuSieciTransportowejType">
+		<restriction base="string">
+			<enumeration value="pod powierzchnią gruntu"/>
+			<enumeration value="na powierzchni gruntu"/>
+			<enumeration value="ponad powierzchnią gruntu poziom 1"/>
+			<enumeration value="ponad powierzchnią gruntu poziom 2"/>
+			<enumeration value="ponad powierzchnią gruntu poziom 3"/>
+			<enumeration value="ponad powierzchnią gruntu poziom 4"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_FunOgolnaBudynkuType">
+		<restriction base="string">
+			<enumeration value="budynki biurowe"/>
+			<enumeration value="budynki handlowo-usługowe"/>
+			<enumeration value="budynki mieszkalne"/>
+			<enumeration value="budynki oświaty, nauki i kultury oraz budynki sportowe"/>
+			<enumeration value="budynki produkcyjne, usługowe i gospodarcze dla rolnictwa"/>
+			<enumeration value="budynki przemysłowe"/>
+			<enumeration value="budynki szpitali i inne budynki opieki zdrowotnej"/>
+			<enumeration value="budynki transportu i łączności"/>
+			<enumeration value="pozostałe budynki niemieszkalne"/>
+			<enumeration value="zbiorniki, silosy i budynki magazynowe"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_KatIstnieniaType">
+		<restriction base="string">
+			<enumeration value="eksploatowany"/>
+			<enumeration value="nieczynny"/>
+			<enumeration value="w budowie"/>
+			<enumeration value="zniszczony"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_PrzebiegCiekuType">
+		<restriction base="string">
+			<enumeration value="ciek główny"/>
+			<enumeration value="ramię boczne"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_KatZarzadzaniaDrogiType">
+		<restriction base="string">
+			<enumeration value="krajowa"/>
+			<enumeration value="wojewódzka"/>
+			<enumeration value="powiatowa"/>
+			<enumeration value="gminna"/>
+			<enumeration value="wewnętrzna"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajBudowliHydrotechnicznejType">
+		<restriction base="string">
+			<enumeration value="jaz"/>
+			<enumeration value="śluza"/>
+			<enumeration value="zapora"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_KlasaDrogiType">
+		<restriction base="string">
+			<enumeration value="autostrada"/>
+			<enumeration value="droga ekspresowa"/>
+			<enumeration value="droga główna ruchu przyśpieszonego"/>
+			<enumeration value="droga główna"/>
+			<enumeration value="droga zbiorcza"/>
+			<enumeration value="droga lokalna"/>
+			<enumeration value="droga dojazdowa"/>
+			<enumeration value="droga wewnętrzna"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajBudowliInzynierskiejType">
+		<restriction base="string">
+			<enumeration value="akwedukt"/>
+			<enumeration value="estakada"/>
+			<enumeration value="kładka"/>
+			<enumeration value="most"/>
+			<enumeration value="przejście dla zwierząt"/>
+			<enumeration value="przejście podziemne dla pieszych"/>
+			<enumeration value="tunel"/>
+			<enumeration value="wiadukt"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajBudowliSportowejType">
+		<restriction base="string">
+			<enumeration value="basen"/>
+			<enumeration value="bieżnia"/>
+			<enumeration value="kort tenisowy"/>
+			<enumeration value="plac gier i zabaw"/>
+			<enumeration value="plac sportowy"/>
+			<enumeration value="pole golfowe"/>
+			<enumeration value="skocznia narciarska"/>
+			<enumeration value="stadion"/>
+			<enumeration value="strzelnica"/>
+			<enumeration value="sztuczny stok"/>
+			<enumeration value="tor sportowy"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajRepGeomType">
+		<restriction base="string">
+			<enumeration value="linia umowna"/>
+			<enumeration value="sztuczny łącznik"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_ZrodloDanychType">
+		<restriction base="string">
+			<enumeration value="EGiB"/>
+			<enumeration value="GESUT"/>
+			<enumeration value="PRG"/>
+			<enumeration value="ortofotomapa"/>
+			<enumeration value="BDOT500"/>
+			<enumeration value="mapa zasadnicza"/>
+			<enumeration value="mapa topograficzna 10k"/>
+			<enumeration value="BDOT10k"/>
+			<enumeration value="Centralny Rejestr Form Ochrony Przyrody"/>
+			<enumeration value="NMT"/>
+			<enumeration value="pomiar terenowy"/>
+			<enumeration value="inne"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajBudowliZiemnejType">
+		<restriction base="string">
+			<enumeration value="fosa sucha lub wykop"/>
+			<enumeration value="nasyp"/>
+			<enumeration value="wał przeciwpowodziowy lub grobla"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajCharakteruZabudowyType">
+		<restriction base="string">
+			<enumeration value="zwarta"/>
+			<enumeration value="gęsta"/>
+			<enumeration value="luźna"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajInnejBudowliType">
+		<restriction base="string">
+			<enumeration value="amfiteatr"/>
+			<enumeration value="peron kolejowy"/>
+			<enumeration value="platforma widokowa"/>
+			<enumeration value="rampa kolejowa"/>
+			<enumeration value="tężnia"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajJednostkiAdministracyjnejType">
+		<restriction base="string">
+			<enumeration value="państwo"/>
+			<enumeration value="województwo"/>
+			<enumeration value="powiat"/>
+			<enumeration value="gmina"/>
+			<enumeration value="miasto w gminie miejsko-wiejskiej"/>
+			<enumeration value="dzielnica lub delegatura"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajKompleksuKomunikacyjnegoType">
+		<restriction base="string">
+			<enumeration value="dworzec autobusowy"/>
+			<enumeration value="lotnisko lub lądowisko"/>
+			<enumeration value="miejsce obsługi podróżnych"/>
+			<enumeration value="parking"/>
+			<enumeration value="port wodny lub przystań"/>
+			<enumeration value="stacja kolejowa"/>
+			<enumeration value="stacja paliw"/>
+			<enumeration value="teren kolejowy"/>
+			<enumeration value="zajezdnia lub baza transportowa"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajKompleksuOchronyZdrowiaType">
+		<restriction base="string">
+			<enumeration value="zakład opieki socjalnej lub dom dziecka"/>
+			<enumeration value="zespół szpitalny lub sanatoryjny"/>
+			<enumeration value="żłobek"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajKompleksuOswiatowegoType">
+		<restriction base="string">
+			<enumeration value="ośrodek naukowo-badawczy"/>
+			<enumeration value="szkoła wyższa"/>
+			<enumeration value="szkoła lub zespół szkół"/>
+			<enumeration value="przedszkole"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajKompleksuSakralnegoType">
+		<restriction base="string">
+			<enumeration value="cmentarz dla zwierząt"/>
+			<enumeration value="cmentarz komunalny"/>
+			<enumeration value="cmentarz wojenny"/>
+			<enumeration value="cmentarz wyznaniowy"/>
+			<enumeration value="zespół sakralny lub klasztorny"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajKompleksuSportowoRekreacyjnegoType">
+		<restriction base="string">
+			<enumeration value="kompleks sportowo-rekreacyjny"/>
+			<enumeration value="ogród botaniczny"/>
+			<enumeration value="ogród zoologiczny"/>
+			<enumeration value="park lub skwer"/>
+			<enumeration value="zespół domów letniskowych"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajKompleksuUslugHotelarskichType">
+		<restriction base="string">
+			<enumeration value="hotel lub motel"/>
+			<enumeration value="kemping"/>
+			<enumeration value="ośrodek wypoczynkowy"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajKompleksuZabytkowoHistorycznegoType">
+		<restriction base="string">
+			<enumeration value="miejsce pamięci narodowej"/>
+			<enumeration value="skansen"/>
+			<enumeration value="twierdza lub forteca"/>
+			<enumeration value="zespół muzealny"/>
+			<enumeration value="zespół zabudowy historycznej"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajLotniskaType">
+		<restriction base="string">
+			<enumeration value="lotnisko wojskowe"/>
+			<enumeration value="port lotniczy"/>
+			<enumeration value="inne lotnisko lub lądowisko"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajPortuType">
+		<restriction base="string">
+			<enumeration value="port handlowy"/>
+			<enumeration value="port rybacki"/>
+			<enumeration value="port wojskowy"/>
+			<enumeration value="przystań żeglugi pasażerskiej"/>
+			<enumeration value="przystań jachtowa"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajElektrowniType">
+		<restriction base="string">
+			<enumeration value="atomowa"/>
+			<enumeration value="cieplna"/>
+			<enumeration value="geotermalna"/>
+			<enumeration value="słoneczna"/>
+			<enumeration value="wiatrowa"/>
+			<enumeration value="wodna"/>
+			<enumeration value="inna"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajLiniiElektroenergetycznejType">
+		<restriction base="string">
+			<enumeration value="linia elektroenergetyczna najwyższego napięcia"/>
+			<enumeration value="linia elektroenergetyczna wysokiego napięcia"/>
+			<enumeration value="linia elektroenergetyczna średniego napięcia"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajMiejscowosciType">
+		<restriction base="string">
+			<enumeration value="miasto"/>
+			<enumeration value="część miasta"/>
+			<enumeration value="wieś"/>
+			<enumeration value="część wsi"/>
+			<enumeration value="kolonia"/>
+			<enumeration value="część kolonii"/>
+			<enumeration value="osada"/>
+			<enumeration value="część osady"/>
+			<enumeration value="osiedle"/>
+			<enumeration value="przysiółek"/>
+			<enumeration value="osada leśna"/>
+			<enumeration value="inny obiekt"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajMokradlaType">
+		<restriction base="string">
+			<enumeration value="bagno"/>
+			<enumeration value="teren podmokły"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_MaterialNawierzchniType">
+		<restriction base="string">
+			<enumeration value="beton"/>
+			<enumeration value="bruk"/>
+			<enumeration value="grunt naturalny"/>
+			<enumeration value="kostka kamienna"/>
+			<enumeration value="kostka prefabrykowana"/>
+			<enumeration value="masa bitumiczna"/>
+			<enumeration value="płyty betonowe"/>
+			<enumeration value="żwir"/>
+			<enumeration value="tłuczeń"/>
+			<enumeration value="inny"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajObiektuKomunikacyjnegoType">
+		<restriction base="string">
+			<enumeration value="ekran akustyczny"/>
+			<enumeration value="lądowisko dla helikopterów"/>
+			<enumeration value="miejsce poboru opłat"/>
+			<enumeration value="pas startowy"/>
+			<enumeration value="przejście graniczne"/>
+			<enumeration value="przystanek autobusowy lub tramwajowy"/>
+			<enumeration value="przystanek promowy lub tramwaju wodnego"/>
+			<enumeration value="schody"/>
+			<enumeration value="stacja lub przystanek kolejowy"/>
+			<enumeration value="sygnalizator świetlny"/>
+			<enumeration value="wejście do stacji metra"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajObiektuPrzyrodniczegoType">
+		<restriction base="string">
+			<enumeration value="drzewo lub grupa drzew"/>
+			<enumeration value="głaz narzutowy lub grupa głazów"/>
+			<enumeration value="kępa krzewów lub kosodrzewiny"/>
+			<enumeration value="linia oddziałowa"/>
+			<enumeration value="mały las"/>
+			<enumeration value="odosobniona skała"/>
+			<enumeration value="pas krzewów lub żywopłot"/>
+			<enumeration value="próg skalny"/>
+			<enumeration value="rząd drzew"/>
+			<enumeration value="wejście do jaskini lub groty"/>
+			<enumeration value="wodospad"/>
+			<enumeration value="źródło"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajObszaruWodyType">
+		<restriction base="string">
+			<enumeration value="woda morska"/>
+			<enumeration value="woda płynąca"/>
+			<enumeration value="woda stojąca"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajPojazduSzynowegoType">
+		<restriction base="string">
+			<enumeration value="kolej"/>
+			<enumeration value="metro"/>
+			<enumeration value="tramwaj"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajPrzeprawyType">
+		<restriction base="string">
+			<enumeration value="bród"/>
+			<enumeration value="łódź"/>
+			<enumeration value="prom"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajPrzewoduRurowegoType">
+		<restriction base="string">
+			<enumeration value="benzynowy"/>
+			<enumeration value="ciepłowniczy"/>
+			<enumeration value="gazowy"/>
+			<enumeration value="kanalizacji"/>
+			<enumeration value="naftowy"/>
+			<enumeration value="wodociągowy"/>
+			<enumeration value="inny"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajRoslinnosciTerenuRolnegoType">
+		<restriction base="string">
+			<enumeration value="roślinność trawiasta"/>
+			<enumeration value="uprawa na gruntach ornych"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajRoslinnosciTerenuZabudowyType">
+		<restriction base="string">
+			<enumeration value="brak"/>
+			<enumeration value="brak – plac twardy"/>
+			<enumeration value="drzewa"/>
+			<enumeration value="trawa"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajRzekiType">
+		<restriction base="string">
+			<enumeration value="rzeka"/>
+			<enumeration value="strumień, potok lub struga"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajGruntuNieuzytkowanegoType">
+		<restriction base="string">
+			<enumeration value="piarg, usypisko lub rumowisko skalne"/>
+			<enumeration value="teren kamienisty"/>
+			<enumeration value="teren piaszczysty lub żwirowy"/>
+			<enumeration value="pozostałe grunty nieużytkowane"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajTerenuKrzewiastegoType">
+		<restriction base="string">
+			<enumeration value="kosodrzewina"/>
+			<enumeration value="krzewy"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajTerenuLesnegoLubZadrzewionegoType">
+		<restriction base="string">
+			<enumeration value="las"/>
+			<enumeration value="zagajnik"/>
+			<enumeration value="zadrzewienie"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajTerenuNiezabudowanegoType">
+		<restriction base="string">
+			<enumeration value="teren pod urządzeniami technicznymi lub budowlami"/>
+			<enumeration value="teren przemysłowo-składowy"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajOdpadowType">
+		<restriction base="string">
+			<enumeration value="odpady komunalne"/>
+			<enumeration value="odpady przemysłowe"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajTerenuUprawTrwalychType">
+		<restriction base="string">
+			<enumeration value="ogródki działkowe"/>
+			<enumeration value="plantacja"/>
+			<enumeration value="sad"/>
+			<enumeration value="szkółka roślin"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajToruType">
+		<restriction base="string">
+			<enumeration value="tor normalny"/>
+			<enumeration value="tor szeroki"/>
+			<enumeration value="tor wąski"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajTrakcjiType">
+		<restriction base="string">
+			<enumeration value="zelektryfikowana"/>
+			<enumeration value="niezelektryfikowana"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajUmocnieniaType">
+		<restriction base="string">
+			<enumeration value="falochron"/>
+			<enumeration value="ostroga"/>
+			<enumeration value="ściana oporowa"/>
+			<enumeration value="umocnienie brzegu"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajUrzadzeniaTechnicznegoType">
+		<restriction base="string">
+			<enumeration value="myjnia samochodowa"/>
+			<enumeration value="radar lub radiolatarnia"/>
+			<enumeration value="szyb naftowy lub gazowy"/>
+			<enumeration value="transformator"/>
+			<enumeration value="ujęcie wody"/>
+			<enumeration value="zespół dystrybutorów paliwa"/>
+			<enumeration value="zespół transformatorów"/>
+			<enumeration value="zespół urządzeń stacji meteorologicznej"/>
+			<enumeration value="zespół urządzeń terminalu ropy naftowej lub materiałów ropopochodnych"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajUrzadzeniaTransportowegoType">
+		<restriction base="string">
+			<enumeration value="kolej linowa"/>
+			<enumeration value="obrotnica kolejowa"/>
+			<enumeration value="pochylnia"/>
+			<enumeration value="suwnica"/>
+			<enumeration value="taśmociąg"/>
+			<enumeration value="wyciąg narciarski"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajZabudowyType">
+		<restriction base="string">
+			<enumeration value="wielorodzinna"/>
+			<enumeration value="jednorodzinna"/>
+			<enumeration value="przemysłowo-składowa"/>
+			<enumeration value="handlowo-usługowa"/>
+			<enumeration value="pozostała zabudowa"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajZbiornikaTechnicznegoType">
+		<restriction base="string">
+			<enumeration value="osadnik"/>
+			<enumeration value="zbiornik"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajSurowcaType">
+		<restriction base="string">
+			<enumeration value="glina"/>
+			<enumeration value="kamień"/>
+			<enumeration value="piasek"/>
+			<enumeration value="ruda cynku i ołowiu"/>
+			<enumeration value="siarka"/>
+			<enumeration value="torf"/>
+			<enumeration value="żwir"/>
+			<enumeration value="węgiel brunatny"/>
+			<enumeration value="inny"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajZwalowiskaWyrobiskaType">
+		<restriction base="string">
+			<enumeration value="wyrobisko"/>
+			<enumeration value="zwałowisko"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_StatusEksploatacjiType">
+		<restriction base="string">
+			<enumeration value="nieżeglowny"/>
+			<enumeration value="żeglowny"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_PomnikPrzyrodyType">
+		<restriction base="string">
+			<enumeration value="obiekt niebędący pomnikiem przyrody"/>
+			<enumeration value="pomnik przyrody"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajCiaguRuchuPieszegoType">
+		<restriction base="string">
+			<enumeration value="aleja lub pasaż"/>
+			<enumeration value="ścieżka"/>
+			<enumeration value="droga dla rowerów"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajSkrzyzowaniaType">
+		<restriction base="string">
+			<enumeration value="rondo"/>
+			<enumeration value="węzeł drogowy"/>
+		</restriction>
+	</simpleType>
+	<simpleType name="OT_RodzajWyznaniaType">
+		<restriction base="string">
+			<enumeration value="chrześcijańskie"/>
+			<enumeration value="inne"/>
+		</restriction>
+	</simpleType>
+</schema>

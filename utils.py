@@ -8,7 +8,7 @@
                               -------------------
         begin                : 2022-12-23
         git sha              : $Format:%H$
-        copyright            : (C) 2022 by Marcin Lebiecki - Główny Urząd Geodezji i Kartografii
+        copyright            : (C) 2024 by Marcin Lebiecki - Główny Urząd Geodezji i Kartografii
         email                : marcin.lebiecki@gugik.gov.pl
  ***************************************************************************/
 
@@ -152,7 +152,7 @@ def adjaMinus2cmBufor(layer):
             powiat_z_PRG.dataProvider().addFeatures([obj])
             break
     bufor = processing.run("native:buffer", {
-        'INPUT':powiat_z_PRG, 
+        'INPUT':powiat_z_PRG,
         'DISTANCE': -0.02,
         'SEGMENTS': 10,
         'DISSOLVE': True,
@@ -215,7 +215,7 @@ def minimalnaPTTRronda(layer):
 
 
 def minimalnaPowierzchniaBezWod(layer):
-    global obiektyZbledami # przekazanie do funkcji powyżej
+    global obiektyZbledami
     obiektyZbledami = []
     minPowWarstwy = {"OT_PTGN_A":1000, "OT_PTLZ_A":500, "OT_PTRK_A":1000, "OT_PTTR_A":500}
     klasa = layer.name()[-9:]
@@ -499,36 +499,68 @@ def czyObiektyWewnatrzPowiatu(layer, teryt):
     for requestFeature in requestFeatures:
         granica_powiatu_z_PRG.dataProvider().addFeatures([requestFeature])
         break
-    try:
-       bufor = processing.run("native:buffer", {
+    invalid_layer = processing.run("qgis:checkvalidity", {
+        'INPUT_LAYER': layer,
+        'METHOD': 0, 
+        'IGNORE_RING_SELF_INTERSECTION': True,
+        'VALID_OUTPUT': 'memory:',
+        'INVALID_OUTPUT': 'memory:',
+        'ERROR_OUTPUT': 'memory:'
+    })
+    # zawiera warstwę z niepoprawnymi geometriami
+    if invalid_layer['INVALID_OUTPUT']:
+              # Wykonanie naprawy geometrii
+              naprawiona = processing.run("native:fixgeometries", {
+                  'INPUT': layer,
+                  'OUTPUT': 'memory:'
+              })
+              layer = naprawiona['OUTPUT']
+    bufor = processing.run("native:buffer", {
            'INPUT': granica_powiatu_z_PRG,
            'DISTANCE': 0.02,
            'SEGMENTS': 10,
            'DISSOLVE': True,
            'OUTPUT': 'memory:'
        })
-       roznica = processing.run("qgis:difference", {
-           'INPUT': layer,
-           'OVERLAY': bufor['OUTPUT'],
-           'OUTPUT': 'memory:'
-       })
-       pojedynczeObiekty = processing.run("native:multiparttosingleparts", {
-           'INPUT': roznica['OUTPUT'],
-           'OUTPUT': 'memory:'
-       })
-       if pojedynczeObiekty['OUTPUT'].featureCount() > 0:
-           czyDodacGranice = True
-           for lyr in QgsProject.instance().mapLayers().values():
-               if lyr.name() == "granica powiatu z PRG":
-                   czyDodacGranice = False
-           if czyDodacGranice:
-               QgsProject.instance().addMapLayer(granica_powiatu_z_PRG)
-       
-           for obj in pojedynczeObiekty['OUTPUT'].getFeatures():
-               obiektyZbledami.append(obj)
-       return obiektyZbledami
-    except:
-       return[]
+    # przeliczanie bufora na linie
+    buforLinie = processing.run("native:polygonstolines", {
+        'INPUT': bufor['OUTPUT'], 
+        'OUTPUT':'TEMPORARY_OUTPUT'
+        })["OUTPUT"]
+    liniePrzecinajace =  processing.run('native:extractbylocation',{
+        'INPUT': layer,
+        'INTERSECT': buforLinie,
+        'PREDICATE': [0],  # przecinają się
+        'OUTPUT': 'memory:'
+        })
+    liniePrzecinajacePojedyncze = processing.run('native:multiparttosingleparts', {
+        'INPUT': liniePrzecinajace['OUTPUT'],
+        'OUTPUT': 'memory:'
+        })
+    # wydobycie rozłącznych obiektów
+    rozlaczne = processing.run('native:extractbylocation',{
+        'INPUT': layer,
+        'INTERSECT': bufor['OUTPUT'],
+        'PREDICATE': [2],  # jest rozłączne
+        'OUTPUT': 'memory:'
+        })
+    rozlacznePojedyncze = processing.run('native:multiparttosingleparts', {
+        'INPUT': rozlaczne['OUTPUT'],
+        'OUTPUT': 'memory:'
+        })
+    if liniePrzecinajacePojedyncze['OUTPUT'].featureCount() > 0 or rozlacznePojedyncze['OUTPUT'].featureCount() > 0:
+        czyDodacGranice = True
+        for lyr in QgsProject.instance().mapLayers().values():
+            if lyr.name() == "granica powiatu z PRG":
+                czyDodacGranice = False
+        if czyDodacGranice:
+            QgsProject.instance().addMapLayer(granica_powiatu_z_PRG)
+        for obj in liniePrzecinajacePojedyncze['OUTPUT'].getFeatures():
+            obiektyZbledami.append(obj)
+        
+        for obj in rozlacznePojedyncze['OUTPUT'].getFeatures():
+            obiektyZbledami.append(obj)
+    return obiektyZbledami
 
 
 def czyOdleglosciMiedzyPoziomicami2m(layer):
@@ -634,6 +666,8 @@ def nadmiernaSegmentacja(layer):
 
 
 def nadmiernaSegmentacja_rtwl(layer):
+    obiekty_z_bledami = []
+    
     poziomice = processing.run("qgis:extractbyexpression", {
         'INPUT': layer,
         'EXPRESSION': '"rodzaj" = \'poziomica\' and "kodKarto10k" != \'\'',
@@ -642,7 +676,6 @@ def nadmiernaSegmentacja_rtwl(layer):
     })
     
     id_to_feature = {feature.id(): feature for feature in poziomice['OUTPUT'].getFeatures()} # Tworzenie słownika mapującego ID obiektu na obiekt
-    obiekty_z_bledami = []
     hash_to_ids = {}
     spatial_index = QgsSpatialIndex(poziomice['OUTPUT'].getFeatures(), flags=QgsSpatialIndex.FlagStoreFeatureGeometries)
     
@@ -710,6 +743,7 @@ def przewerteksowanie(layer):
 
 def przecieciaLiniiNapieciaPodziemna(layer):
     obiekty_z_bledami = []
+    
     OT_SULN_L_layer = None
     OT_BUWT_P_layer = None
     if layer.name()[-6:] == 'SULN_L':
@@ -729,7 +763,7 @@ def przecieciaLiniiNapieciaPodziemna(layer):
         new_geom = QgsGeometry.fromPolylineXY(analysis_points)
         kodkarto = OT_SULN_L_feature['kodKarto10k']
         rodzaj = OT_SULN_L_feature['rodzaj']
-        if kodkarto == '0010_444' and rodzaj in ['linia elektroenergetyczna najwyższego napięcia', 'linia elektroenergetyczna wysokiego napięcia', 'linia elektroenergetyczna średniego napięcia']:
+        if kodkarto == '0010_444' and rodzaj in ['linia elektroenergetyczna najwyższego napięcia', 'linia elektroenergetyczna wysokiego napięcia']:
             ids = index.intersects(new_geom.boundingBox()) # intersekcja z obiektem
             intersects = False
             for id in ids:
@@ -738,12 +772,16 @@ def przecieciaLiniiNapieciaPodziemna(layer):
                     intersects = True
                     obiekty_z_bledami.append(OT_SULN_L_feature)
                     identyfikatory_bledow.add(OT_SULN_L_feature.id())
+        if rodzaj == 'linia elektroenergetyczna średniego napięcia' and kodkarto != '0010_444':
+                 obiekty_z_bledami.append(OT_SULN_L_feature)
+                 identyfikatory_bledow.add(OT_SULN_L_feature.id())
     
     return obiekty_z_bledami
 
 
 def przecieciaLiniiNapieciaNadziemna(layer):
     obiekty_z_bledami = []
+    
     OT_SULN_L_layer = None
     OT_BUWT_P_layer = None
     if layer.name()[-6:] == 'SULN_L':
@@ -763,21 +801,24 @@ def przecieciaLiniiNapieciaNadziemna(layer):
         new_geom = QgsGeometry.fromPolylineXY(analysis_points)
         kodkarto = OT_SULN_L_feature['kodKarto10k']
         rodzaj = OT_SULN_L_feature['rodzaj']
-        if kodkarto == '0010_446' and rodzaj not in ['linia elektroenergetyczna najwyższego napięcia', 'linia elektroenergetyczna wysokiego napięcia']:
+        if kodkarto == '0010_446' and rodzaj in ['linia elektroenergetyczna najwyższego napięcia', 'linia elektroenergetyczna wysokiego napięcia']:
             ids = index.intersects(new_geom.boundingBox()) # intersekcja z obiektem
             intersects = False
             for id in ids:
                 other_feat = OT_BUWT_P_layer.getFeature(id)
-                if not new_geom.intersects(other_feat.geometry()) and other_feat['rodzaj'] == 'słup energetyczny' and OT_SULN_L_feature.id() not in identyfikatory_bledow:
+                if new_geom.intersects(other_feat.geometry()) and other_feat['rodzaj'] == 'słup energetyczny':
                     intersects = True
-                    obiekty_z_bledami.append(OT_SULN_L_feature)
-                    identyfikatory_bledow.add(OT_SULN_L_feature.id())
+                    break
+            if not intersects and OT_SULN_L_feature.id() not in identyfikatory_bledow:
+                obiekty_z_bledami.append(OT_SULN_L_feature)
+                identyfikatory_bledow.add(OT_SULN_L_feature.id())
     
     return obiekty_z_bledami
 
 
 def kontrola_OT_ADMS_P_z_OT_ADMS_A(layer):
     obiekty_z_bledami = []
+    
     OT_ADMS_A_layer = None
     OT_ADMS_P_layer = None
     if layer.name()[-6:] == 'ADMS_P':
@@ -814,6 +855,7 @@ def kontrola_OT_ADMS_P_z_OT_ADMS_A(layer):
 
 def kontrolaTERCpunkt(layer):
     obiektyZbledami = []
+    
     adms = None
     adja = None
     if layer.name()[-6:] == 'ADMS_P':
@@ -853,6 +895,7 @@ def kontrolaTERCpunkt(layer):
 
 def kontrolaTERCpowierzchnia(layer):
     obiektyZbledami = []
+    
     adms = None
     adja = None
     if layer.name()[-6:] == 'ADMS_A':
@@ -867,7 +910,7 @@ def kontrolaTERCpowierzchnia(layer):
     # Sprawdzenie, czy jsą warstwy
     if adms and adja:
         # Iteruj przez warstwy
-        expression = """ "rodzaj" = 'gmina' """ 
+        expression = """ "rodzaj" = 'gmina' """
         # Wykonaj selekcję na ADJA_A
         adja.selectByExpression(expression, QgsVectorLayer.SetSelection)
         selected = adja.selectedFeatures()
@@ -893,6 +936,7 @@ def kontrolaTERCpowierzchnia(layer):
 
 def fullCoverage(layer):
     obiektyZbledami = []
+    
     adja = None
     wszystkieObiektyZPokrycia = QgsVectorLayer("Polygon?crs=epsg:" + str(2180), "Wszystkie obiekty z pokrycia", "memory")
     pokrycie = []
@@ -1007,6 +1051,7 @@ def fullCoverage(layer):
 
 def jednostkaEwidencyjnaFullCoverage(layer):
     obiektyZbledami = []
+    
     wszystkieJednostkiEwidencyjne = QgsVectorLayer("Polygon?crs=epsg:" + str(4326), "Wszystkie jednostki ewidencyjne", "memory")
     warstwy = []
     for layer_id, lyr in QgsProject.instance().mapLayers().items():
@@ -1112,7 +1157,7 @@ def jednostkaEwidencyjnaFullCoverage(layer):
 
 
 def boundaryPTWP(layer):
-    try: 
+    try:
         obiektyZbledami = []
         ptwp = None
         if layer.name().__contains__('RTLW_L'):
@@ -1157,6 +1202,7 @@ def boundaryPTWP(layer):
 
 def boundaryPTWP_poziomica(layer):
     obiektyZbledami = []
+    
     try:
         ptwp = None
         if layer.name().__contains__('RTLW_L'):
@@ -1197,8 +1243,10 @@ def boundaryPTWP_poziomica(layer):
         pass
     return obiektyZbledami
 
+
 def kontrolaZdublowaniaAtrybutuFunkcjaSzczegolowaBudynku(layer):
     obiektyZbledami = []
+    
     idenBledow = set()
     for feature in layer.getFeatures():
         funkcje_szczegolowe = feature['funkcjaSzczegolowaBudynku'] 
@@ -1216,8 +1264,10 @@ def kontrolaZdublowaniaAtrybutuFunkcjaSzczegolowaBudynku(layer):
                 idenBledow.add(feature.id())
     return obiektyZbledami
 
+
 def kontrolaZgodnosciFunkcjaSzczegolowaBudynkuZprzewazajacaFunkcjaBudynku(layer):
     obiektyZbledami = []
+    
     idenBledow = set()
     for feature in layer.getFeatures():
         funkcje_szczegolowe = feature['funkcjaSzczegolowaBudynku'] 
@@ -1231,6 +1281,7 @@ def kontrolaZgodnosciFunkcjaSzczegolowaBudynkuZprzewazajacaFunkcjaBudynku(layer)
 
 def KontrolaAtrybutuKlasouzytek(layer, plikGML):
     obiektyZbledami = []
+    
     plikGML = plikGML.getroot()
     ns = {'gml': 'http://www.opengis.net/gml/3.2', 'egb': 'ewidencjaGruntowIBudynkow:1.0'}
     
@@ -1418,6 +1469,7 @@ def miastoWiesCzyNakladajaSie(layer):
 
 def sprawdzLokalnyId(layer):
     obiektyZbledami = []
+    
     if layer.name()[-6:] in ['RTLW_L', 'RTPW_P']:
         # funkcja nie wykona się dla warstw z rzeźbą terenu
         return obiektyZbledami
@@ -1439,6 +1491,7 @@ def sprawdzLokalnyId(layer):
 
 def sprawdzPrzestrzenNazw(layer):
     obiektyZbledami = []
+    
     if layer.name()[-6:] in ['RTLW_L', 'RTPW_P']:
         # funkcja nie wykona się dla warstw z rzeźbą terenu
         return obiektyZbledami
@@ -1489,6 +1542,7 @@ def sprawdzPrzestrzenNazw(layer):
 
 def sprawdzWersja(layer):
     obiektyZbledami = []
+    
     if layer.name()[-6:] in ['RTLW_L', 'RTPW_P']:
         # funkcja nie wykona się dla warstw z rzeźbą terenu
         return obiektyZbledami
@@ -1538,6 +1592,7 @@ def sprawdzPoczatekWersjiObiektu(layer):
 
 def przestrzenNazw(layer,teryt):
     obiektyZbledami = []
+    
     slownik = {
     '02': '337',  # dolnośląskie
     '04': '994',  # kujawsko-pomrskie
@@ -1585,6 +1640,7 @@ def przestrzenNazw(layer,teryt):
 
 def zapisWspolrzednych(layer, plikGML):
     obiektyZbledami = []
+    
     pattern = re.compile(r"[0-9]{6}\.[0-9]{3,}")
     plikGML = plikGML.getroot()
     otklasa = f'.//ot:{layer.name()[-9:]}'
@@ -1619,6 +1675,7 @@ def zapisWspolrzednych(layer, plikGML):
 
 def minDlugoscOIPR(layer):
     obiektyZbledami = []
+    
     if layer.name()[-6:] == 'OIPR_L':
         OIPR_L_layer = QgsProject().instance().mapLayersByName(layer.name())[0]
     granica = adjaMinus2cmBufor(layer)
@@ -1636,6 +1693,7 @@ def minDlugoscOIPR(layer):
 
 def minDlugoscBUUO(layer):
     obiektyZbledami = []
+    
     if layer.name()[-6:] == 'BUUO_L':
         BUUO_L_layer = QgsProject().instance().mapLayersByName(layer.name())[0]
     granica = adjaMinus2cmBufor(layer)
@@ -1653,6 +1711,7 @@ def minDlugoscBUUO(layer):
 
 def minDlugoscSUPRnaKUPG(layer):
     obiektyZbledami = []
+    
     if layer.name()[-6:] == 'SUPR_L':
         KUPG_A_layer = QgsProject().instance().mapLayersByName(layer.name().replace("OT_SUPR_L","OT_KUPG_A"))[0]
         SUPR_L_layer = QgsProject().instance().mapLayersByName(layer.name())[0]
@@ -1684,6 +1743,7 @@ def minDlugoscSUPRnaKUPG(layer):
 
 def kontrolaZgodnosciIdentyfikatoraUlicyZNazwa(layer, plikcsv):
     obiektyZbledami = []
+    
     global loaded_csv_data
     
     if loaded_csv_data is None:
@@ -1707,10 +1767,7 @@ def kontrolaZgodnosciIdentyfikatoraUlicyZNazwa(layer, plikcsv):
                 nazwa2 = f.attribute('placNazwa2')
             except:
                 nazwa2 = 'NULL'
-            try:
-                cecha = f.attribute('placCecha')
-            except:
-                cecha = 'NULL'
+            cecha = f.attribute('placCecha')
             t = 'placCecha:' + cecha + ',placNazwa1:' + nazwa1 + ',placNazwa2:' + nazwa2
         else:
             nazwa1 = str(f.attribute('ulicaNazwa1'))
@@ -1875,6 +1932,7 @@ def mgrExpression(layer, gml, sqltxt):
 
 def numerPodloza(layer, plikGML):
     obiektyZbledami = []
+    
     idenBledow = set()
     plikGML = plikGML.getroot()
     ns = {'gml': 'http://www.opengis.net/gml/3.2', 'gr': 'urn:gugik:specyfikacje:gmlas:mapaGlebowoRolnicza:1.0'}
@@ -1899,6 +1957,7 @@ def numerPodloza(layer, plikGML):
 
 def miazszoscPodloza(layer, plikGML):
     obiektyZbledami = []
+    
     idenBledow = set()
     plikGML = plikGML.getroot()
     ns = {'gml': 'http://www.opengis.net/gml/3.2', 'gr': 'urn:gugik:specyfikacje:gmlas:mapaGlebowoRolnicza:1.0'}
@@ -1948,6 +2007,7 @@ def miazszoscPodloza(layer, plikGML):
 
 def podlozeKompleks(layer, plikGML):
     obiektyZbledami = []
+    
     idenBledow = set()
     plikGML = plikGML.getroot()
     ns = {'gml': 'http://www.opengis.net/gml/3.2', 'gr': 'urn:gugik:specyfikacje:gmlas:mapaGlebowoRolnicza:1.0'}
@@ -2266,6 +2326,7 @@ def kompletnoscObiektowBDOT10k(layer, plikGMLzrodlowy, plikGML):
 
 def kontrolaZmianAtrybutowWzgledemWersji(layer, plikGMLzrodlowy, plikGML):
     obiektyZbledami = set()
+    
     parser = etree.XMLParser(remove_blank_text=True)
     k = lxml.etree.parse(plikGML, parser).getroot()
     z = lxml.etree.parse(plikGMLzrodlowy, parser).getroot()
@@ -2417,6 +2478,7 @@ def kontrolaZgodnosciZDanymiPRNG(layer, plik_prng, klasa):
 def kontrolaZgodnosciZDanymiGDOS(layer, tc_zip, klasa):
     global tereny_chronione_zip
     obiektyZbledami = []
+    
     klasaPliki = {'OT_TCPN_A':['ParkiNarodowePolygon.shp'],
                  'OT_TCPK_A':['ParkiKrajobrazowePolygon.shp'],
                  'OT_TCRZ_A':['RezerwatyPolygon.shp'],
@@ -2709,6 +2771,7 @@ def kodKarto10kNULL(layer):
 
 def blednePolozeniePktWys(layer):
     obiektyZbledami = []
+    
     try:
         bubda = None
         buzta = None
@@ -2780,7 +2843,7 @@ def blednePolozeniePktWys(layer):
                     'OUTPUT': 'memory:'
                 })
                 extractbylocation = processing.run("native:extractbylocation", {
-                    'INPUT': layer,#extractbyexpression['OUTPUT'],
+                    'INPUT': layer,
                     'INTERSECT': pojedynczeBUBDA['OUTPUT'],
                     'PREDICATE': [0],
                     'OUTPUT': 'memory:'
@@ -2931,6 +2994,148 @@ def blednePolozeniePktWys(layer):
     return obiektyZbledami
 
 
+def kontrolaKodKarto10k219_1(layer):
+    try:
+        obiektyZbledami = []
+        
+        if not layer.isValid():
+            return []
+        
+        # Wyszukiwanie warstwy OT_SKTR_L
+        sktr_layer_name = layer.name().replace("OT_BUIN_L", "OT_SKTR_L")
+        sktr_layers = QgsProject.instance().mapLayersByName(sktr_layer_name)
+        
+        if not sktr_layers:
+            return []
+        
+        sktr = sktr_layers[0]  # Przypisanie warstwy OT_SKTR_L
+        # Wyodrębnienie obiektów spełniających warunki w warstwie OT_BUIN_L
+        extract_params = {
+            'INPUT': layer,
+            'EXPRESSION': '"kodKarto10k" = \'0010_219_1\'',
+            'OUTPUT': 'memory:'
+        }
+        extract_result = processing.run("qgis:extractbyexpression", extract_params)
+        filtered_layer = extract_result['OUTPUT']
+        
+        for obj in filtered_layer.getFeatures():
+            if obj['rodzaj'] not in ['tunel']:
+                obiektyZbledami.append(obj)
+                
+        # Tworzenie indeksów przestrzennych dla obu warstw
+        index_buin = QgsSpatialIndex(layer.getFeatures())
+        index_sktr = QgsSpatialIndex(sktr.getFeatures())
+        
+        # Granica powiatu z buforem
+        granica = adjaMinus2cmBufor(layer)
+        
+        distance_threshold = 10  # Wartość progowa w metrach
+        # Przetwarzanie wyodrębnionych obiektów
+        for obj in filtered_layer.getFeatures():
+            try:
+                if obj.geometry().length() < 25:
+                    touches_boundary = any(obj.geometry().intersects(boundary.geometry()) for boundary in granica.getFeatures())
+                    if not touches_boundary:
+                        obiektyZbledami.append(obj)
+                        continue  # Do dalszej analizy
+                        
+                # Znajdowanie obiektów SKTR w pobliżu obiektu BUIN_L
+                nearby_sktr_ids = index_sktr.nearestNeighbor(obj.geometry().centroid(), 10)
+                found_valid_sktr = False
+                
+                for sktr_id in nearby_sktr_ids:
+                    sktr_obj = sktr.getFeature(sktr_id)
+                    distance = obj.geometry().distance(sktr_obj.geometry())
+                    
+                    # Odległość progowa i atrybut "polozenie"
+                    if distance < distance_threshold:
+                        if sktr_obj['polozenie'] not in [None, 'na powierzchni gruntu', 'pod powierzchnią gruntu']:
+                            found_valid_sktr = True
+                            break
+                        
+                if not found_valid_sktr:
+                    obiektyZbledami.append(obj)
+                    
+            except Exception as e:
+                pass
+        
+        return obiektyZbledami
+    
+    except Exception:
+        return []
+
+
+def kontrolaKodKarto10k219_2(layer):
+    try:
+        obiektyZbledami = []
+        
+    
+        if not layer.isValid():
+            return []
+        
+        # Wyszukiwanie warstwy OT_SKTR_L
+        sktr_layer_name = layer.name().replace("OT_BUIN_L", "OT_SKTR_L")
+        sktr_layers = QgsProject.instance().mapLayersByName(sktr_layer_name)
+        
+        if not sktr_layers:
+            return []
+        
+        sktr = sktr_layers[0]  # Przypisanie warstwy OT_SKTR_L
+        # Wyodrębnienie obiektów spełniających warunki w warstwie OT_BUIN_L
+        extract_params = {
+            'INPUT': layer,
+            'EXPRESSION': '"kodKarto10k" = \'0010_219_2\'',
+            'OUTPUT': 'memory:'
+        }
+        extract_result = processing.run("qgis:extractbyexpression", extract_params)
+        filtered_layer = extract_result['OUTPUT']
+        
+        for obj in filtered_layer.getFeatures():
+            if obj['rodzaj'] not in ['tunel']:
+                obiektyZbledami.append(obj)
+                
+        # Tworzenie indeksów przestrzennych dla obu warstw
+        index_buin = QgsSpatialIndex(layer.getFeatures())
+        index_sktr = QgsSpatialIndex(sktr.getFeatures())
+        
+        # Granica powiatu z buforem
+        granica = adjaMinus2cmBufor(layer)
+        
+        distance_threshold = 10  # Wartość progowa w metrach
+        # Przetwarzanie wyodrębnionych obiektów
+        for obj in filtered_layer.getFeatures():
+            try:
+                if obj.geometry().length() >= 25:
+                    touches_boundary = any(obj.geometry().intersects(boundary.geometry()) for boundary in granica.getFeatures())
+                    if not touches_boundary:
+                        obiektyZbledami.append(obj)
+                        continue  # Do dalszej analizy
+                        
+                # Znajdowanie obiektów SKTR w pobliżu obiektu BUIN_L
+                nearby_sktr_ids = index_sktr.nearestNeighbor(obj.geometry().centroid(), 25)
+                found_valid_sktr = False
+                
+                for sktr_id in nearby_sktr_ids:
+                    sktr_obj = sktr.getFeature(sktr_id)
+                    distance = obj.geometry().distance(sktr_obj.geometry())
+                    
+                    # Odległość progowa i atrybut "polozenie"
+                    if distance < distance_threshold:
+                        if sktr_obj['polozenie'] not in [None, 'na powierzchni gruntu', 'pod powierzchnią gruntu']:
+                            found_valid_sktr = True
+                            break
+                        
+                if not found_valid_sktr:
+                    obiektyZbledami.append(obj)
+                    
+            except Exception as e:
+                pass
+        return obiektyZbledami
+    
+    except Exception:
+        return []
+
+
 def kontrolaKodKarto10k220_1(layer):
     try:
         obiektyZbledami = []
@@ -3076,7 +3281,7 @@ def kontrolaKodKarto10k220_2(layer):
                         if sktr_obj['polozenie'] not in (None, 'na powierzchni gruntu'):
                             found_valid_sktr = True
                             break
-                        
+                
                 if not found_valid_sktr:
                     obiektyZbledami.append(obj)
                     
@@ -3087,6 +3292,232 @@ def kontrolaKodKarto10k220_2(layer):
         return obiektyZbledami
     
     except Exception as e:
+        return []
+
+
+def kontrolaKodKarto10k131_1(layer):
+    try:
+        obiektyZbledami = []
+        
+        if not layer.isValid():
+            return []
+        
+        # Wyszukiwanie warstw OT_SKTR_L i OT_SKJZ_L
+        skjz_layer_name = layer.name().replace("OT_BUIN_L", "OT_SKJZ_L")
+        sktr_layer_name = layer.name().replace("OT_BUIN_L", "OT_SKTR_L")
+        skjz_layers = QgsProject.instance().mapLayersByName(skjz_layer_name)
+        sktr_layers = QgsProject.instance().mapLayersByName(sktr_layer_name)
+       
+        if not skjz_layers or not sktr_layers:
+           return []
+       
+        skjz = skjz_layers[0]
+        sktr = sktr_layers[0]
+       
+        # Tworzenie indeksów przestrzennych dla warstw BUIN_L i SKJZ
+        index_buin = QgsSpatialIndex(layer.getFeatures())
+        index_skjz = QgsSpatialIndex(skjz.getFeatures())
+        index_sktr = QgsSpatialIndex(sktr_layer.getFeatures())
+       
+        extract_params = {
+            'INPUT': layer,
+            'EXPRESSION': '"kodKarto10k" = \'0010_131_1\'',
+            'OUTPUT': 'memory:'
+        }
+        extract_result = processing.run("qgis:extractbyexpression", extract_params)
+        filtered_layer = extract_result['OUTPUT']
+        for obj in filtered_layer.getFeatures():
+            if obj['rodzaj'] not in ['tunel']:
+                obiektyZbledami.append(obj)
+       
+             
+        granica = adjaMinus2cmBufor(layer)
+         
+        distance_threshold = 10  # Wartość progowa w metrach
+        
+        for obj in filtered_layer.getFeatures():
+            try:
+                touches_boundary = False
+                nearby_skjz_ids = []
+                nearby_sktr_ids = []
+                
+                # Znajdowanie obiektów SKJZ w pobliżu obiektu BUIN_L
+                nearby_skjz_ids = index_skjz.nearestNeighbor(obj.geometry().centroid(), 10)
+                nearby_skjz = [skjz.getFeature(skjz_id) for skjz_id in nearby_skjz_ids 
+                               if obj.geometry().distance(skjz.getFeature(skjz_id).geometry()) < distance_threshold]
+                
+                # Znajdowanie obiektów SKTR w pobliżu obiektu BUIN_L (jeśli warstwa istnieje)
+                if sktr_layers:
+                    nearby_sktr_ids = index_sktr.nearestNeighbor(obj.geometry().centroid(), 10)
+                    nearby_sktr = [sktr_layer.getFeature(sktr_id) for sktr_id in nearby_sktr_ids 
+                                   if obj.geometry().distance(sktr_layer.getFeature(sktr_id).geometry()) < distance_threshold]
+                else:
+                    nearby_sktr = []
+                    
+                # 1. Jeśli BUIN_L spotyka tylko SKJZ i ma długość >= 10, jest pozytywny
+                if len(nearby_skjz) > 0 and len(nearby_sktr) == 0:
+                    if obj.geometry().length() >= 10:
+                        continue
+                    
+                # 2. Jeśli BUIN_L spotyka tylko SKTR i nie spotyka SKJZ, jest to błąd
+                if len(nearby_sktr) > 0 and len(nearby_skjz) == 0:
+                    obiektyZbledami.append(obj)
+                    continue
+                
+                # Analiza pozostałych przypadków
+                found_invalid_skjz = False
+                found_non_surface_skjz = False
+                all_skjz_on_surface = True
+                found_skjz = False
+                found_sktr = False
+                
+                if obj.geometry().length() < 25:
+                    touches_boundary = any(obj.geometry().intersects(boundary.geometry()) for boundary in granica.getFeatures())
+                    if not touches_boundary:
+                        obiektyZbledami.append(obj)
+                        continue
+                    
+                for skjz_obj in nearby_skjz:
+                    found_skjz = True
+                    if skjz_obj['polozenie'] is None:
+                        found_invalid_skjz = True
+                        break
+                    elif skjz_obj['polozenie'] not in ['pod powierzchnią gruntu',  'na powierzchni gruntu']:
+                        found_non_surface_skjz = True
+                        all_skjz_on_surface = False
+                        
+                if found_invalid_skjz:
+                    obiektyZbledami.append(obj)
+                    continue
+                
+                if all_skjz_on_surface and not found_non_surface_skjz:
+                    obiektyZbledami.append(obj)
+                    continue
+                
+                for sktr_obj in nearby_sktr:
+                    found_sktr = True
+                    if sktr_obj['polozenie'] not in ['pod powierzchnią gruntu',  'na powierzchni gruntu']:
+                        obiektyZbledami.append(obj)
+                        break
+                    
+                if found_sktr and not found_skjz:
+                    obiektyZbledami.append(obj)
+                
+            except Exception as e:
+                pass
+        
+        return obiektyZbledami
+    
+    except Exception:
+        return []
+
+
+def kontrolaKodKarto10k131_2(layer):
+    try:
+        obiektyZbledami = []
+        
+        if not layer.isValid():
+            return []
+        
+        # Wyszukiwanie warstw OT_SKTR_L i OT_SKJZ_L
+        skjz_layer_name = layer.name().replace("OT_BUIN_L", "OT_SKJZ_L")
+        sktr_layer_name = layer.name().replace("OT_BUIN_L", "OT_SKTR_L")
+        skjz_layers = QgsProject.instance().mapLayersByName(skjz_layer_name)
+        sktr_layers = QgsProject.instance().mapLayersByName(sktr_layer_name)
+        
+        if not skjz_layers or not sktr_layers:
+            return []
+        
+        skjz = skjz_layers[0]
+        sktr = sktr_layers[0]
+        
+        # Tworzenie indeksów przestrzennych dla warstw BUIN_L i SKJZ
+        index_buin = QgsSpatialIndex(layer.getFeatures())
+        index_skjz = QgsSpatialIndex(skjz.getFeatures())
+        index_sktr = QgsSpatialIndex(sktr_layer.getFeatures())
+        
+        extract_params = {
+            'INPUT': layer,
+            'EXPRESSION': '"kodKarto10k" = \'0010_131_2\'',
+            'OUTPUT': 'memory:'
+        }
+        
+        extract_result = processing.run("qgis:extractbyexpression", extract_params)
+        filtered_layer = extract_result['OUTPUT']
+        for obj in filtered_layer.getFeatures():
+            if obj['rodzaj'] not in ['tunel']:
+                obiektyZbledami.append(obj)
+        
+        if not sktr_layers:
+            return []
+        
+        granica = adjaMinus2cmBufor(layer)
+        
+        distance_threshold = 10  # Wartość progowa w metrach
+        
+        for obj in filtered_layer.getFeatures():
+            try:
+                touches_boundary = False
+                obj_length = obj.geometry().length()
+                obj_centroid = obj.geometry().centroid()
+                
+                # Inicjalizacja list dla obiektów w zasięgu 25 metrów
+                nearby_skjz_ids = []
+                nearby_sktr_ids = []
+                
+                # Sprawdzanie sąsiedztwa z SKJZ
+                for skjz_obj in skjz.getFeatures():
+                    if obj_centroid.distance(skjz_obj.geometry().centroid()) <= distance_threshold:
+                        nearby_skjz_ids.append(skjz_obj.id())
+                        
+                # Sprawdzanie sąsiedztwa z SKTR
+                for sktr_obj in sktr.getFeatures():
+                    if obj_centroid.distance(sktr_obj.geometry().centroid()) <= distance_threshold:
+                        nearby_sktr_ids.append(sktr_obj.id())
+                        
+                # Jeśli BUIN_L ma tylko SKJZ w sąsiedztwie i jego długość jest mniejsza od 25
+                if len(nearby_skjz_ids) > 0 and len(nearby_sktr_ids) == 0:
+                    if  obj_length < 10:
+                        continue
+                    
+                    # Analiza długości obiektu w innych przypadkach
+                    elif obj_length >= 10:
+                        obiektyZbledami.append(obj)
+                        continue
+                    
+                    if obj_length < 10:
+                        found_invalid_skjz = False
+                        for skjz_obj in skjz.getFeatures():
+                            if obj.geometry().distance(skjz_obj.geometry()) < distance_threshold:
+                                if skjz_obj['polozenie'] is None or skjz_obj['polozenie'] in ['pod powierzchnią gruntu', 'na powierzchni gruntu']:
+                                    found_invalid_skjz = True
+                                    break
+                        if found_invalid_skjz:
+                            obiektyZbledami.append(obj)
+                            
+                # Dodanie warunku, kiedy BUIN_L ma w sąsiedztwie tylko SKTR, a nie ma SKJZ
+                elif len(nearby_sktr_ids) > 0 and len(nearby_skjz_ids) == 0:
+                    obiektyZbledami.append(obj)
+                    
+                # Jeśli obiekt ma zarówno SKJZ, jak i SKTR w pobliżu, przeprowadzamy dodatkową analizę
+                else:
+                    found_intersection = False
+                    for sktr_obj in sktr.getFeatures():
+                        if obj.geometry().distance(sktr_obj.geometry()) < distance_threshold:
+                            polozenie = sktr_obj['polozenie']
+                            if polozenie is None or polozenie.strip().lower() not in ['pod powierzchnią gruntu', 'na powierzchni gruntu']:
+                                obiektyZbledami.append(obj)
+                                found_intersection = True
+                                break
+                    if found_intersection:
+                        obiektyZbledami.append(obj)
+                        
+            except Exception:
+                pass
+        
+        return obiektyZbledami
+        
+    except Exception:
         return []
 
 
@@ -3320,78 +3751,141 @@ def kontrolaKodKarto10k133_2(layer):
                         
             except Exception:
                 pass
-                
+            
         return obiektyZbledami
     
     except Exception:
         return []
 
 
+def kontrolaKodKarto10k134_1(layer):
+     try:
+         obiektyZbledami = []
+         granica = adjaMinus2cmBufor(layer)
+         for obj in layer.getFeatures():
+             try:
+                 if obj["kodKarto10k"] == '0010_134_1':
+                     if obj['rodzaj'] != 'kładka':
+                         obiektyZbledami.append(obj)
+                     geom = obj.geometry()
+                     touches_boundary = any(geom.intersects(boundary.geometry()) for boundary in granica.getFeatures())
+                     if not touches_boundary:
+                         if not (geom.length() >= 10):
+                             obiektyZbledami.append(obj)
+             except Exception:
+                  pass
+         return obiektyZbledami
+     
+     except Exception:
+         return []
+
+
+def kontrolaKodKarto10k134_2(layer):
+     try:
+         obiektyZbledami = []
+         granica = adjaMinus2cmBufor(layer)
+         for obj in layer.getFeatures():
+             try:
+                 if obj["kodKarto10k"] == '0010_134_2':
+                     if obj['rodzaj'] != 'kładka':
+                         obiektyZbledami.append(obj)
+                     geom = obj.geometry()
+                     touches_boundary = any(obj.geometry().intersects(boundary.geometry()) for boundary in granica.getFeatures())
+                     if not touches_boundary:
+                         if geom.length() < 3 or geom.length() > 10:
+                             obiektyZbledami.append(obj)
+             except Exception:
+                 pass
+         return obiektyZbledami
+     
+     except Exception:
+         return []
+
+
+def kontrolaKodKarto10k638_1(layer):
+     try:
+         obiektyZbledami = []
+         granica = adjaMinus2cmBufor(layer)
+         for obj in layer.getFeatures():
+             try:
+                 if obj["kodKarto10k"] == '0010_638_1':
+                     if obj['rodzaj'] != 'akwedukt':
+                         obiektyZbledami.append(obj)
+                     geom = obj.geometry()
+                     touches_boundary = any(obj.geometry().intersects(boundary.geometry()) for boundary in granica.getFeatures())
+                     if not touches_boundary:
+                         if not (geom.length() >= 10):
+                             obiektyZbledami.append(obj)
+             except Exception:
+                  pass
+         return obiektyZbledami
+     
+     except Exception:
+         return []
+
+
+def kontrolaKodKarto10k638_2(layer):
+     try:
+         obiektyZbledami = []
+         granica = adjaMinus2cmBufor(layer)
+         for obj in layer.getFeatures():
+            try:
+                if obj["kodKarto10k"] == '0010_638_2':
+                    if obj['rodzaj'] != 'akwedukt':
+                        obiektyZbledami.append(obj)
+                    geom = obj.geometry()
+                    touches_boundary = any(obj.geometry().intersects(boundary.geometry()) for boundary in granica.getFeatures())
+                    
+                    if not touches_boundary:
+                        if not (geom.length() < 10):
+                            obiektyZbledami.append(obj)
+            except Exception:
+                 pass
+         return obiektyZbledami
+     
+     except Exception:
+         return []
+
+
 def kontrolaRelacjiDzialkaEwidencyjnaDoPunktGraniczny(layer):
     obiektyZbledami = []
     
     try:
-        DzialkaEwidencyjna_layer = QgsProject().instance().mapLayersByName(layer.name().replace("PunktGraniczny","DzialkaEwidencyjna"))[0]
+        EGB_PunktGraniczny_layer = None
+        EGB_PunktGraniczny_layer = QgsProject().instance().mapLayersByName(layer.name().replace("DzialkaEwidencyjna","PunktGraniczny"))[0]
     except:
         pass
     
-    extractbyexpression = processing.run("qgis:extractbyexpression", {
-        'INPUT': DzialkaEwidencyjna_layer,
-        'EXPRESSION': "'punktGranicyDzialki_href' IS NOT NULL",
-        'FAIL_OUTPUT': 'memory:',
-        'OUTPUT': 'memory:'
-    })
-    
-    for obj in DzialkaEwidencyjna_layer.getFeatures():
-        jestBlad = False
-        if isinstance(obj['punktGranicyDzialki_href'], list):
-            if len(obj['punktGranicyDzialki_href']) < 3:
-                jestBlad = True
+    for obj in layer.getFeatures():
+        error_msg = ''
+        if layer.fields().indexOf('punktGranicyDzialki_href') == -1 or obj['punktGranicyDzialki_href'] == NULL:
+            error_msg = 'Działka ewidencyjna nie referuje na punkty granicy działki.'
         else:
-            jestBlad = True
-        if jestBlad:
-            gml_id = obj['gml_id'] + '| Brak min. 3 punktów granicznych przypisanych do działki ewidencyjnej'
-            obj.setAttribute(DzialkaEwidencyjna_layer.fields().indexFromName("gml_id"), gml_id)
-            DzialkaEwidencyjna_layer.updateFeature(obj)
-            obiektyZbledami.append(obj)
-            DzialkaEwidencyjna_layer.commitChanges()
-    
-    if extractbyexpression['OUTPUT'].featureCount() > 0 and layer.featureCount() > 0:
-        punktyGranicyDzialki_hrefy = set()
-        
-        for obj in extractbyexpression['OUTPUT'].getFeatures():
-            if isinstance(obj['punktGranicyDzialki_href'], list):
-                for gmlid in obj['punktGranicyDzialki_href']:
-                    punktyGranicyDzialki_hrefy.add(gmlid)
+            if EGB_PunktGraniczny_layer == None:
+                error_msg = 'Brak punktów granicznych w pliku GML.'
+            punktGranicyDzialki_href = obj['punktGranicyDzialki_href']
+            if isinstance(punktGranicyDzialki_href, list):
+                if '' in punktGranicyDzialki_href:
+                    error_msg += 'Działka ewidencyjna posiada pustą referencję na punkt granicy działki.'
+                    punktGranicyDzialki_href.remove('')
+                if len(punktGranicyDzialki_href) < 3:
+                    error_msg += 'Działka ewidencyjna musi referować na minimum trzy punkty granicy działki.'
+                for href in punktGranicyDzialki_href:
+                    request = QgsFeatureRequest().setFilterExpression(f"gml_id = '{href}'")
+                    matching_features = list(EGB_PunktGraniczny_layer.getFeatures(request))
+                    if not matching_features:
+                        error_msg += 'Działka ewidencyjna posiada błędną referencję na punkt granicy działki.'
+                        break
             else:
-                punktyGranicyDzialki_hrefy.add(obj['punktGranicyDzialki_href'])
+                error_msg = 'Działka ewidencyjna musi referować na minimum trzy punkty granicy działki.'
         
-        gmlid_PunktyGraniczne = set()
-        
-        for obj_PG in layer.getFeatures():
-            gmlid_PunktyGraniczne.add(obj_PG['gml_id'])
-            
-        only_in_punktyGranicyDzialki_hrefy = punktyGranicyDzialki_hrefy.difference(gmlid_PunktyGraniczne)
-        only_in_gmlid_PunktyGraniczne = gmlid_PunktyGraniczne.difference(punktyGranicyDzialki_hrefy)
-        
-        if len(only_in_gmlid_PunktyGraniczne) > 0:
-            for obj in layer.getFeatures():
-                if obj['gml_id'] in only_in_gmlid_PunktyGraniczne:
-                    gml_id = obj['gml_id'] + '| punkt graniczny nie referuje na żadną działkę'
-                    obj.setAttribute(layer.fields().indexFromName("gml_id"), gml_id)
-                    layer.updateFeature(obj)
-                    obiektyZbledami.append(obj)
-                    layer.commitChanges()
-        
-        if len(only_in_punktyGranicyDzialki_hrefy) > 0:
-            for obj in DzialkaEwidencyjna_layer.getFeatures():
-                if obj['gml_id'] in only_in_punktyGranicyDzialki_hrefy:
-                    gml_id = obj['gml_id'] + '| '
-                    obj.setAttribute(DzialkaEwidencyjna_layer.fields().indexFromName("gml_id"), gml_id)
-                    DzialkaEwidencyjna_layer.updateFeature(obj)
-                    obiektyZbledami.append(obj)
-                    DzialkaEwidencyjna_layer.commitChanges()
-        
+        if error_msg != '':
+            gml_id = obj['gml_id'] + '|' + error_msg
+            obj.setAttribute(layer.fields().indexFromName("gml_id"), gml_id)
+            layer.updateFeature(obj)
+            obiektyZbledami.append(obj)
+            layer.commitChanges()
+    
     return obiektyZbledami
 
 

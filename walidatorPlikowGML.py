@@ -35,6 +35,8 @@ import osgeo
 import hashlib
 import binascii
 import logging
+from openpyxl import Workbook
+from openpyxl.styles import Alignment, Border, Side, Font, PatternFill
 from lxml.etree import parse, XMLSchema, ElementTree
 from time import sleep
 from datetime import datetime
@@ -159,7 +161,7 @@ class walidatorPlikowGML:
     def run(self):
         global walidowanaBaza
         walidowanaBaza = ['EGIB','GESUT','BDOT500','RCN','PRNG','BDOT10k','BDOO','MGR','KARTO10k']
-        formatRaportu = ['xls', 'pdf', 'txt', 'shp', 'gpkg']
+        formatRaportu = ['xls', 'xlsx', 'pdf', 'txt', 'shp', 'gpkg']
         
         self.dlg = walidatorPlikowGMLDialog()
         self.dlg.comboBox.addItems(walidowanaBaza)
@@ -170,8 +172,17 @@ class walidatorPlikowGML:
         self.dlg.pushButton_2.clicked.connect(self.odznaczWszystkieKontrole)
         self.dlg.comboBox.currentIndexChanged.connect(self.wyborXSD)
         self.dlg.comboBox_xsd.currentIndexChanged.connect(self.zmianaXSD)
+        self.dlg.pushButton.setEnabled(False) # wylaczona na start
+        self.dlg.comboBox.currentIndexChanged.connect(self.szarzenieNieBDOT)
         self.wyborXSD(0)
         self.walidacjaIKontrolaAtrybutow()
+        
+    def szarzenieNieBDOT(self): # jesli jest wybrana opcja inna niż BDOT10k przycisk będzie dezaktywowany
+         wybranaBaza = self.dlg.comboBox.currentText()
+         if wybranaBaza != 'BDOT10k':
+             self.dlg.pushButton.setEnabled(False)
+         else:
+             self.dlg.pushButton.setEnabled(True)
 
 
     def wczytanieWersjiSzablonow(self, nazwaBazyDanych):
@@ -415,7 +426,6 @@ class walidatorPlikowGML:
                      for c in range(item.rowCount()):
                          if item.child(c).checkState() == 2 and any(keyword in item.data(6) for keyword in ["Granice_powiatow", "czyObiektyWewnatrzPowiatu", "minimalna", "minDlugosc", "kontrolaZgodnosciZDanymiGDOS"]):
                              if os.path.isfile(txt):
-                                 print ('stan blokad:', blokady)
                                  if sum(blokady) == 0:
                                      self.dlg.button_box.buttons()[0].setEnabled(True)
                              else:
@@ -628,6 +638,8 @@ class walidatorPlikowGML:
             
             pathPDF = sciezkaGML + "/RaportBledow_" + str(nazwa_pliku) + "_" + timestr + ".pdf"
             pathXLS = sciezkaGML + "/RaportBledow_" + str(nazwa_pliku) + "_" + timestr + ".xls"
+            pathXLSX = sciezkaGML + "/RaportBledow_" + str(nazwa_pliku) + "_" + timestr + ".xlsx"
+            pathTXT = sciezkaGML + "/RaportBledow_" + str(nazwa_pliku) + "_" + timestr + ".txt"
         else:
             return
         
@@ -647,7 +659,8 @@ class walidatorPlikowGML:
         slownikBledow = {}
         slownikWalidacji = {}
         idkontroli_LiczbaBledow = {}
-        
+        slownik_liczba_bledow = {}
+        slownik_grupa = {}
         i = 0
         walidacjaZWynikiemPozytywnym = True
         kontrolaZWynikiemPozytywnym = True
@@ -712,8 +725,11 @@ class walidatorPlikowGML:
         if not walidacjaZWynikiemPozytywnym or liczbaKontroliDoWykonania > 0:
             mainGroup = os.path.splitext(os.path.basename(plik[0]))[0]
             root = QgsProject.instance().layerTreeRoot()
+            groupaGlowna = next((group for group in root.children() if group.name() == mainGroup), None)
+            if groupaGlowna:
+               # Jeśli grupa istnieje, sprawdzamy czy jest usunięta, jeśli tak - tworzymy nową
+                   root.removeChildNode(groupaGlowna)
             groupaGlowna = root.addGroup(mainGroup)
-            groupaGlowna.setExpanded(False)
             
             for plikZparsowany in plikiZparsowane:
                 self.importGML(plikZparsowany)
@@ -766,8 +782,6 @@ class walidatorPlikowGML:
             listaBledow = {k: v for k, v in idkontroli_LiczbaBledow.items() if v > 0}
             grupy = {}
             grupa_map = {}
-            slownik_liczba_bledow = {}
-            slownik_grupa = {}
             for i in range(modelKontroli.rowCount()):
                 item = modelKontroli.item(i)
                 grupa_nazwa = item.data(2)
@@ -860,6 +874,7 @@ class walidatorPlikowGML:
             
         if 'txt' in self.dlg.mComboBox.checkedItems(): 
            try:
+               plikRaportu = open(pathTXT, "w")
                if len(walidowanePliki_df) > 0:
                    for i in range(len(walidowanePliki_df)):
                        plikRaportu.write(f'Walidacja pliku: {walidowanePliki_df[i]} z wynikiem negatywnym.\n')
@@ -1193,6 +1208,175 @@ class walidatorPlikowGML:
                 print(f'Błąd : {e}')
                 return
             # koniec tworzenia xls
+            
+        if 'xlsx' in self.dlg.mComboBox.checkedItems(): # nowoczesniejsza wersja xlsx
+            progressMessageBar = iface.messageBar().createMessage("Generowanie raportu xlsx...")
+            bledyWalidacji = {'WALIDOWANY PLIK': walidowanePliki_df, 'GMLID': gmlid_df_w, 'WIERSZ': wiersze_df, 'OPIS BŁĘDU': opisyBledow_df, 'KOMUNIKAT BŁĘDU': komunikatyBledow_df}
+            bledyKontroli = {'KLASA':klasy_df, 'GMLID':gmlid_df_k, 'KOMUNIKAT BŁĘDU':komunikatyBledowKontroli_df, 'GRUPA KONTROLI': grupyKontroli_df}
+            try:
+                idenkontroli = []
+                nazwKontroli = []
+                liczBledy = []
+                for i, (k, (w, n)) in enumerate(slownik_grupa.items()):
+                    idenkontroli.append(k)
+                    nazwKontroli.append(n)
+                    liczBledy.append(w)
+                if len(slownik_grupa) > 0:
+                    idenkontroli.append("") # dodanie pustego wiersza w przerwie
+                    nazwKontroli.append("")
+                    liczBledy.append("")
+                for j,(klucz, (wartosc, nazwa)) in enumerate(slownik_liczba_bledow.items()):
+                    idenkontroli.append(klucz)
+                    nazwKontroli.append(nazwa)
+                    liczBledy.append(wartosc)
+                daneStatystyk ={'IDENTYFIKATOR KONTROLI':idenkontroli, 'NAZWA KONTROLI':nazwKontroli, 'LICZBA BŁĘDÓW': liczBledy}
+                wynik_5_6_7 = "Pozytywny" if walidacjaZWynikiemPozytywnym and kontrolaZWynikiemPozytywnym else "Negatywny"
+                wynik_6 = "Pozytywny" if walidacjaZWynikiemPozytywnym else "Negatywny"
+                wynik_7 = "Pozytywny" if kontrolaZWynikiemPozytywnym else "Negatywny"
+                if liczbaKontroliWykonanych != 0:
+                  wynikKontroli = wynik_5_6_7
+                  wynikWalidacji =  wynik_6
+                  wynikKonDodat = wynik_7
+                else:
+                    wynikKonDodat = 'Nie dotyczy'
+                    wynikWalidacji =  wynik_6
+                    if walidacjaZWynikiemPozytywnym:
+                        wynikKontroli = "Pozytywny"
+                    else:
+                        wynikKontroli = "Negatywny"
+                if len(bledyWalidacji["WIERSZ"]) == 0:
+                    bledyWalidacji["WIERSZ"] = 0
+            
+                daneWstepne = [["Data kontroli i wskazany plik",time.strftime("%Y-%m-%d %H:%M"), str(pathlib.Path(plik[0]).name)],["Wersja wtyczki",str(version), ''],
+                                              ["Suma kontrolna szablonu kontroli (CRC32)",sumaKontrolaSzablonKontroli, ''],["Wersja szablonu kontroli",wersjaSzablonuKontroli, szablonKontroliPath],
+                                              ["Suma kontrolna schematu (CRC32)",sumaKontrolaSchemat, ''],["Wersja schematu aplikacyjnego GML",wersjaSchematu, xsdPath],
+                                              ["Wynik kontroli",wynikKontroli,''],
+                                              ["Wynik walidacji",wynikWalidacji,''],
+                                              ["Wynik kontroli dodatkowych",wynikKonDodat,'']]
+            
+                for i, (data1, data2) in enumerate(nazwy):
+                    daneWstepne.append(["Zlecona kontrola dodatkowa", data1, data2])
+                arkuszDaneWstepne = pd.DataFrame(daneWstepne)
+                arkuszStatystyk = pd.DataFrame(daneStatystyk)
+                dataFrameWalidacja = pd.DataFrame(bledyWalidacji)
+                dataFrameKontrola = pd.DataFrame(bledyKontroli)
+                czcionka = Font(name='Arial', size=10)
+                czcioNagl = Font(name='Arial', size=10, bold= True)
+                thin_border = Border( # utworzenie ramki 
+                    left=Side(style="thin"),
+                    right=Side(style="thin"),
+                    top=Side(style="thin"),
+                    bottom=Side(style="thin")
+                    )
+                alignment = Alignment(wrap_text=True)
+                alignment_center = Alignment(horizontal='center', vertical='center', wrap_text=True) # nagłówki na srodku
+                with pd.ExcelWriter(pathXLSX) as writer:
+                    arkuszDaneWstepne.to_excel(writer, sheet_name="Podsumowanie kontroli", index = False, header = False)
+                    worksheet = writer.sheets["Podsumowanie kontroli"]
+                    max_col = worksheet.max_column
+                    max_row = worksheet.max_row
+                    worksheet.column_dimensions["A"].width = 41 # 1 arkusz
+                    worksheet.column_dimensions["B"].width = 20
+                    worksheet.column_dimensions["C"].width = 136
+                    for row in range(1, worksheet.max_row + 1):  # zmiana szerokosci wierszy
+                        worksheet.row_dimensions[row].height = 12.75
+                    # Formatowanie pierwszej kolumny jako pogrubionej
+                    for row in worksheet.iter_rows(min_col=1, max_col=1, min_row=1, max_row=max_row):
+                        for cell in row:
+                            cell.font = czcioNagl
+                            cell.border = thin_border
+                            cell.alignment = alignment
+                    for row in worksheet.iter_rows(min_col=2, max_col=max_col, min_row=1, max_row=max_row): # ustawiania na pozostałcy kolumnach
+                        for cell in row:
+                            cell.font = czcionka
+                            cell.border = thin_border
+                            cell.alignment = alignment
+                            if cell.value == "Pozytywny": # kolorowanie wyników kontroli
+                                cell.font = Font(bold=True, color="008000")  # Zielony
+                            elif cell.value == "Negatywny":
+                                cell.font = Font(bold=True, color="FF0000")  # Czerwony
+                            elif cell.value == "Nie dotyczy":
+                                cell.font = Font(bold=True)  # Domyślny czarny
+                    
+                            
+                    arkuszStatystyk.to_excel(writer, sheet_name="Statystyki", index = False)
+                    worksheet = writer.sheets["Statystyki"] # 2 arkusz
+                    worksheet.column_dimensions["A"].width = 20
+                    worksheet.column_dimensions["B"].width = 58
+                    worksheet.column_dimensions["C"].width = 15
+                    for row in worksheet.iter_rows():
+                        if all(cell.value == "" or cell.value is None for cell in row):  # Sprawdzanie, czy cały wiersz jest pusty
+                            continue  # Pomijanie stylizacji dla pustych wierszy
+                        for cell in row:
+                            cell.font = czcionka
+                            cell.border = thin_border
+                            cell.alignment = alignment
+                    max_col = worksheet.max_column
+                    for cell in worksheet[1]:  # Pierwszy wiersz to nagłówki
+                        cell.alignment = alignment_center
+                        cell.font = czcioNagl 
+                    for row in worksheet.iter_rows(min_col=1, max_col=1, min_row=2):
+                        for cell in row: # ustawienie na lewy srodek tekstu w kolumnie Identyfikator Kontroli
+                            cell.alignment = Alignment(horizontal='left', vertical='center')
+                    for row in worksheet.iter_rows(min_col=2, max_col=2, min_row=2):
+                        for cell in row: # ustawienie na lewy srodek tekstu w kolumnie Nazwa kontroli
+                            cell.alignment = Alignment(horizontal='left', vertical='center', wrap_text = True)
+                    for row in worksheet.iter_rows(min_col=max_col, max_col=max_col, min_row=2):
+                        for cell in row: # ustawienie na prawy srodek tekstu w kolumnie Liczba Błędów
+                            cell.alignment = Alignment(horizontal='right', vertical='center')
+                            
+                            
+                    dataFrameWalidacja.to_excel(writer, sheet_name="Raport z walidacji", index = False)
+                    worksheet = writer.sheets["Raport z walidacji"] # 3 arkusz
+                    worksheet.column_dimensions["A"].width = 49
+                    worksheet.column_dimensions["B"].width = 43
+                    worksheet.column_dimensions["C"].width = 8
+                    worksheet.column_dimensions["D"].width = 39
+                    worksheet.column_dimensions["E"].width = 39
+                    max_col = worksheet.max_column
+                    max_row=worksheet.max_row
+                    for row in worksheet.iter_rows():
+                        for cell in row:
+                            cell.font = czcionka
+                            cell.border = thin_border
+                            cell.alignment = alignment
+                    for cell in worksheet[1]:  # Pierwszy wiersz to nagłówki
+                        cell.alignment = alignment_center
+                        cell.font = czcioNagl
+                    for row in worksheet.iter_rows(min_col=1, max_col=max_col, min_row=2, max_row= max_row):
+                        for cell in row:
+                            cell.alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+                   
+                        
+                    dataFrameKontrola.to_excel(writer, sheet_name="Raport z kontroli dodatkowych", index = False)
+                    worksheet = writer.sheets["Raport z kontroli dodatkowych"] # 4 arkusz
+                    worksheet.column_dimensions["A"].width = 15.5
+                    worksheet.column_dimensions["B"].width = 49
+                    worksheet.column_dimensions["C"].width = 107
+                    worksheet.column_dimensions["D"].width = 39
+                    for row in worksheet.iter_rows():
+                        for cell in row:
+                            cell.font = czcionka
+                            cell.border = thin_border
+                            cell.alignment = alignment
+                    for cell in worksheet[1]:  # Pierwszy wiersz to nagłówki
+                        cell.alignment = alignment_center
+                        cell.font = czcioNagl
+                    for row in worksheet.iter_rows(min_col=1, max_col=1, min_row=2):
+                        for cell in row: # ustawienie na lewy srodek tekstu w kolumnie Klasa
+                            cell.alignment = Alignment(horizontal='left', vertical='center')
+                    for row in worksheet.iter_rows(min_col=2, max_col=2, min_row=2):
+                        for cell in row: # ustawienie na lewy srodek tekstu w kolumnie GMLID
+                            cell.alignment = Alignment(horizontal='left', vertical='center')
+                    for row in worksheet.iter_rows(min_col=3, max_col=3, min_row=2):
+                        for cell in row: # ustawienie na lewy srodek tekstu w kolumnie Komunikat Błedu
+                            cell.alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+                    for row in worksheet.iter_rows(min_col=4, max_col=4, min_row=2):
+                        for cell in row: # ustawienie na lewy srodek tekstu w kolumnie Grupa Kontroli
+                            cell.alignment = Alignment(horizontal='left', vertical='center')
+            except Exception as e:
+                 print(f'Błąd : {e}')
+                 return
         
         if 'shp' in self.dlg.mComboBox.checkedItems():
             created_layers = {
@@ -1343,7 +1527,7 @@ class walidatorPlikowGML:
                  "is not a valid value of the local atomic type":"nie jest poprawną wartością lokalnego typu podstawowego"
                  }
         if value != None:
-            formats_to_check = ['xls', 'pdf', 'txt', 'shp', 'gpkg']
+            formats_to_check = ['xls', 'pdf', 'txt', 'shp', 'gpkg', 'xlsx']
             for errors in value['error']:
                 
                 if isinstance(errors, lxml.etree.XMLSyntaxError):
@@ -1418,7 +1602,8 @@ class walidatorPlikowGML:
                           13: 'Curve',
                           100: 'No Geometry',
                           1001: 'PointZ',
-                          -2147483647: 'Point'}
+                          -2147483647: 'Point',
+                          -2147483648: 'Point'}
         
         warstwy = [x.GetName() for x in ogr.Open(zparsowanyPlik)]
         data_source = ogr.Open(zparsowanyPlik)
