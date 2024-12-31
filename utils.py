@@ -8,7 +8,7 @@
                               -------------------
         begin                : 2022-12-23
         git sha              : $Format:%H$
-        copyright            : (C) 2024 by Marcin Lebiecki - Główny Urząd Geodezji i Kartografii
+        copyright            : (C) 2022 by Marcin Lebiecki - Główny Urząd Geodezji i Kartografii
         email                : marcin.lebiecki@gugik.gov.pl
  ***************************************************************************/
 
@@ -152,7 +152,7 @@ def adjaMinus2cmBufor(layer):
             powiat_z_PRG.dataProvider().addFeatures([obj])
             break
     bufor = processing.run("native:buffer", {
-        'INPUT':powiat_z_PRG,
+        'INPUT':powiat_z_PRG, 
         'DISTANCE': -0.02,
         'SEGMENTS': 10,
         'DISSOLVE': True,
@@ -215,7 +215,7 @@ def minimalnaPTTRronda(layer):
 
 
 def minimalnaPowierzchniaBezWod(layer):
-    global obiektyZbledami
+    global obiektyZbledami # przekazanie do funkcji powyżej
     obiektyZbledami = []
     minPowWarstwy = {"OT_PTGN_A":1000, "OT_PTLZ_A":500, "OT_PTRK_A":1000, "OT_PTTR_A":500}
     klasa = layer.name()[-9:]
@@ -666,8 +666,6 @@ def nadmiernaSegmentacja(layer):
 
 
 def nadmiernaSegmentacja_rtwl(layer):
-    obiekty_z_bledami = []
-    
     poziomice = processing.run("qgis:extractbyexpression", {
         'INPUT': layer,
         'EXPRESSION': '"rodzaj" = \'poziomica\' and "kodKarto10k" != \'\'',
@@ -676,6 +674,7 @@ def nadmiernaSegmentacja_rtwl(layer):
     })
     
     id_to_feature = {feature.id(): feature for feature in poziomice['OUTPUT'].getFeatures()} # Tworzenie słownika mapującego ID obiektu na obiekt
+    obiekty_z_bledami = []
     hash_to_ids = {}
     spatial_index = QgsSpatialIndex(poziomice['OUTPUT'].getFeatures(), flags=QgsSpatialIndex.FlagStoreFeatureGeometries)
     
@@ -743,7 +742,6 @@ def przewerteksowanie(layer):
 
 def przecieciaLiniiNapieciaPodziemna(layer):
     obiekty_z_bledami = []
-    
     OT_SULN_L_layer = None
     OT_BUWT_P_layer = None
     if layer.name()[-6:] == 'SULN_L':
@@ -781,7 +779,6 @@ def przecieciaLiniiNapieciaPodziemna(layer):
 
 def przecieciaLiniiNapieciaNadziemna(layer):
     obiekty_z_bledami = []
-    
     OT_SULN_L_layer = None
     OT_BUWT_P_layer = None
     if layer.name()[-6:] == 'SULN_L':
@@ -818,7 +815,6 @@ def przecieciaLiniiNapieciaNadziemna(layer):
 
 def kontrola_OT_ADMS_P_z_OT_ADMS_A(layer):
     obiekty_z_bledami = []
-    
     OT_ADMS_A_layer = None
     OT_ADMS_P_layer = None
     if layer.name()[-6:] == 'ADMS_P':
@@ -855,7 +851,6 @@ def kontrola_OT_ADMS_P_z_OT_ADMS_A(layer):
 
 def kontrolaTERCpunkt(layer):
     obiektyZbledami = []
-    
     adms = None
     adja = None
     if layer.name()[-6:] == 'ADMS_P':
@@ -895,7 +890,6 @@ def kontrolaTERCpunkt(layer):
 
 def kontrolaTERCpowierzchnia(layer):
     obiektyZbledami = []
-    
     adms = None
     adja = None
     if layer.name()[-6:] == 'ADMS_A':
@@ -910,7 +904,7 @@ def kontrolaTERCpowierzchnia(layer):
     # Sprawdzenie, czy jsą warstwy
     if adms and adja:
         # Iteruj przez warstwy
-        expression = """ "rodzaj" = 'gmina' """
+        expression = """ "rodzaj" = 'gmina' """ 
         # Wykonaj selekcję na ADJA_A
         adja.selectByExpression(expression, QgsVectorLayer.SetSelection)
         selected = adja.selectedFeatures()
@@ -936,7 +930,6 @@ def kontrolaTERCpowierzchnia(layer):
 
 def fullCoverage(layer):
     obiektyZbledami = []
-    
     adja = None
     wszystkieObiektyZPokrycia = QgsVectorLayer("Polygon?crs=epsg:" + str(2180), "Wszystkie obiekty z pokrycia", "memory")
     pokrycie = []
@@ -1051,7 +1044,6 @@ def fullCoverage(layer):
 
 def jednostkaEwidencyjnaFullCoverage(layer):
     obiektyZbledami = []
-    
     wszystkieJednostkiEwidencyjne = QgsVectorLayer("Polygon?crs=epsg:" + str(4326), "Wszystkie jednostki ewidencyjne", "memory")
     warstwy = []
     for layer_id, lyr in QgsProject.instance().mapLayers().items():
@@ -1157,7 +1149,7 @@ def jednostkaEwidencyjnaFullCoverage(layer):
 
 
 def boundaryPTWP(layer):
-    try:
+    try: 
         obiektyZbledami = []
         ptwp = None
         if layer.name().__contains__('RTLW_L'):
@@ -1202,7 +1194,6 @@ def boundaryPTWP(layer):
 
 def boundaryPTWP_poziomica(layer):
     obiektyZbledami = []
-    
     try:
         ptwp = None
         if layer.name().__contains__('RTLW_L'):
@@ -1243,10 +1234,8 @@ def boundaryPTWP_poziomica(layer):
         pass
     return obiektyZbledami
 
-
 def kontrolaZdublowaniaAtrybutuFunkcjaSzczegolowaBudynku(layer):
     obiektyZbledami = []
-    
     idenBledow = set()
     for feature in layer.getFeatures():
         funkcje_szczegolowe = feature['funkcjaSzczegolowaBudynku'] 
@@ -1264,10 +1253,8 @@ def kontrolaZdublowaniaAtrybutuFunkcjaSzczegolowaBudynku(layer):
                 idenBledow.add(feature.id())
     return obiektyZbledami
 
-
 def kontrolaZgodnosciFunkcjaSzczegolowaBudynkuZprzewazajacaFunkcjaBudynku(layer):
     obiektyZbledami = []
-    
     idenBledow = set()
     for feature in layer.getFeatures():
         funkcje_szczegolowe = feature['funkcjaSzczegolowaBudynku'] 
@@ -1281,7 +1268,6 @@ def kontrolaZgodnosciFunkcjaSzczegolowaBudynkuZprzewazajacaFunkcjaBudynku(layer)
 
 def KontrolaAtrybutuKlasouzytek(layer, plikGML):
     obiektyZbledami = []
-    
     plikGML = plikGML.getroot()
     ns = {'gml': 'http://www.opengis.net/gml/3.2', 'egb': 'ewidencjaGruntowIBudynkow:1.0'}
     
@@ -1469,7 +1455,6 @@ def miastoWiesCzyNakladajaSie(layer):
 
 def sprawdzLokalnyId(layer):
     obiektyZbledami = []
-    
     if layer.name()[-6:] in ['RTLW_L', 'RTPW_P']:
         # funkcja nie wykona się dla warstw z rzeźbą terenu
         return obiektyZbledami
@@ -1491,7 +1476,6 @@ def sprawdzLokalnyId(layer):
 
 def sprawdzPrzestrzenNazw(layer):
     obiektyZbledami = []
-    
     if layer.name()[-6:] in ['RTLW_L', 'RTPW_P']:
         # funkcja nie wykona się dla warstw z rzeźbą terenu
         return obiektyZbledami
@@ -1542,7 +1526,6 @@ def sprawdzPrzestrzenNazw(layer):
 
 def sprawdzWersja(layer):
     obiektyZbledami = []
-    
     if layer.name()[-6:] in ['RTLW_L', 'RTPW_P']:
         # funkcja nie wykona się dla warstw z rzeźbą terenu
         return obiektyZbledami
@@ -1592,7 +1575,6 @@ def sprawdzPoczatekWersjiObiektu(layer):
 
 def przestrzenNazw(layer,teryt):
     obiektyZbledami = []
-    
     slownik = {
     '02': '337',  # dolnośląskie
     '04': '994',  # kujawsko-pomrskie
@@ -1640,7 +1622,6 @@ def przestrzenNazw(layer,teryt):
 
 def zapisWspolrzednych(layer, plikGML):
     obiektyZbledami = []
-    
     pattern = re.compile(r"[0-9]{6}\.[0-9]{3,}")
     plikGML = plikGML.getroot()
     otklasa = f'.//ot:{layer.name()[-9:]}'
@@ -1675,7 +1656,6 @@ def zapisWspolrzednych(layer, plikGML):
 
 def minDlugoscOIPR(layer):
     obiektyZbledami = []
-    
     if layer.name()[-6:] == 'OIPR_L':
         OIPR_L_layer = QgsProject().instance().mapLayersByName(layer.name())[0]
     granica = adjaMinus2cmBufor(layer)
@@ -1693,7 +1673,6 @@ def minDlugoscOIPR(layer):
 
 def minDlugoscBUUO(layer):
     obiektyZbledami = []
-    
     if layer.name()[-6:] == 'BUUO_L':
         BUUO_L_layer = QgsProject().instance().mapLayersByName(layer.name())[0]
     granica = adjaMinus2cmBufor(layer)
@@ -1711,7 +1690,6 @@ def minDlugoscBUUO(layer):
 
 def minDlugoscSUPRnaKUPG(layer):
     obiektyZbledami = []
-    
     if layer.name()[-6:] == 'SUPR_L':
         KUPG_A_layer = QgsProject().instance().mapLayersByName(layer.name().replace("OT_SUPR_L","OT_KUPG_A"))[0]
         SUPR_L_layer = QgsProject().instance().mapLayersByName(layer.name())[0]
@@ -1743,7 +1721,6 @@ def minDlugoscSUPRnaKUPG(layer):
 
 def kontrolaZgodnosciIdentyfikatoraUlicyZNazwa(layer, plikcsv):
     obiektyZbledami = []
-    
     global loaded_csv_data
     
     if loaded_csv_data is None:
@@ -1932,7 +1909,6 @@ def mgrExpression(layer, gml, sqltxt):
 
 def numerPodloza(layer, plikGML):
     obiektyZbledami = []
-    
     idenBledow = set()
     plikGML = plikGML.getroot()
     ns = {'gml': 'http://www.opengis.net/gml/3.2', 'gr': 'urn:gugik:specyfikacje:gmlas:mapaGlebowoRolnicza:1.0'}
@@ -1957,7 +1933,6 @@ def numerPodloza(layer, plikGML):
 
 def miazszoscPodloza(layer, plikGML):
     obiektyZbledami = []
-    
     idenBledow = set()
     plikGML = plikGML.getroot()
     ns = {'gml': 'http://www.opengis.net/gml/3.2', 'gr': 'urn:gugik:specyfikacje:gmlas:mapaGlebowoRolnicza:1.0'}
@@ -2007,7 +1982,6 @@ def miazszoscPodloza(layer, plikGML):
 
 def podlozeKompleks(layer, plikGML):
     obiektyZbledami = []
-    
     idenBledow = set()
     plikGML = plikGML.getroot()
     ns = {'gml': 'http://www.opengis.net/gml/3.2', 'gr': 'urn:gugik:specyfikacje:gmlas:mapaGlebowoRolnicza:1.0'}
@@ -2326,7 +2300,6 @@ def kompletnoscObiektowBDOT10k(layer, plikGMLzrodlowy, plikGML):
 
 def kontrolaZmianAtrybutowWzgledemWersji(layer, plikGMLzrodlowy, plikGML):
     obiektyZbledami = set()
-    
     parser = etree.XMLParser(remove_blank_text=True)
     k = lxml.etree.parse(plikGML, parser).getroot()
     z = lxml.etree.parse(plikGMLzrodlowy, parser).getroot()
@@ -2478,7 +2451,6 @@ def kontrolaZgodnosciZDanymiPRNG(layer, plik_prng, klasa):
 def kontrolaZgodnosciZDanymiGDOS(layer, tc_zip, klasa):
     global tereny_chronione_zip
     obiektyZbledami = []
-    
     klasaPliki = {'OT_TCPN_A':['ParkiNarodowePolygon.shp'],
                  'OT_TCPK_A':['ParkiKrajobrazowePolygon.shp'],
                  'OT_TCRZ_A':['RezerwatyPolygon.shp'],
@@ -2771,7 +2743,6 @@ def kodKarto10kNULL(layer):
 
 def blednePolozeniePktWys(layer):
     obiektyZbledami = []
-    
     try:
         bubda = None
         buzta = None
@@ -2993,23 +2964,36 @@ def blednePolozeniePktWys(layer):
         pass
     return obiektyZbledami
 
-
 def kontrolaKodKarto10k219_1(layer):
     try:
         obiektyZbledami = []
-        
+        dodane_bledy_ids = set()  # Analiza unikalnych Id obiektów błędnych
+
         if not layer.isValid():
             return []
-        
-        # Wyszukiwanie warstwy OT_SKTR_L
+
+        # Wyszukiwanie warstw OT_SKTR_L i OT_SKJZ_L
         sktr_layer_name = layer.name().replace("OT_BUIN_L", "OT_SKTR_L")
+        skjz_layer_name = layer.name().replace("OT_BUIN_L", "OT_SKJZ_L")
+
         sktr_layers = QgsProject.instance().mapLayersByName(sktr_layer_name)
-        
-        if not sktr_layers:
+        skjz_layers = QgsProject.instance().mapLayersByName(skjz_layer_name)
+
+        if not sktr_layers or not skjz_layers:
             return []
-        
-        sktr = sktr_layers[0]  # Przypisanie warstwy OT_SKTR_L
-        # Wyodrębnienie obiektów spełniających warunki w warstwie OT_BUIN_L
+
+        sktr = sktr_layers[0]
+        skjz = skjz_layers[0]
+
+        # Tworzenie indeksów przestrzennych
+        index_buin = QgsSpatialIndex(layer.getFeatures())
+        index_sktr = QgsSpatialIndex(sktr.getFeatures())
+        index_skjz = QgsSpatialIndex(skjz.getFeatures())
+
+        # Bufor granicy
+        granica = adjaMinus2cmBufor(layer)
+
+        # Filtrowanie warstwy BUIN_L według kodu
         extract_params = {
             'INPUT': layer,
             'EXPRESSION': '"kodKarto10k" = \'0010_219_1\'',
@@ -3017,71 +3001,102 @@ def kontrolaKodKarto10k219_1(layer):
         }
         extract_result = processing.run("qgis:extractbyexpression", extract_params)
         filtered_layer = extract_result['OUTPUT']
-        
+
+        # Filtrowanie obiektów według 'rodzaj' oraz kontrola długości
         for obj in filtered_layer.getFeatures():
-            if obj['rodzaj'] not in ['tunel']:
+
+            # Sprawdzanie, czy rodzaj jest poprawny
+            if obj['rodzaj'] != 'tunel':
+                print(f"-> Niewłaściwy rodzaj: {obj['rodzaj']}")
                 obiektyZbledami.append(obj)
-                
-        # Tworzenie indeksów przestrzennych dla obu warstw
-        index_buin = QgsSpatialIndex(layer.getFeatures())
-        index_sktr = QgsSpatialIndex(sktr.getFeatures())
-        
-        # Granica powiatu z buforem
-        granica = adjaMinus2cmBufor(layer)
-        
-        distance_threshold = 10  # Wartość progowa w metrach
-        # Przetwarzanie wyodrębnionych obiektów
-        for obj in filtered_layer.getFeatures():
-            try:
-                if obj.geometry().length() < 25:
-                    touches_boundary = any(obj.geometry().intersects(boundary.geometry()) for boundary in granica.getFeatures())
-                    if not touches_boundary:
+                continue
+
+            # Kontrola długości obiektu BUIN_L
+            geom = obj.geometry()
+            obj_length = geom.length()
+
+            if obj_length < 25:
+                # Sprawdzanie, czy obiekt dotyka granicy
+                if not any(obj.geometry().intersects(boundary.geometry()) for boundary in granica.getFeatures()):
+                    if obj.id() not in dodane_bledy_ids:
                         obiektyZbledami.append(obj)
-                        continue  # Do dalszej analizy
-                        
-                # Znajdowanie obiektów SKTR w pobliżu obiektu BUIN_L
-                nearby_sktr_ids = index_sktr.nearestNeighbor(obj.geometry().centroid(), 10)
-                found_valid_sktr = False
-                
-                for sktr_id in nearby_sktr_ids:
-                    sktr_obj = sktr.getFeature(sktr_id)
-                    distance = obj.geometry().distance(sktr_obj.geometry())
-                    
-                    # Odległość progowa i atrybut "polozenie"
-                    if distance < distance_threshold:
-                        if sktr_obj['polozenie'] not in [None, 'na powierzchni gruntu', 'pod powierzchnią gruntu']:
-                            found_valid_sktr = True
-                            break
-                        
-                if not found_valid_sktr:
-                    obiektyZbledami.append(obj)
-                    
-            except Exception as e:
-                pass
-        
+                        dodane_bledy_ids.add(obj.id())
+                    continue  # Odrzucenie obiektu, jeśli nie styka się z granicą
+
+            # Tworzenie bufora dla geometrii obiektu BUIN_L
+            buffer_distance = 5  # Odległość bufora w metrach
+            buffered_geometry = geom.buffer(buffer_distance, 5)  # Bufor 5 m z zaokrągleniem 5 segmentów
+
+            # Sprawdzenie obiektów SKTR w buforze
+            nearby_sktr_ids = index_sktr.intersects(buffered_geometry.boundingBox())
+            nearby_sktr = [sktr.getFeature(fid) for fid in nearby_sktr_ids]
+
+            # Weryfikacja atrybutu 'położenie' w obiektach SKTR
+            sktr_valid_positions = []
+            sktr_invalid_positions = []  # Lista obiektów SKTR, które mają błędny lub brakujący atrybut 'polozenie'
+            for sktr_obj in nearby_sktr:
+                try:
+                    if sktr_obj['polozenie'] == 'na powierzchni gruntu':
+                        sktr_valid_positions.append(sktr_obj)
+                    else:
+                        sktr_invalid_positions.append(sktr_obj)  # Obiekt SKTR ma niewłaściwe położenie
+                except KeyError:
+                    sktr_invalid_positions.append(sktr_obj)  # Obiekt SKTR nie ma atrybutu 'polozenie'
+
+            # Sprawdzenie obiektów SKJZ w buforze
+            nearby_skjz_ids = index_skjz.intersects(buffered_geometry.boundingBox())
+            nearby_skjz = [skjz.getFeature(fid) for fid in nearby_skjz_ids]
+
+            # Logika decyzji
+            if len(sktr_valid_positions) > 0:
+                continue
+
+            if len(nearby_sktr) > 0 and len(nearby_skjz) == 0:
+                continue
+
+            # Jeśli w buforze znajdują się tylko obiekty SKTR z błędnym lub brakującym atrybutem 'polozenie'
+            if len(sktr_invalid_positions) == len(nearby_sktr):
+                continue
+
+            # Jeśli żaden obiekt SKTR nie spełnia warunku
+            if obj.id() not in dodane_bledy_ids:
+                obiektyZbledami.append(obj)
+                dodane_bledy_ids.add(obj.id())
+
         return obiektyZbledami
-    
-    except Exception:
+
+    except Exception as e:
+
         return []
 
-
+    
 def kontrolaKodKarto10k219_2(layer):
     try:
         obiektyZbledami = []
-        
-    
+        dodane_bledy_ids = set()  # Analiza unikalnych Id obiektów błędnych
+
         if not layer.isValid():
             return []
-        
-        # Wyszukiwanie warstwy OT_SKTR_L
+
+        # Wyszukiwanie warstw OT_SKTR_L i OT_SKJZ_L
         sktr_layer_name = layer.name().replace("OT_BUIN_L", "OT_SKTR_L")
+        skjz_layer_name = layer.name().replace("OT_BUIN_L", "OT_SKJZ_L")
+
         sktr_layers = QgsProject.instance().mapLayersByName(sktr_layer_name)
-        
-        if not sktr_layers:
+        skjz_layers = QgsProject.instance().mapLayersByName(skjz_layer_name)
+
+        if not sktr_layers or not skjz_layers:
             return []
-        
-        sktr = sktr_layers[0]  # Przypisanie warstwy OT_SKTR_L
-        # Wyodrębnienie obiektów spełniających warunki w warstwie OT_BUIN_L
+
+        sktr = sktr_layers[0]
+        skjz = skjz_layers[0]
+
+        # Tworzenie indeksów przestrzennych
+        index_buin = QgsSpatialIndex(layer.getFeatures())
+        index_sktr = QgsSpatialIndex(sktr.getFeatures())
+        index_skjz = QgsSpatialIndex(skjz.getFeatures())
+
+        # Filtrowanie warstwy BUIN_L według kodu
         extract_params = {
             'INPUT': layer,
             'EXPRESSION': '"kodKarto10k" = \'0010_219_2\'',
@@ -3089,70 +3104,103 @@ def kontrolaKodKarto10k219_2(layer):
         }
         extract_result = processing.run("qgis:extractbyexpression", extract_params)
         filtered_layer = extract_result['OUTPUT']
-        
+
+        # Filtrowanie obiektów według 'rodzaj' oraz kontrola długości
         for obj in filtered_layer.getFeatures():
-            if obj['rodzaj'] not in ['tunel']:
+
+            # Sprawdzanie, czy rodzaj jest poprawny
+            if obj['rodzaj'] != 'tunel':
                 obiektyZbledami.append(obj)
-                
-        # Tworzenie indeksów przestrzennych dla obu warstw
-        index_buin = QgsSpatialIndex(layer.getFeatures())
-        index_sktr = QgsSpatialIndex(sktr.getFeatures())
-        
-        # Granica powiatu z buforem
-        granica = adjaMinus2cmBufor(layer)
-        
-        distance_threshold = 10  # Wartość progowa w metrach
-        # Przetwarzanie wyodrębnionych obiektów
-        for obj in filtered_layer.getFeatures():
-            try:
-                if obj.geometry().length() >= 25:
-                    touches_boundary = any(obj.geometry().intersects(boundary.geometry()) for boundary in granica.getFeatures())
-                    if not touches_boundary:
-                        obiektyZbledami.append(obj)
-                        continue  # Do dalszej analizy
-                        
-                # Znajdowanie obiektów SKTR w pobliżu obiektu BUIN_L
-                nearby_sktr_ids = index_sktr.nearestNeighbor(obj.geometry().centroid(), 25)
-                found_valid_sktr = False
-                
-                for sktr_id in nearby_sktr_ids:
-                    sktr_obj = sktr.getFeature(sktr_id)
-                    distance = obj.geometry().distance(sktr_obj.geometry())
-                    
-                    # Odległość progowa i atrybut "polozenie"
-                    if distance < distance_threshold:
-                        if sktr_obj['polozenie'] not in [None, 'na powierzchni gruntu', 'pod powierzchnią gruntu']:
-                            found_valid_sktr = True
-                            break
-                        
-                if not found_valid_sktr:
+                continue
+
+            # Kontrola długości obiektu BUIN_L
+            geom = obj.geometry()
+            obj_length = geom.length()
+
+            if obj_length >= 25:
+                if obj.id() not in dodane_bledy_ids:
                     obiektyZbledami.append(obj)
-                    
-            except Exception as e:
-                pass
+                    dodane_bledy_ids.add(obj.id())
+                continue  # Odrzucenie obiektu z dalszej analizy, jeśli długość >= 25
+
+            # Tworzenie bufora dla geometrii obiektu BUIN_L
+            buffer_distance = 5  # Odległość bufora w metrach
+            buffered_geometry = geom.buffer(buffer_distance, 5)  # Bufor 5 m z zaokrągleniem 5 segmentów
+
+            # Sprawdzenie obiektów SKTR w buforze
+            nearby_sktr_ids = index_sktr.intersects(buffered_geometry.boundingBox())
+            nearby_sktr = [sktr.getFeature(fid) for fid in nearby_sktr_ids]
+
+            # Weryfikacja atrybutu 'położenie' w obiektach SKTR
+            sktr_valid_positions = []
+            sktr_invalid_positions = []  # Lista obiektów SKTR, które mają błędny lub brakujący atrybut 'polozenie'
+            for sktr_obj in nearby_sktr:
+                try:
+                    if sktr_obj['polozenie'] == 'na powierzchni gruntu':
+                        sktr_valid_positions.append(sktr_obj)
+                    else:
+                        sktr_invalid_positions.append(sktr_obj)  # Obiekt SKTR ma niewłaściwe położenie
+                except KeyError:
+                    sktr_invalid_positions.append(sktr_obj)  # Obiekt SKTR nie ma atrybutu 'polozenie'
+
+            # Sprawdzenie obiektów SKJZ w buforze
+            nearby_skjz_ids = index_skjz.intersects(buffered_geometry.boundingBox())
+            nearby_skjz = [skjz.getFeature(fid) for fid in nearby_skjz_ids]
+
+            # Logika decyzji
+            if len(sktr_valid_positions) > 0:
+                continue
+
+            if len(nearby_sktr) > 0 and len(nearby_skjz) == 0:
+                continue
+
+            # Jeśli w buforze znajdują się tylko obiekty SKTR z błędnym lub brakującym atrybutem 'polozenie'
+            if len(sktr_invalid_positions) == len(nearby_sktr):
+                continue
+
+            # Jeśli żaden obiekt SKTR nie spełnia warunku
+            if obj.id() not in dodane_bledy_ids:
+                obiektyZbledami.append(obj)
+                dodane_bledy_ids.add(obj.id())
+
         return obiektyZbledami
+
+    except Exception as e:
     
-    except Exception:
         return []
 
 
 def kontrolaKodKarto10k220_1(layer):
     try:
         obiektyZbledami = []
-        
+        dodane_bledy_ids = set()
+
         if not layer.isValid():
             return []
-        
-        # Wyszukiwanie warstwy OT_SKTR_L
+
+        # Wyszukiwanie warstw OT_SKTR_L i OT_SKJZ_L
         sktr_layer_name = layer.name().replace("OT_BUIN_L", "OT_SKTR_L")
+        skjz_layer_name = layer.name().replace("OT_BUIN_L", "OT_SKJZ_L")
+
         sktr_layers = QgsProject.instance().mapLayersByName(sktr_layer_name)
+        skjz_layers = QgsProject.instance().mapLayersByName(skjz_layer_name)
+
+        if not sktr_layers or not skjz_layers:
         
-        if not sktr_layers:
             return []
-        
-        sktr = sktr_layers[0]  # Przypisanie warstwy OT_SKTR_L
-        
-        # Wyodrębnienie obiektów spełniających warunki w warstwie OT_BUIN_L
+
+        sktr = sktr_layers[0]
+        skjz = skjz_layers[0]
+
+        # Tworzenie indeksów przestrzennych
+        index_buin = QgsSpatialIndex(layer.getFeatures())
+        index_sktr = QgsSpatialIndex(sktr.getFeatures())
+        index_skjz = QgsSpatialIndex(skjz.getFeatures())
+
+        # Bufor granicy
+        granica = adjaMinus2cmBufor(layer)
+
+        # Filtrowanie warstwy BUIN_L według kodu
         extract_params = {
             'INPUT': layer,
             'EXPRESSION': '"kodKarto10k" = \'0010_220_1\'',
@@ -3160,72 +3208,106 @@ def kontrolaKodKarto10k220_1(layer):
         }
         extract_result = processing.run("qgis:extractbyexpression", extract_params)
         filtered_layer = extract_result['OUTPUT']
-        
-        for obj in filtered_layer.getFeatures():
+        filtered_features = list(filtered_layer.getFeatures())
+
+        if len(filtered_features) == 0:
+            return []
+
+        # Filtrowanie obiektów według 'rodzaj' oraz kontrola długości i styku z granicą
+        for obj in filtered_features:
+
             if obj['rodzaj'] not in ['estakada', 'wiadukt', 'most']:
                 obiektyZbledami.append(obj)
-                
-        # Tworzenie indeksów przestrzennych dla obu warstw
-        index_buin = QgsSpatialIndex(layer.getFeatures())
-        index_sktr = QgsSpatialIndex(sktr.getFeatures())
-        
-        # Granica powiatu z buforem
-        granica = adjaMinus2cmBufor(layer)
-        
-        distance_threshold = 10  # Wartość progowa w metrach
-        
-        # Przetwarzanie wyodrębnionych obiektów
-        for obj in filtered_layer.getFeatures():
-            try:
-                if obj.geometry().length() < 10:
-                    touches_boundary = any(obj.geometry().intersects(boundary.geometry()) for boundary in granica.getFeatures())
-                    if not touches_boundary:
+                continue
+
+            # Kontrola długości obiektu BUIN_L
+            geom = obj.geometry()
+            obj_length = geom.length()
+
+            # Warunki długości i styku z granicą
+            if obj_length < 10:
+                # Sprawdzanie, czy obiekt dotyka granicy
+                if not any(geom.intersects(boundary.geometry()) for boundary in granica.getFeatures()):
+                    if obj.id() not in dodane_bledy_ids:
                         obiektyZbledami.append(obj)
-                        continue  # Do dalszej analizy
-                        
-                # Znajdowanie obiektów SKTR w pobliżu obiektu BUIN_L
-                nearby_sktr_ids = index_sktr.nearestNeighbor(obj.geometry().centroid(), 10)
-                found_valid_sktr = False
+                        dodane_bledy_ids.add(obj.id())
+                    continue
+
+            # Tworzenie bufora dla geometrii obiektu BUIN_L
+            buffer_distance = 5  # Odległość bufora w metrach
+            buffered_geometry = geom.buffer(buffer_distance, 5)
+
+            # Sprawdzenie obiektów SKTR w buforze
+            nearby_sktr_ids = index_sktr.intersects(buffered_geometry.boundingBox())
+            nearby_sktr = [sktr.getFeature(fid) for fid in nearby_sktr_ids]
+
+            # Weryfikacja atrybutu 'położenie' w obiektach SKTR
+            sktr_valid_positions = []
+            sktr_invalid_positions = []
+            for sktr_obj in nearby_sktr:
+                try:
+                    if sktr_obj['polozenie'] == 'na powierzchni gruntu':
+                        sktr_valid_positions.append(sktr_obj)
+                    else:
+                        sktr_invalid_positions.append(sktr_obj)
+                except KeyError:
+                    sktr_invalid_positions.append(sktr_obj)
+
+            # Sprawdzenie obiektów SKJZ w buforze
+            nearby_skjz_ids = index_skjz.intersects(buffered_geometry.boundingBox())
+            nearby_skjz = [skjz.getFeature(fid) for fid in nearby_skjz_ids]
+
+            # Logika decyzji
+            if len(sktr_valid_positions) > 0:
+                continue
+
+            if len(nearby_sktr) > 0 and len(nearby_skjz) == 0:
+                continue
+
+            if len(sktr_invalid_positions) == len(nearby_sktr):
+                continue
                 
-                for sktr_id in nearby_sktr_ids:
-                    sktr_obj = sktr.getFeature(sktr_id)
-                    distance = obj.geometry().distance(sktr_obj.geometry())
-                    
-                    # Odległość progowa i atrybut "polozenie"
-                    if distance < distance_threshold:
-                        if sktr_obj['polozenie'] not in (None, 'na powierzchni gruntu'):
-                            found_valid_sktr = True
-                            break
-                        
-                if not found_valid_sktr:
-                    obiektyZbledami.append(obj)
-                    
-            except Exception as e:
-                pass
-            
+            if obj.id() not in dodane_bledy_ids:
+                obiektyZbledami.append(obj)
+                dodane_bledy_ids.add(obj.id())
+
         return obiektyZbledami
-    
+
     except Exception as e:
+
         return []
 
 
 def kontrolaKodKarto10k220_2(layer):
     try:
         obiektyZbledami = []
-        
+        dodane_bledy_ids = set()  # analiza unikalnych Id obiektów błędnych
+
         if not layer.isValid():
-            return []  # Zwracamy pustą listę błędów, jeśli warstwa jest niepoprawna
-        
-        # Wyszukiwanie warstwy OT_SKTR_L
-        sktr_layer_name = layer.name().replace("OT_BUIN_L", "OT_SKTR_L")
-        sktr_layers = QgsProject.instance().mapLayersByName(sktr_layer_name)
-        
-        if not sktr_layers:
             return []
-        
+
+        # Wyszukiwanie warstw OT_SKTR_L i OT_SKJZ_L
+        skjz_layer_name = layer.name().replace("OT_BUIN_L", "OT_SKTR_L")
+        sktr_layer_name = layer.name().replace("OT_BUIN_L", "OT_SKJZ_L")
+
+        skjz_layers = QgsProject.instance().mapLayersByName(skjz_layer_name)
+        sktr_layers = QgsProject.instance().mapLayersByName(sktr_layer_name)
+
+        if not skjz_layers or not sktr_layers:
+            return []
+
+        skjz = skjz_layers[0]
         sktr = sktr_layers[0]
-        
-        # Wyodrębnienie obiektów spełniających warunki w warstwie OT_BUIN_L
+
+        # Tworzenie indeksów przestrzennych
+        index_buin = QgsSpatialIndex(layer.getFeatures())
+        index_sktr = QgsSpatialIndex(sktr.getFeatures())
+        index_skjz = QgsSpatialIndex(skjz.getFeatures())
+
+        granica = adjaMinus2cmBufor(layer)
+        distance_threshold = 10  # Wartość progowa w metrach
+
+        # Zmieniony kod na '0010_220_2'
         extract_params = {
             'INPUT': layer,
             'EXPRESSION': '"kodKarto10k" = \'0010_220_2\'',
@@ -3233,92 +3315,107 @@ def kontrolaKodKarto10k220_2(layer):
         }
         extract_result = processing.run("qgis:extractbyexpression", extract_params)
         filtered_layer = extract_result['OUTPUT']
-        
+
+        # Sprawdzanie 'rodzaj'
         for obj in filtered_layer.getFeatures():
             if obj['rodzaj'] not in ['estakada', 'wiadukt', 'most']:
-                obiektyZbledami.append(obj)
-                
-        # Tworzenie indeksów przestrzennych dla obu warstw
-        index_buin = QgsSpatialIndex(layer.getFeatures())
-        index_sktr = QgsSpatialIndex(sktr.getFeatures())
-        
-        # Granica powiatu z buforem
-        granica = adjaMinus2cmBufor(layer)
-        
-        distance_threshold = 10  # Wartość progowa w metrach
-        
-        # Przetwarzanie wyodrębnionych obiektów
+                if obj.id() not in dodane_bledy_ids:
+                    obiektyZbledami.append(obj)
+                    dodane_bledy_ids.add(obj.id())
+                continue
+
+        # Przetwarzanie obiektów
         for obj in filtered_layer.getFeatures():
             try:
-                found_intersection = False
-                
-                if obj.geometry().length() < 3:
-                    touches_boundary = False
-                    
-                    for boundary in granica.getFeatures():
-                        if obj.geometry().intersects(boundary.geometry()):
-                            touches_boundary = True
-                            break
-                        
-                    if not touches_boundary:
+                obj_length = obj.geometry().length()
+                obj_centroid = obj.geometry().centroid()
+
+                # Sprawdzanie geometrii
+                if not obj.geometry().isGeosValid():
+                    continue
+
+                # Analiza obiektów w zasięgu 10 metrów
+                nearby_sktr_ids = index_sktr.intersects(obj.geometry().boundingBox())
+                nearby_skjz_ids = index_skjz.intersects(obj.geometry().boundingBox())
+
+                nearby_sktr = [sktr.getFeature(fid) for fid in nearby_sktr_ids]
+                nearby_skjz = [skjz.getFeature(fid) for fid in nearby_skjz_ids]
+
+                # Jeśli BUIN_L ma tylko SKTR w sąsiedztwie
+                if len(nearby_sktr) > 0 and len(nearby_skjz) == 0:
+                    if 3 <= obj_length < 10:
+                        continue
+
+                    if obj_length < 3:
+                        if not any(obj.geometry().intersects(boundary.geometry()) for boundary in granica.getFeatures()):
+                            if obj.id() not in dodane_bledy_ids:
+                                obiektyZbledami.append(obj)
+                                dodane_bledy_ids.add(obj.id())
+                    elif obj_length >= 10:
+                        if obj.id() not in dodane_bledy_ids:
+                            obiektyZbledami.append(obj)
+                            dodane_bledy_ids.add(obj.id())
+                    else:
+                        for sktr_obj in nearby_sktr:
+                            if sktr_obj['polozenie'] is None or sktr_obj['polozenie'] == 'na powierzchni gruntu':
+                                if obj.id() not in dodane_bledy_ids:
+                                    obiektyZbledami.append(obj)
+                                    dodane_bledy_ids.add(obj.id())
+
+                elif len(nearby_skjz) > 0 and len(nearby_sktr) == 0:
+                    if obj.id() not in dodane_bledy_ids:
                         obiektyZbledami.append(obj)
-                    continue
-                    
-                if obj.geometry().length() >= 10:
-                    obiektyZbledami.append(obj)
-                    continue
-                
-             # Znajdowanie obiektów SKTR w pobliżu obiektu BUIN_L
-                nearby_sktr_ids = index_sktr.nearestNeighbor(obj.geometry().centroid(), 10)
-                found_valid_sktr = False
-                
-                for sktr_id in nearby_sktr_ids:
-                    sktr_obj = sktr.getFeature(sktr_id)
-                    distance = obj.geometry().distance(sktr_obj.geometry())
-                    
-                    # Odległość progowa i atrybut "polozenie"
-                    if distance < distance_threshold:
-                        if sktr_obj['polozenie'] not in (None, 'na powierzchni gruntu'):
-                            found_valid_sktr = True
-                            break
-                
-                if not found_valid_sktr:
-                    obiektyZbledami.append(obj)
-                    
+                        dodane_bledy_ids.add(obj.id())
+
+                else:
+                    for skjz_obj in nearby_skjz:
+                        if obj.geometry().distance(skjz_obj.geometry()) < distance_threshold:
+                            polozenie = skjz_obj['polozenie']
+                            if polozenie is None or polozenie.strip().lower() != 'na powierzchni gruntu':
+                                if obj.id() not in dodane_bledy_ids:
+                                    obiektyZbledami.append(obj)
+                                    dodane_bledy_ids.add(obj.id())
+                                break
+
             except Exception as e:
-                # Obsługuje wyjątki dla każdego obiektu, jeśli wystąpi błąd
                 pass
-            
+
         return obiektyZbledami
-    
+
     except Exception as e:
         return []
 
-
+    
 def kontrolaKodKarto10k131_1(layer):
     try:
         obiektyZbledami = []
-        
+        dodane_bledy_ids = set()  # Analiza unikalnych Id obiektów błędnych
+
         if not layer.isValid():
             return []
-        
+
         # Wyszukiwanie warstw OT_SKTR_L i OT_SKJZ_L
         skjz_layer_name = layer.name().replace("OT_BUIN_L", "OT_SKJZ_L")
         sktr_layer_name = layer.name().replace("OT_BUIN_L", "OT_SKTR_L")
+
         skjz_layers = QgsProject.instance().mapLayersByName(skjz_layer_name)
         sktr_layers = QgsProject.instance().mapLayersByName(sktr_layer_name)
-       
+
         if not skjz_layers or not sktr_layers:
-           return []
-       
+            return []
+
         skjz = skjz_layers[0]
         sktr = sktr_layers[0]
-       
-        # Tworzenie indeksów przestrzennych dla warstw BUIN_L i SKJZ
+
+        # Tworzenie indeksów przestrzennych
         index_buin = QgsSpatialIndex(layer.getFeatures())
         index_skjz = QgsSpatialIndex(skjz.getFeatures())
-        index_sktr = QgsSpatialIndex(sktr_layer.getFeatures())
-       
+        index_sktr = QgsSpatialIndex(sktr.getFeatures())
+
+        # Bufor granicy
+        granica = adjaMinus2cmBufor(layer)
+
+        # Filtrowanie warstwy BUIN_L według kodu
         extract_params = {
             'INPUT': layer,
             'EXPRESSION': '"kodKarto10k" = \'0010_131_1\'',
@@ -3326,218 +3423,202 @@ def kontrolaKodKarto10k131_1(layer):
         }
         extract_result = processing.run("qgis:extractbyexpression", extract_params)
         filtered_layer = extract_result['OUTPUT']
+
+        # Filtrowanie obiektów według 'rodzaj' oraz kontrola długości
         for obj in filtered_layer.getFeatures():
-            if obj['rodzaj'] not in ['tunel']:
+
+            # Sprawdzanie, czy rodzaj jest poprawny
+            if obj['rodzaj'] != 'tunel':
                 obiektyZbledami.append(obj)
-       
-             
-        granica = adjaMinus2cmBufor(layer)
-         
-        distance_threshold = 10  # Wartość progowa w metrach
-        
-        for obj in filtered_layer.getFeatures():
-            try:
-                touches_boundary = False
-                nearby_skjz_ids = []
-                nearby_sktr_ids = []
-                
-                # Znajdowanie obiektów SKJZ w pobliżu obiektu BUIN_L
-                nearby_skjz_ids = index_skjz.nearestNeighbor(obj.geometry().centroid(), 10)
-                nearby_skjz = [skjz.getFeature(skjz_id) for skjz_id in nearby_skjz_ids 
-                               if obj.geometry().distance(skjz.getFeature(skjz_id).geometry()) < distance_threshold]
-                
-                # Znajdowanie obiektów SKTR w pobliżu obiektu BUIN_L (jeśli warstwa istnieje)
-                if sktr_layers:
-                    nearby_sktr_ids = index_sktr.nearestNeighbor(obj.geometry().centroid(), 10)
-                    nearby_sktr = [sktr_layer.getFeature(sktr_id) for sktr_id in nearby_sktr_ids 
-                                   if obj.geometry().distance(sktr_layer.getFeature(sktr_id).geometry()) < distance_threshold]
-                else:
-                    nearby_sktr = []
-                    
-                # 1. Jeśli BUIN_L spotyka tylko SKJZ i ma długość >= 10, jest pozytywny
-                if len(nearby_skjz) > 0 and len(nearby_sktr) == 0:
-                    if obj.geometry().length() >= 10:
-                        continue
-                    
-                # 2. Jeśli BUIN_L spotyka tylko SKTR i nie spotyka SKJZ, jest to błąd
-                if len(nearby_sktr) > 0 and len(nearby_skjz) == 0:
-                    obiektyZbledami.append(obj)
-                    continue
-                
-                # Analiza pozostałych przypadków
-                found_invalid_skjz = False
-                found_non_surface_skjz = False
-                all_skjz_on_surface = True
-                found_skjz = False
-                found_sktr = False
-                
-                if obj.geometry().length() < 25:
-                    touches_boundary = any(obj.geometry().intersects(boundary.geometry()) for boundary in granica.getFeatures())
-                    if not touches_boundary:
+                continue
+
+            # Kontrola długości obiektu BUIN_L
+            geom = obj.geometry()
+            obj_length = geom.length()
+
+            if obj_length < 25:
+                # Sprawdzanie, czy obiekt dotyka granicy
+                if not any(obj.geometry().intersects(boundary.geometry()) for boundary in granica.getFeatures()):
+                    if obj.id() not in dodane_bledy_ids:
                         obiektyZbledami.append(obj)
-                        continue
-                    
-                for skjz_obj in nearby_skjz:
-                    found_skjz = True
-                    if skjz_obj['polozenie'] is None:
-                        found_invalid_skjz = True
-                        break
-                    elif skjz_obj['polozenie'] not in ['pod powierzchnią gruntu',  'na powierzchni gruntu']:
-                        found_non_surface_skjz = True
-                        all_skjz_on_surface = False
-                        
-                if found_invalid_skjz:
-                    obiektyZbledami.append(obj)
-                    continue
-                
-                if all_skjz_on_surface and not found_non_surface_skjz:
-                    obiektyZbledami.append(obj)
-                    continue
-                
-                for sktr_obj in nearby_sktr:
-                    found_sktr = True
-                    if sktr_obj['polozenie'] not in ['pod powierzchnią gruntu',  'na powierzchni gruntu']:
-                        obiektyZbledami.append(obj)
-                        break
-                    
-                if found_sktr and not found_skjz:
-                    obiektyZbledami.append(obj)
-                
-            except Exception as e:
-                pass
-        
+                        dodane_bledy_ids.add(obj.id())
+                    continue  # Odrzucenie obiektu, jeśli nie styka się z granicą
+
+            # Tworzenie bufora dla geometrii obiektu BUIN_L
+            buffer_distance = 5  # Odległość bufora w metrach
+            buffered_geometry = geom.buffer(buffer_distance, 5)  # Bufor 5 m z zaokrągleniem 5 segmentów
+
+            # Sprawdzenie obiektów SKJZ w buforze
+            nearby_skjz_ids = index_skjz.intersects(buffered_geometry.boundingBox())
+            nearby_skjz = [skjz.getFeature(fid) for fid in nearby_skjz_ids]
+
+            # Weryfikacja atrybutu 'położenie' w obiektach SKJZ
+            skjz_valid_positions = []
+            skjz_invalid_positions = []  # Lista obiektów SKJZ, które mają błędny lub brakujący atrybut 'polozenie'
+            for skjz_obj in nearby_skjz:
+                try:
+                    if skjz_obj['polozenie'] == 'na powierzchni gruntu':
+                        skjz_valid_positions.append(skjz_obj)
+                    else:
+                        skjz_invalid_positions.append(skjz_obj)  # Obiekt SKJZ ma niewłaściwe położenie
+                except KeyError:
+                    skjz_invalid_positions.append(skjz_obj)  # Obiekt SKJZ nie ma atrybutu 'polozenie'
+
+            # Sprawdzenie obiektów SKTR w buforze
+            nearby_sktr_ids = index_sktr.intersects(buffered_geometry.boundingBox())
+            nearby_sktr = [sktr.getFeature(fid) for fid in nearby_sktr_ids]
+
+            # Logika decyzji
+            if len(skjz_valid_positions) > 0:
+                continue
+
+            if len(nearby_skjz) > 0 and len(nearby_sktr) == 0:
+                continue
+
+            # Jeśli w buforze znajdują się tylko obiekty SKJZ z błędnym lub brakującym atrybutem 'polozenie'
+            if len(skjz_invalid_positions) == len(nearby_skjz):
+                continue
+
+            # Jeśli żaden obiekt SKJZ nie spełnia warunku
+            if obj.id() not in dodane_bledy_ids:
+                obiektyZbledami.append(obj)
+                dodane_bledy_ids.add(obj.id())
+
         return obiektyZbledami
-    
-    except Exception:
+
+    except Exception as e:
         return []
 
-
+    
 def kontrolaKodKarto10k131_2(layer):
     try:
         obiektyZbledami = []
-        
+        dodane_bledy_ids = set()  # Analiza unikalnych Id obiektów błędnych
+
         if not layer.isValid():
             return []
-        
+
         # Wyszukiwanie warstw OT_SKTR_L i OT_SKJZ_L
-        skjz_layer_name = layer.name().replace("OT_BUIN_L", "OT_SKJZ_L")
         sktr_layer_name = layer.name().replace("OT_BUIN_L", "OT_SKTR_L")
-        skjz_layers = QgsProject.instance().mapLayersByName(skjz_layer_name)
+        skjz_layer_name = layer.name().replace("OT_BUIN_L", "OT_SKJZ_L")
+
         sktr_layers = QgsProject.instance().mapLayersByName(sktr_layer_name)
-        
-        if not skjz_layers or not sktr_layers:
+        skjz_layers = QgsProject.instance().mapLayersByName(skjz_layer_name)
+
+        if not sktr_layers or not skjz_layers:
             return []
-        
-        skjz = skjz_layers[0]
+
         sktr = sktr_layers[0]
-        
-        # Tworzenie indeksów przestrzennych dla warstw BUIN_L i SKJZ
+        skjz = skjz_layers[0]
+
+        # Tworzenie indeksów przestrzennych
         index_buin = QgsSpatialIndex(layer.getFeatures())
+        index_sktr = QgsSpatialIndex(sktr.getFeatures())
         index_skjz = QgsSpatialIndex(skjz.getFeatures())
-        index_sktr = QgsSpatialIndex(sktr_layer.getFeatures())
-        
+
+        # Filtrowanie warstwy BUIN_L według kodu
         extract_params = {
             'INPUT': layer,
             'EXPRESSION': '"kodKarto10k" = \'0010_131_2\'',
             'OUTPUT': 'memory:'
         }
-        
         extract_result = processing.run("qgis:extractbyexpression", extract_params)
         filtered_layer = extract_result['OUTPUT']
+
+        # Filtrowanie obiektów według 'rodzaj' oraz kontrola długości
         for obj in filtered_layer.getFeatures():
-            if obj['rodzaj'] not in ['tunel']:
+
+            # Sprawdzanie, czy rodzaj jest poprawny
+            if obj['rodzaj'] != 'tunel':
                 obiektyZbledami.append(obj)
-        
-        if not sktr_layers:
-            return []
-        
-        granica = adjaMinus2cmBufor(layer)
-        
-        distance_threshold = 10  # Wartość progowa w metrach
-        
-        for obj in filtered_layer.getFeatures():
-            try:
-                touches_boundary = False
-                obj_length = obj.geometry().length()
-                obj_centroid = obj.geometry().centroid()
-                
-                # Inicjalizacja list dla obiektów w zasięgu 25 metrów
-                nearby_skjz_ids = []
-                nearby_sktr_ids = []
-                
-                # Sprawdzanie sąsiedztwa z SKJZ
-                for skjz_obj in skjz.getFeatures():
-                    if obj_centroid.distance(skjz_obj.geometry().centroid()) <= distance_threshold:
-                        nearby_skjz_ids.append(skjz_obj.id())
-                        
-                # Sprawdzanie sąsiedztwa z SKTR
-                for sktr_obj in sktr.getFeatures():
-                    if obj_centroid.distance(sktr_obj.geometry().centroid()) <= distance_threshold:
-                        nearby_sktr_ids.append(sktr_obj.id())
-                        
-                # Jeśli BUIN_L ma tylko SKJZ w sąsiedztwie i jego długość jest mniejsza od 25
-                if len(nearby_skjz_ids) > 0 and len(nearby_sktr_ids) == 0:
-                    if  obj_length < 10:
-                        continue
-                    
-                    # Analiza długości obiektu w innych przypadkach
-                    elif obj_length >= 10:
-                        obiektyZbledami.append(obj)
-                        continue
-                    
-                    if obj_length < 10:
-                        found_invalid_skjz = False
-                        for skjz_obj in skjz.getFeatures():
-                            if obj.geometry().distance(skjz_obj.geometry()) < distance_threshold:
-                                if skjz_obj['polozenie'] is None or skjz_obj['polozenie'] in ['pod powierzchnią gruntu', 'na powierzchni gruntu']:
-                                    found_invalid_skjz = True
-                                    break
-                        if found_invalid_skjz:
-                            obiektyZbledami.append(obj)
-                            
-                # Dodanie warunku, kiedy BUIN_L ma w sąsiedztwie tylko SKTR, a nie ma SKJZ
-                elif len(nearby_sktr_ids) > 0 and len(nearby_skjz_ids) == 0:
+                continue
+
+            # Kontrola długości obiektu BUIN_L
+            geom = obj.geometry()
+            obj_length = geom.length()
+
+            if obj_length >= 25:
+                if obj.id() not in dodane_bledy_ids:
                     obiektyZbledami.append(obj)
-                    
-                # Jeśli obiekt ma zarówno SKJZ, jak i SKTR w pobliżu, przeprowadzamy dodatkową analizę
-                else:
-                    found_intersection = False
-                    for sktr_obj in sktr.getFeatures():
-                        if obj.geometry().distance(sktr_obj.geometry()) < distance_threshold:
-                            polozenie = sktr_obj['polozenie']
-                            if polozenie is None or polozenie.strip().lower() not in ['pod powierzchnią gruntu', 'na powierzchni gruntu']:
-                                obiektyZbledami.append(obj)
-                                found_intersection = True
-                                break
-                    if found_intersection:
-                        obiektyZbledami.append(obj)
-                        
-            except Exception:
-                pass
-        
+                    dodane_bledy_ids.add(obj.id())
+                continue  # Odrzucenie obiektu z dalszej analizy, jeśli długość >= 25
+
+            # Tworzenie bufora dla geometrii obiektu BUIN_L
+            buffer_distance = 5  # Odległość bufora w metrach
+            buffered_geometry = geom.buffer(buffer_distance, 5)  # Bufor 5 m z zaokrągleniem 5 segmentów
+
+            # Sprawdzenie obiektów SKJZ w buforze
+            nearby_skjz_ids = index_skjz.intersects(buffered_geometry.boundingBox())
+            nearby_skjz = [skjz.getFeature(fid) for fid in nearby_skjz_ids]
+
+            # Weryfikacja atrybutu 'położenie' w obiektach SKJZ
+            skjz_valid_positions = []
+            skjz_invalid_positions = []  # Lista obiektów SKJZ, które mają błędny lub brakujący atrybut 'polozenie'
+            for skjz_obj in nearby_skjz:
+                try:
+                    if skjz_obj['polozenie'] == 'na powierzchni gruntu':
+                        skjz_valid_positions.append(skjz_obj)
+                    else:
+                        skjz_invalid_positions.append(skjz_obj)  # Obiekt SKJZ ma niewłaściwe położenie
+                except KeyError:
+                    skjz_invalid_positions.append(skjz_obj)  # Obiekt SKJZ nie ma atrybutu 'polozenie'
+
+            # Sprawdzenie obiektów SKTR w buforze
+            nearby_sktr_ids = index_sktr.intersects(buffered_geometry.boundingBox())
+            nearby_sktr = [sktr.getFeature(fid) for fid in nearby_sktr_ids]
+
+            # Logika decyzji
+            if len(skjz_valid_positions) > 0:
+                continue
+
+            if len(nearby_skjz) > 0 and len(nearby_sktr) == 0:
+                continue
+
+            # Jeśli w buforze znajdują się tylko obiekty SKJZ z błędnym lub brakującym atrybutem 'polozenie'
+            if len(skjz_invalid_positions) == len(nearby_skjz):
+                continue
+
+            # Jeśli żaden obiekt SKJZ nie spełnia warunku
+            if obj.id() not in dodane_bledy_ids:
+                obiektyZbledami.append(obj)
+                dodane_bledy_ids.add(obj.id())
+
         return obiektyZbledami
-        
-    except Exception:
+
+    except Exception as e:
         return []
 
 
 def kontrolaKodKarto10k133_1(layer):
     try:
         obiektyZbledami = []
-        
+        dodane_bledy_ids = set()
+
         if not layer.isValid():
             return []
-        
-        # Wyszukiwanie warstwy OT_SKJZ_L
+
+        # Wyszukiwanie warstw OT_SKJZ_L i OT_SKTR_L (zamiana SKTR z SKJZ)
         skjz_layer_name = layer.name().replace("OT_BUIN_L", "OT_SKJZ_L")
+        sktr_layer_name = layer.name().replace("OT_BUIN_L", "OT_SKTR_L")
+
         skjz_layers = QgsProject.instance().mapLayersByName(skjz_layer_name)
-        
-        if not skjz_layers:
+        sktr_layers = QgsProject.instance().mapLayersByName(sktr_layer_name)
+
+        if not skjz_layers or not sktr_layers:
             return []
-        
+
         skjz = skjz_layers[0]
-        
-        # Wyodrębnienie obiektów spełniających warunki w warstwie OT_BUIN_L
+        sktr = sktr_layers[0]
+
+        # Tworzenie indeksów przestrzennych
+        index_buin = QgsSpatialIndex(layer.getFeatures())
+        index_skjz = QgsSpatialIndex(skjz.getFeatures())
+        index_sktr = QgsSpatialIndex(sktr.getFeatures())
+
+        # Bufor granicy
+        granica = adjaMinus2cmBufor(layer)
+
+        # Filtrowanie warstwy BUIN_L według kodu
         extract_params = {
             'INPUT': layer,
             'EXPRESSION': '"kodKarto10k" = \'0010_133_1\'',
@@ -3545,131 +3626,102 @@ def kontrolaKodKarto10k133_1(layer):
         }
         extract_result = processing.run("qgis:extractbyexpression", extract_params)
         filtered_layer = extract_result['OUTPUT']
-        
-        for obj in filtered_layer.getFeatures():
+        filtered_features = list(filtered_layer.getFeatures())
+
+        if len(filtered_features) == 0:
+            return []
+
+        # Filtrowanie obiektów według 'rodzaj' oraz kontrola długości i styku z granicą
+        for obj in filtered_features:
+
             if obj['rodzaj'] not in ['estakada', 'wiadukt', 'most']:
                 obiektyZbledami.append(obj)
-                
-        # Tworzenie indeksów przestrzennych dla warstw BUIN_L i SKJZ
-        index_buin = QgsSpatialIndex(layer.getFeatures())
-        index_skjz = QgsSpatialIndex(skjz.getFeatures())
-        
-        sktr_layer_name = "OT_SKTR_L"  # Zmienna musi odpowiadać nazwie warstwy SKTR
-        sktr_layers = QgsProject.instance().mapLayersByName(sktr_layer_name)
-        
-        if sktr_layers:
-            sktr_layer = sktr_layers[0]
-            index_sktr = QgsSpatialIndex(sktr_layer.getFeatures())  # Indeks przestrzenny dla SKTR
-            
-        granica = adjaMinus2cmBufor(layer)
-        
-        distance_threshold = 10  # Wartość progowa w metrach
-        
-        for obj in filtered_layer.getFeatures():
-            try:
-                touches_boundary = False
-                nearby_skjz_ids = []
-                nearby_sktr_ids = []
-                
-                # Znajdowanie obiektów SKJZ w pobliżu obiektu BUIN_L
-                nearby_skjz_ids = index_skjz.nearestNeighbor(obj.geometry().centroid(), 10)
-                nearby_skjz = [skjz.getFeature(skjz_id) for skjz_id in nearby_skjz_ids 
-                               if obj.geometry().distance(skjz.getFeature(skjz_id).geometry()) < distance_threshold]
-                
-                # Znajdowanie obiektów SKTR w pobliżu obiektu BUIN_L (jeśli warstwa istnieje)
-                if sktr_layers:
-                    nearby_sktr_ids = index_sktr.nearestNeighbor(obj.geometry().centroid(), 10)
-                    nearby_sktr = [sktr_layer.getFeature(sktr_id) for sktr_id in nearby_sktr_ids 
-                                   if obj.geometry().distance(sktr_layer.getFeature(sktr_id).geometry()) < distance_threshold]
-                else:
-                    nearby_sktr = []
-                    
-                # 1. Jeśli BUIN_L spotyka tylko SKJZ i ma długość >= 10, jest pozytywny
-                if len(nearby_skjz) > 0 and len(nearby_sktr) == 0:
-                    if obj.geometry().length() >= 10:
-                        continue
-                    
-                # 2. Jeśli BUIN_L spotyka tylko SKTR i nie spotyka SKJZ, jest to błąd
-                if len(nearby_sktr) > 0 and len(nearby_skjz) == 0:
-                    obiektyZbledami.append(obj)
-                    continue
-                
-                # Analiza pozostałych przypadków
-                found_invalid_skjz = False
-                found_non_surface_skjz = False
-                all_skjz_on_surface = True
-                found_skjz = False
-                found_sktr = False
-                
-                if obj.geometry().length() < 10:
-                    touches_boundary = any(obj.geometry().intersects(boundary.geometry()) for boundary in granica.getFeatures())
-                    if not touches_boundary:
+                continue
+
+            # Kontrola długości obiektu BUIN_L
+            geom = obj.geometry()
+            obj_length = geom.length()
+
+            # Warunki długości i styku z granicą
+            if obj_length < 10:
+                # Sprawdzanie, czy obiekt dotyka granicy
+                if not any(geom.intersects(boundary.geometry()) for boundary in granica.getFeatures()):
+                    if obj.id() not in dodane_bledy_ids:
                         obiektyZbledami.append(obj)
-                        continue
-                    
-                for skjz_obj in nearby_skjz:
-                    found_skjz = True
-                    if skjz_obj['polozenie'] is None:
-                        found_invalid_skjz = True
-                        break
-                    elif skjz_obj['polozenie'] != 'na powierzchni gruntu':
-                        found_non_surface_skjz = True
-                        all_skjz_on_surface = False
-                        
-                if found_invalid_skjz:
-                    obiektyZbledami.append(obj)
+                        dodane_bledy_ids.add(obj.id())
                     continue
-                
-                if all_skjz_on_surface and not found_non_surface_skjz:
-                    obiektyZbledami.append(obj)
-                    continue
-                
-                for sktr_obj in nearby_sktr:
-                    found_sktr = True
-                    if sktr_obj['polozenie'] != 'na powierzchni':
-                        obiektyZbledami.append(obj)
-                        break
-                    
-                if found_sktr and not found_skjz:
-                    obiektyZbledami.append(obj)
-                    
-            except Exception as e:
-                pass
-            
+
+            # Tworzenie bufora dla geometrii obiektu BUIN_L
+            buffer_distance = 5  # Odległość bufora w metrach
+            buffered_geometry = geom.buffer(buffer_distance, 5)
+
+            # Sprawdzenie obiektów SKJZ w buforze (zamiana SKTR na SKJZ)
+            nearby_skjz_ids = index_skjz.intersects(buffered_geometry.boundingBox())
+            nearby_skjz = [skjz.getFeature(fid) for fid in nearby_skjz_ids]
+
+            # Weryfikacja atrybutu 'położenie' w obiektach SKJZ (zamiana SKTR na SKJZ)
+            skjz_valid_positions = []
+            skjz_invalid_positions = []
+            for skjz_obj in nearby_skjz:
+                try:
+                    if skjz_obj['polozenie'] == 'na powierzchni gruntu':
+                        skjz_valid_positions.append(skjz_obj)
+                    else:
+                        skjz_invalid_positions.append(skjz_obj)
+                except KeyError:
+                    skjz_invalid_positions.append(skjz_obj)
+
+            # Sprawdzenie obiektów SKTR w buforze (zamiana SKJZ na SKTR)
+            nearby_sktr_ids = index_sktr.intersects(buffered_geometry.boundingBox())
+            nearby_sktr = [sktr.getFeature(fid) for fid in nearby_sktr_ids]
+
+            # Logika decyzji
+            if len(skjz_valid_positions) > 0:
+                continue
+
+            if len(nearby_skjz) > 0 and len(nearby_sktr) == 0:
+                continue
+
+            if len(skjz_invalid_positions) == len(nearby_skjz):
+                continue
+
+            if obj.id() not in dodane_bledy_ids:
+                obiektyZbledami.append(obj)
+                dodane_bledy_ids.add(obj.id())
+
         return obiektyZbledami
-    
+
     except Exception as e:
-        # Obsługuje błędy w funkcji głównej
         return []
 
 
 def kontrolaKodKarto10k133_2(layer):
     try:
         obiektyZbledami = []
-        
+
         if not layer.isValid():
             return []
-        
+
         # Wyszukiwanie warstw OT_SKTR_L i OT_SKJZ_L
         skjz_layer_name = layer.name().replace("OT_BUIN_L", "OT_SKJZ_L")
         sktr_layer_name = layer.name().replace("OT_BUIN_L", "OT_SKTR_L")
         skjz_layers = QgsProject.instance().mapLayersByName(skjz_layer_name)
         sktr_layers = QgsProject.instance().mapLayersByName(sktr_layer_name)
-        
+
         if not skjz_layers or not sktr_layers:
             return []
-        
+
         skjz = skjz_layers[0]
         sktr = sktr_layers[0]
-        
+
         # Tworzenie indeksów przestrzennych
         index_buin = QgsSpatialIndex(layer.getFeatures())
         index_skjz = QgsSpatialIndex(skjz.getFeatures())
         index_sktr = QgsSpatialIndex(sktr.getFeatures())
-        
+
         granica = adjaMinus2cmBufor(layer)
         distance_threshold = 10  # Wartość progowa w metrach
-        
+
         extract_params = {
             'INPUT': layer,
             'EXPRESSION': '"kodKarto10k" = \'0010_133_2\'',
@@ -3677,38 +3729,38 @@ def kontrolaKodKarto10k133_2(layer):
         }
         extract_result = processing.run("qgis:extractbyexpression", extract_params)
         filtered_layer = extract_result['OUTPUT']
-        
+
         # Sprawdzanie 'rodzaj'
         for obj in filtered_layer.getFeatures():
             if obj['rodzaj'] not in ['estakada', 'wiadukt', 'most']:
                 obiektyZbledami.append(obj)
-                
+
         # Przetwarzanie obiektów
         for obj in filtered_layer.getFeatures():
             try:
                 touches_boundary = False
                 obj_length = obj.geometry().length()
                 obj_centroid = obj.geometry().centroid()
-                
+
                 # Inicjalizacja list dla obiektów w zasięgu 10 metrów
                 nearby_skjz_ids = []
                 nearby_sktr_ids = []
-                
+
                 # Sprawdzanie sąsiedztwa z SKJZ
                 for skjz_obj in skjz.getFeatures():
                     if obj_centroid.distance(skjz_obj.geometry().centroid()) <= distance_threshold:
                         nearby_skjz_ids.append(skjz_obj.id())
-                        
+
                 # Sprawdzanie sąsiedztwa z SKTR
                 for sktr_obj in sktr.getFeatures():
                     if obj_centroid.distance(sktr_obj.geometry().centroid()) <= distance_threshold:
                         nearby_sktr_ids.append(sktr_obj.id())
-                        
+
                 # Jeśli BUIN_L ma tylko SKJZ w sąsiedztwie i jego długość mieści się w przedziale [3, 10)
                 if len(nearby_skjz_ids) > 0 and len(nearby_sktr_ids) == 0:
                     if 3 <= obj_length < 10:
                         continue
-                    
+
                     # Analiza długości obiektu w innych przypadkach
                     if obj_length < 3:
                         for boundary in granica.getFeatures():
@@ -3721,7 +3773,7 @@ def kontrolaKodKarto10k133_2(layer):
                     elif obj_length >= 10:
                         obiektyZbledami.append(obj)
                         continue
-                    
+
                     if 3 <= obj_length < 10:
                         found_invalid_skjz = False
                         for skjz_obj in skjz.getFeatures():
@@ -3731,11 +3783,11 @@ def kontrolaKodKarto10k133_2(layer):
                                     break
                         if found_invalid_skjz:
                             obiektyZbledami.append(obj)
-                            
+
                 # Dodanie warunku, kiedy BUIN_L ma w sąsiedztwie tylko SKTR, a nie ma SKJZ
                 elif len(nearby_sktr_ids) > 0 and len(nearby_skjz_ids) == 0:
                     obiektyZbledami.append(obj)
-                    
+
                 # Jeśli obiekt ma zarówno SKJZ, jak i SKTR w pobliżu, przeprowadzamy dodatkową analizę
                 else:
                     found_intersection = False
@@ -3748,144 +3800,173 @@ def kontrolaKodKarto10k133_2(layer):
                                 break
                     if found_intersection:
                         obiektyZbledami.append(obj)
-                        
+
             except Exception:
-                pass
-            
+                pass  
+
         return obiektyZbledami
-    
+
     except Exception:
         return []
-
-
+    
 def kontrolaKodKarto10k134_1(layer):
-     try:
-         obiektyZbledami = []
-         granica = adjaMinus2cmBufor(layer)
-         for obj in layer.getFeatures():
-             try:
-                 if obj["kodKarto10k"] == '0010_134_1':
-                     if obj['rodzaj'] != 'kładka':
-                         obiektyZbledami.append(obj)
-                     geom = obj.geometry()
-                     touches_boundary = any(geom.intersects(boundary.geometry()) for boundary in granica.getFeatures())
-                     if not touches_boundary:
-                         if not (geom.length() >= 10):
-                             obiektyZbledami.append(obj)
-             except Exception:
-                  pass
-         return obiektyZbledami
-     
-     except Exception:
-         return []
-
-
-def kontrolaKodKarto10k134_2(layer):
-     try:
-         obiektyZbledami = []
-         granica = adjaMinus2cmBufor(layer)
-         for obj in layer.getFeatures():
-             try:
-                 if obj["kodKarto10k"] == '0010_134_2':
-                     if obj['rodzaj'] != 'kładka':
-                         obiektyZbledami.append(obj)
-                     geom = obj.geometry()
-                     touches_boundary = any(obj.geometry().intersects(boundary.geometry()) for boundary in granica.getFeatures())
-                     if not touches_boundary:
-                         if geom.length() < 3 or geom.length() > 10:
-                             obiektyZbledami.append(obj)
-             except Exception:
-                 pass
-         return obiektyZbledami
-     
-     except Exception:
-         return []
-
-
-def kontrolaKodKarto10k638_1(layer):
-     try:
-         obiektyZbledami = []
-         granica = adjaMinus2cmBufor(layer)
-         for obj in layer.getFeatures():
-             try:
-                 if obj["kodKarto10k"] == '0010_638_1':
-                     if obj['rodzaj'] != 'akwedukt':
-                         obiektyZbledami.append(obj)
-                     geom = obj.geometry()
-                     touches_boundary = any(obj.geometry().intersects(boundary.geometry()) for boundary in granica.getFeatures())
-                     if not touches_boundary:
-                         if not (geom.length() >= 10):
-                             obiektyZbledami.append(obj)
-             except Exception:
-                  pass
-         return obiektyZbledami
-     
-     except Exception:
-         return []
-
-
-def kontrolaKodKarto10k638_2(layer):
-     try:
-         obiektyZbledami = []
-         granica = adjaMinus2cmBufor(layer)
-         for obj in layer.getFeatures():
+    try:
+        obiektyZbledami = []
+        granica = adjaMinus2cmBufor(layer)
+        for obj in layer.getFeatures():
             try:
-                if obj["kodKarto10k"] == '0010_638_2':
-                    if obj['rodzaj'] != 'akwedukt':
+                if obj["kodKarto10k"] == '0010_134_1':
+                    if obj['rodzaj'] != 'kładka':
                         obiektyZbledami.append(obj)
+                        continue
                     geom = obj.geometry()
-                    touches_boundary = any(obj.geometry().intersects(boundary.geometry()) for boundary in granica.getFeatures())
-                    
+                    touches_boundary = any(geom.intersects(boundary.geometry()) for boundary in granica.getFeatures())
                     if not touches_boundary:
-                        if not (geom.length() < 10):
+                        if not (geom.length() >= 10):
                             obiektyZbledami.append(obj)
             except Exception:
                  pass
-         return obiektyZbledami
-     
-     except Exception:
-         return []
+        return obiektyZbledami
+
+    except Exception:
+        return []
+        
+    
+def kontrolaKodKarto10k134_2(layer):
+    try:
+        obiektyZbledami = []
+        granica = adjaMinus2cmBufor(layer)
+        for obj in layer.getFeatures():
+            try:
+                if obj["kodKarto10k"] == '0010_134_2':
+                    if obj['rodzaj'] != 'kładka':
+                        obiektyZbledami.append(obj)
+                        continue
+                    geom = obj.geometry()
+                    touches_boundary = any(obj.geometry().intersects(boundary.geometry()) for boundary in granica.getFeatures())
+                    if not touches_boundary:
+                        if geom.length() < 3 or geom.length() > 10:
+                            obiektyZbledami.append(obj)
+            except Exception:
+                pass
+        return obiektyZbledami
+
+    except Exception:
+        return []
+    
+    
+def kontrolaKodKarto10k638_1(layer):
+    try:
+        obiektyZbledami = []
+        granica = adjaMinus2cmBufor(layer)
+        for obj in layer.getFeatures():
+            try:
+                if obj["kodKarto10k"] == '0010_638_1':
+                    if obj['rodzaj'] != 'akwedukt':
+                        obiektyZbledami.append(obj)
+                        continue
+                    geom = obj.geometry()
+                    touches_boundary = any(obj.geometry().intersects(boundary.geometry()) for boundary in granica.getFeatures())
+                    if not touches_boundary:
+                        if not (geom.length() >= 10):
+                            obiektyZbledami.append(obj)
+            except Exception:
+                 pass
+        return obiektyZbledami
+
+    except Exception:
+        return []
+        
+
+def kontrolaKodKarto10k638_2(layer):  
+    try:
+        obiektyZbledami = []
+        granica = adjaMinus2cmBufor(layer)
+        for obj in layer.getFeatures():
+           try:
+               if obj["kodKarto10k"] == '0010_638_2':
+                   if obj['rodzaj'] != 'akwedukt':
+                       obiektyZbledami.append(obj)
+                       continue
+                   geom = obj.geometry()
+                   touches_boundary = any(obj.geometry().intersects(boundary.geometry()) for boundary in granica.getFeatures())
+                   
+                   if not touches_boundary:
+                       if not (geom.length() < 10):
+                           obiektyZbledami.append(obj)
+           except Exception:
+                pass
+        return obiektyZbledami
+
+    except Exception:
+        return []
 
 
 def kontrolaRelacjiDzialkaEwidencyjnaDoPunktGraniczny(layer):
     obiektyZbledami = []
     
     try:
-        EGB_PunktGraniczny_layer = None
-        EGB_PunktGraniczny_layer = QgsProject().instance().mapLayersByName(layer.name().replace("DzialkaEwidencyjna","PunktGraniczny"))[0]
+        DzialkaEwidencyjna_layer = QgsProject().instance().mapLayersByName(layer.name().replace("PunktGraniczny","DzialkaEwidencyjna"))[0]
     except:
         pass
     
-    for obj in layer.getFeatures():
-        error_msg = ''
-        if layer.fields().indexOf('punktGranicyDzialki_href') == -1 or obj['punktGranicyDzialki_href'] == NULL:
-            error_msg = 'Działka ewidencyjna nie referuje na punkty granicy działki.'
-        else:
-            if EGB_PunktGraniczny_layer == None:
-                error_msg = 'Brak punktów granicznych w pliku GML.'
-            punktGranicyDzialki_href = obj['punktGranicyDzialki_href']
-            if isinstance(punktGranicyDzialki_href, list):
-                if '' in punktGranicyDzialki_href:
-                    error_msg += 'Działka ewidencyjna posiada pustą referencję na punkt granicy działki.'
-                    punktGranicyDzialki_href.remove('')
-                if len(punktGranicyDzialki_href) < 3:
-                    error_msg += 'Działka ewidencyjna musi referować na minimum trzy punkty granicy działki.'
-                for href in punktGranicyDzialki_href:
-                    request = QgsFeatureRequest().setFilterExpression(f"gml_id = '{href}'")
-                    matching_features = list(EGB_PunktGraniczny_layer.getFeatures(request))
-                    if not matching_features:
-                        error_msg += 'Działka ewidencyjna posiada błędną referencję na punkt granicy działki.'
-                        break
-            else:
-                error_msg = 'Działka ewidencyjna musi referować na minimum trzy punkty granicy działki.'
-        
-        if error_msg != '':
-            gml_id = obj['gml_id'] + '|' + error_msg
-            obj.setAttribute(layer.fields().indexFromName("gml_id"), gml_id)
-            layer.updateFeature(obj)
-            obiektyZbledami.append(obj)
-            layer.commitChanges()
+    extractbyexpression = processing.run("qgis:extractbyexpression", {
+        'INPUT': DzialkaEwidencyjna_layer,
+        'EXPRESSION': "'punktGranicyDzialki_href' IS NOT NULL",
+        'FAIL_OUTPUT': 'memory:',
+        'OUTPUT': 'memory:'
+    })
     
+    for obj in DzialkaEwidencyjna_layer.getFeatures():
+        jestBlad = False
+        if isinstance(obj['punktGranicyDzialki_href'], list):
+            if len(obj['punktGranicyDzialki_href']) < 3:
+                jestBlad = True
+        else:
+            jestBlad = True
+        if jestBlad:
+            gml_id = obj['gml_id'] + '| Brak min. 3 punktów granicznych przypisanych do działki ewidencyjnej'
+            obj.setAttribute(DzialkaEwidencyjna_layer.fields().indexFromName("gml_id"), gml_id)
+            DzialkaEwidencyjna_layer.updateFeature(obj)
+            obiektyZbledami.append(obj)
+            DzialkaEwidencyjna_layer.commitChanges()
+    
+    if extractbyexpression['OUTPUT'].featureCount() > 0 and layer.featureCount() > 0:
+        punktyGranicyDzialki_hrefy = set()
+        
+        for obj in extractbyexpression['OUTPUT'].getFeatures():
+            if isinstance(obj['punktGranicyDzialki_href'], list):
+                for gmlid in obj['punktGranicyDzialki_href']:
+                    punktyGranicyDzialki_hrefy.add(gmlid)
+            else:
+                punktyGranicyDzialki_hrefy.add(obj['punktGranicyDzialki_href'])
+        
+        gmlid_PunktyGraniczne = set()
+        
+        for obj_PG in layer.getFeatures():
+            gmlid_PunktyGraniczne.add(obj_PG['gml_id'])
+            
+        only_in_punktyGranicyDzialki_hrefy = punktyGranicyDzialki_hrefy.difference(gmlid_PunktyGraniczne)
+        only_in_gmlid_PunktyGraniczne = gmlid_PunktyGraniczne.difference(punktyGranicyDzialki_hrefy)
+        
+        if len(only_in_gmlid_PunktyGraniczne) > 0:
+            for obj in layer.getFeatures():
+                if obj['gml_id'] in only_in_gmlid_PunktyGraniczne:
+                    gml_id = obj['gml_id'] + '| punkt graniczny nie referuje na żadną działkę'
+                    obj.setAttribute(layer.fields().indexFromName("gml_id"), gml_id)
+                    layer.updateFeature(obj)
+                    obiektyZbledami.append(obj)
+                    layer.commitChanges()
+        
+        if len(only_in_punktyGranicyDzialki_hrefy) > 0:
+            for obj in DzialkaEwidencyjna_layer.getFeatures():
+                if obj['gml_id'] in only_in_punktyGranicyDzialki_hrefy:
+                    gml_id = obj['gml_id'] + '| '
+                    obj.setAttribute(DzialkaEwidencyjna_layer.fields().indexFromName("gml_id"), gml_id)
+                    DzialkaEwidencyjna_layer.updateFeature(obj)
+                    obiektyZbledami.append(obj)
+                    DzialkaEwidencyjna_layer.commitChanges()
+        
     return obiektyZbledami
 
 
