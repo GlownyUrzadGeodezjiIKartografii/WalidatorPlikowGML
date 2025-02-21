@@ -1992,8 +1992,7 @@ class walidatorPlikowGML:
                                                     warstwa = warstwyBledowKontroliAtrybutow['LineString']
                                                 elif typ_geometrii == 'Polygon' or typ_geometrii == 'CurvePolygon':
                                                     warstwa = warstwyBledowKontroliAtrybutow['Polygon']
-                                                else:
-                                                    continue
+                                                
                                                 if idKontroli in ['topo_e5_k1']:
                                                     klasaDoRaportowania = gmlid
                                                     gmlid = 'nie dotyczy'
@@ -2009,8 +2008,9 @@ class walidatorPlikowGML:
                                                     errorPhrase_fin = errorPhrase
                                                 
                                                 feature.setAttributes([gmlid, klasaDoRaportowania, errorPhrase_fin])
-                                                warstwa.dataProvider().addFeatures([feature])
-                                                QgsProject.instance().addMapLayer(warstwa)
+                                                if typ_geometrii != 'Unknown':
+                                                    warstwa.dataProvider().addFeatures([feature])
+                                                    QgsProject.instance().addMapLayer(warstwa)
                                                 
                                             if idKontroli not in kontrolePojedynczyKomunikat or not kontrolePojedynczyKomunikat[idKontroli]:
                                                 komunikatyBledowKontroli_df.append(errorPhrase_fin)

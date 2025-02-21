@@ -909,7 +909,7 @@
           <item row="1" column="1">
            <widget class="QLabel" name="label_14">
             <property name="text">
-             <string>1.1.6</string>
+             <string>1.1.7</string>
             </property>
             <property name="scaledContents">
              <bool>true</bool>
