@@ -3818,33 +3818,29 @@ def kontrolaKodKarto10k220_1(layer):
 def kontrolaKodKarto10k220_2(layer):
     try:
         obiektyZbledami = []
-        dodane_bledy_ids = set()  # analiza unikalnych Id obiektów błędnych
+        dodane_bledy_ids = set()
         
         if not layer.isValid():
             return []
-            
-        # Wyszukiwanie warstw OT_SKTR_L i OT_SKJZ_L
-        skjz_layer_name = layer.name().replace("OT_BUIN_L", "OT_SKTR_L")
-        sktr_layer_name = layer.name().replace("OT_BUIN_L", "OT_SKJZ_L")
         
-        skjz_layers = QgsProject.instance().mapLayersByName(skjz_layer_name)
+        sktr_layer_name = layer.name().replace("OT_BUIN_L", "OT_SKTR_L")
+        skjz_layer_name = layer.name().replace("OT_BUIN_L", "OT_SKJZ_L")
+        
         sktr_layers = QgsProject.instance().mapLayersByName(sktr_layer_name)
+        skjz_layers = QgsProject.instance().mapLayersByName(skjz_layer_name)
         
-        if not skjz_layers or not sktr_layers:
+        if not sktr_layers or not skjz_layers:
             return []
-            
-        skjz = skjz_layers[0]
-        sktr = sktr_layers[0]
         
-        # Tworzenie indeksów przestrzennych
+        sktr = sktr_layers[0]
+        skjz = skjz_layers[0]
+        
         index_buin = QgsSpatialIndex(layer.getFeatures())
         index_sktr = QgsSpatialIndex(sktr.getFeatures())
         index_skjz = QgsSpatialIndex(skjz.getFeatures())
         
         granica = adjaMinus2cmBufor(layer)
-        distance_threshold = 10  # Wartość progowa w metrach
         
-        # Zmieniony kod na '0010_220_2'
         extract_params = {
             'INPUT': layer,
             'EXPRESSION': '"kodKarto10k" = \'0010_220_2\'',
@@ -3852,70 +3848,72 @@ def kontrolaKodKarto10k220_2(layer):
         }
         extract_result = processing.run("qgis:extractbyexpression", extract_params)
         filtered_layer = extract_result['OUTPUT']
+        filtered_features = list(filtered_layer.getFeatures())
         
-        # Sprawdzanie 'rodzaj'
-        for obj in filtered_layer.getFeatures():
+        if len(filtered_features) == 0:
+            return []
+        
+        for obj in filtered_features:
             if obj['rodzaj'] not in ['estakada', 'wiadukt', 'most']:
+                obiektyZbledami.append(obj)
+                continue
+            
+            geom = obj.geometry()
+            obj_length = geom.length()
+            
+            buffer_distance = 5 
+            buffered_geometry = geom.buffer(buffer_distance, 5)
+            
+            nearby_sktr_ids = index_sktr.intersects(buffered_geometry.boundingBox())
+            nearby_sktr = [sktr.getFeature(fid) for fid in nearby_sktr_ids]
+            
+            nearby_skjz_ids = index_skjz.intersects(buffered_geometry.boundingBox())
+            nearby_skjz = [skjz.getFeature(fid) for fid in nearby_skjz_ids]
+            
+            # Jeśli obiekt nie styka się z żadnym SKTR
+            if len(nearby_sktr) == 0:
                 if obj.id() not in dodane_bledy_ids:
                     obiektyZbledami.append(obj)
                     dodane_bledy_ids.add(obj.id())
                 continue
-                
-        # Przetwarzanie obiektów
-        for obj in filtered_layer.getFeatures():
-            try:
-                obj_length = obj.geometry().length()
-                obj_centroid = obj.geometry().centroid()
-                
-                # Sprawdzanie geometrii
-                if not obj.geometry().isGeosValid():
+            
+            # Jeśli BUIN_L ma tylko SKTR w sąsiedztwie
+            if len(nearby_sktr) > 0 and len(nearby_skjz) == 0:
+                if 3 <= obj_length < 10:
                     continue
-                    
-                # Analiza obiektów w zasięgu 10 metrów
-                nearby_sktr_ids = index_sktr.intersects(obj.geometry().boundingBox())
-                nearby_skjz_ids = index_skjz.intersects(obj.geometry().boundingBox())
                 
-                nearby_sktr = [sktr.getFeature(fid) for fid in nearby_sktr_ids]
-                nearby_skjz = [skjz.getFeature(fid) for fid in nearby_skjz_ids]
-                
-                # Jeśli BUIN_L ma tylko SKTR w sąsiedztwie
-                if len(nearby_sktr) > 0 and len(nearby_skjz) == 0:
-                    if 3 <= obj_length < 10:
-                        continue
-                        
-                    if obj_length < 3:
-                        if not any(obj.geometry().intersects(boundary.geometry()) for boundary in granica.getFeatures()):
-                            if obj.id() not in dodane_bledy_ids:
-                                obiektyZbledami.append(obj)
-                                dodane_bledy_ids.add(obj.id())
-                    elif obj_length >= 10:
+                if obj_length < 3:
+                    if not any(obj.geometry().intersects(boundary.geometry()) for boundary in granica.getFeatures()):
                         if obj.id() not in dodane_bledy_ids:
                             obiektyZbledami.append(obj)
                             dodane_bledy_ids.add(obj.id())
-                    else:
-                        for sktr_obj in nearby_sktr:
-                            if sktr_obj['polozenie'] is None or sktr_obj['polozenie'] == 'na powierzchni gruntu':
-                                if obj.id() not in dodane_bledy_ids:
-                                    obiektyZbledami.append(obj)
-                                    dodane_bledy_ids.add(obj.id())
-                                    
-                elif len(nearby_skjz) > 0 and len(nearby_sktr) == 0:
+                elif obj_length >= 10:
                     if obj.id() not in dodane_bledy_ids:
                         obiektyZbledami.append(obj)
                         dodane_bledy_ids.add(obj.id())
-                        
-                else:
-                    for skjz_obj in nearby_skjz:
-                        if obj.geometry().distance(skjz_obj.geometry()) < distance_threshold:
-                            polozenie = skjz_obj['polozenie']
-                            if polozenie is None or polozenie.strip().lower() != 'na powierzchni gruntu':
-                                if obj.id() not in dodane_bledy_ids:
-                                    obiektyZbledami.append(obj)
-                                    dodane_bledy_ids.add(obj.id())
-                                break
-                            
-            except Exception as e:
-                pass
+                continue
+            
+            sktr_valid_positions = []
+            sktr_invalid_positions = []
+            for sktr_obj in nearby_sktr:
+                try:
+                    if sktr_obj['polozenie'] == 'na powierzchni gruntu':
+                        sktr_valid_positions.append(sktr_obj)
+                    else:
+                        sktr_invalid_positions.append(sktr_obj)
+                except KeyError:
+                    sktr_invalid_positions.append(sktr_obj)
+                    
+            if len(sktr_valid_positions) > 0:
+                continue
+            
+            if len(sktr_invalid_positions) == len(nearby_sktr):
+                continue
+            
+            if obj.id() not in dodane_bledy_ids:
+                obiektyZbledami.append(obj)
+                dodane_bledy_ids.add(obj.id())
+                
         return obiektyZbledami
     except Exception as e:
         return []
@@ -4233,29 +4231,29 @@ def kontrolaKodKarto10k133_1(layer):
 def kontrolaKodKarto10k133_2(layer):
     try:
         obiektyZbledami = []
+        dodane_bledy_ids = set()
         
         if not layer.isValid():
             return []
-            
-        # Wyszukiwanie warstw OT_SKTR_L i OT_SKJZ_L
+        
         skjz_layer_name = layer.name().replace("OT_BUIN_L", "OT_SKJZ_L")
         sktr_layer_name = layer.name().replace("OT_BUIN_L", "OT_SKTR_L")
+        
         skjz_layers = QgsProject.instance().mapLayersByName(skjz_layer_name)
         sktr_layers = QgsProject.instance().mapLayersByName(sktr_layer_name)
         
         if not skjz_layers or not sktr_layers:
             return []
-            
+        
         skjz = skjz_layers[0]
         sktr = sktr_layers[0]
         
-        # Tworzenie indeksów przestrzennych
         index_buin = QgsSpatialIndex(layer.getFeatures())
         index_skjz = QgsSpatialIndex(skjz.getFeatures())
         index_sktr = QgsSpatialIndex(sktr.getFeatures())
         
         granica = adjaMinus2cmBufor(layer)
-        distance_threshold = 10  # Wartość progowa w metrach
+        distance_threshold = 10
         
         extract_params = {
             'INPUT': layer,
@@ -4265,80 +4263,64 @@ def kontrolaKodKarto10k133_2(layer):
         extract_result = processing.run("qgis:extractbyexpression", extract_params)
         filtered_layer = extract_result['OUTPUT']
         
-        # Sprawdzanie 'rodzaj'
         for obj in filtered_layer.getFeatures():
+            if obj.id() in dodane_bledy_ids:
+                continue  # Jeśli obiekt już dodano, pomijamy dalsze sprawdzenia
+            
             if obj['rodzaj'] not in ['estakada', 'wiadukt', 'most']:
                 obiektyZbledami.append(obj)
-                
-        # Przetwarzanie obiektów
-        for obj in filtered_layer.getFeatures():
-            try:
-                touches_boundary = False
-                obj_length = obj.geometry().length()
-                obj_centroid = obj.geometry().centroid()
-                
-                # Inicjalizacja list dla obiektów w zasięgu 10 metrów
-                nearby_skjz_ids = []
-                nearby_sktr_ids = []
-                
-                # Sprawdzanie sąsiedztwa z SKJZ
-                for skjz_obj in skjz.getFeatures():
-                    if obj_centroid.distance(skjz_obj.geometry().centroid()) <= distance_threshold:
-                        nearby_skjz_ids.append(skjz_obj.id())
-                        
-                # Sprawdzanie sąsiedztwa z SKTR
-                for sktr_obj in sktr.getFeatures():
-                    if obj_centroid.distance(sktr_obj.geometry().centroid()) <= distance_threshold:
-                        nearby_sktr_ids.append(sktr_obj.id())
-                        
-                # Jeśli BUIN_L ma tylko SKJZ w sąsiedztwie i jego długość mieści się w przedziale [3, 10)
-                if len(nearby_skjz_ids) > 0 and len(nearby_sktr_ids) == 0:
-                    if 3 <= obj_length < 10:
-                        continue
-                        
-                    # Analiza długości obiektu w innych przypadkach
-                    if obj_length < 3:
-                        for boundary in granica.getFeatures():
-                            if obj.geometry().intersects(boundary.geometry()):
-                                touches_boundary = True
-                                break
-                        if not touches_boundary:
-                            obiektyZbledami.append(obj)
-                            continue
-                    elif obj_length >= 10:
-                        obiektyZbledami.append(obj)
-                        continue
-                        
-                    if 3 <= obj_length < 10:
-                        found_invalid_skjz = False
-                        for skjz_obj in skjz.getFeatures():
-                            if obj.geometry().distance(skjz_obj.geometry()) < distance_threshold:
-                                if skjz_obj['polozenie'] is None or skjz_obj['polozenie'] == 'na powierzchni gruntu':
-                                    found_invalid_skjz = True
-                                    break
-                        if found_invalid_skjz:
-                            obiektyZbledami.append(obj)
-                            
-                # Dodanie warunku, kiedy BUIN_L ma w sąsiedztwie tylko SKTR, a nie ma SKJZ
-                elif len(nearby_sktr_ids) > 0 and len(nearby_skjz_ids) == 0:
-                    obiektyZbledami.append(obj)
+                dodane_bledy_ids.add(obj.id())
+                continue
+            
+            obj_length = obj.geometry().length()
+            obj_centroid = obj.geometry().centroid()
+            
+            nearby_skjz_ids = []
+            nearby_sktr_ids = []
+            
+            for skjz_obj in skjz.getFeatures():
+                if obj_centroid.distance(skjz_obj.geometry().centroid()) <= distance_threshold:
+                    nearby_skjz_ids.append(skjz_obj.id())
                     
-                # Jeśli obiekt ma zarówno SKJZ, jak i SKTR w pobliżu, przeprowadzamy dodatkową analizę
-                else:
-                    found_intersection = False
-                    for sktr_obj in sktr.getFeatures():
-                        if obj.geometry().distance(sktr_obj.geometry()) < distance_threshold:
-                            polozenie = sktr_obj['polozenie']
-                            if polozenie is None or polozenie.strip().lower() != 'na powierzchni gruntu':
-                                obiektyZbledami.append(obj)
-                                found_intersection = True
-                                break
-                    if found_intersection:
+            for sktr_obj in sktr.getFeatures():
+                if obj_centroid.distance(sktr_obj.geometry().centroid()) <= distance_threshold:
+                    nearby_sktr_ids.append(sktr_obj.id())
+                    
+            if len(nearby_skjz_ids) > 0 and len(nearby_sktr_ids) == 0:
+                if 3 <= obj_length < 10:
+                    continue
+                    
+                if obj_length < 3:
+                    if not any(obj.geometry().intersects(boundary.geometry()) for boundary in granica.getFeatures()):
                         obiektyZbledami.append(obj)
+                        dodane_bledy_ids.add(obj.id())
+                elif obj_length >= 10:
+                    obiektyZbledami.append(obj)
+                    dodane_bledy_ids.add(obj.id())
+                
+                if 3 <= obj_length < 10:
+                    for skjz_obj in skjz.getFeatures():
+                        if obj.geometry().distance(skjz_obj.geometry()) < distance_threshold:
+                            if skjz_obj['polozenie'] is None or skjz_obj['polozenie'] == 'na powierzchni gruntu':
+                                obiektyZbledami.append(obj)
+                                dodane_bledy_ids.add(obj.id())
+                                break
                         
-            except Exception:
-                pass
+            elif len(nearby_sktr_ids) > 0 and len(nearby_skjz_ids) == 0:
+                obiektyZbledami.append(obj)
+                dodane_bledy_ids.add(obj.id())
+                
+            else:
+                for sktr_obj in sktr.getFeatures():
+                    if obj.geometry().distance(sktr_obj.geometry()) < distance_threshold:
+                        polozenie = sktr_obj['polozenie']
+                        if polozenie is None or polozenie.strip().lower() != 'na powierzchni gruntu':
+                            obiektyZbledami.append(obj)
+                            dodane_bledy_ids.add(obj.id())
+                            break
+        
         return obiektyZbledami
+    
     except Exception:
         return []
 
