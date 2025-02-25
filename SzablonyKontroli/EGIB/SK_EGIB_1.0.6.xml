@@ -17,7 +17,7 @@
 			<Parametr typ="QgsExpression" sql="status&lt;&gt;1"/>
 		</Kontrola>	
 		<Kontrola id="egib_e1_k6" name="Kontrola atrybutu geometria dla rodzaju obiektu związanego z budynkiem=t/w/i/s/r/j/d" class="EGB_ObiektTrwaleZwiazanyZBudynkiem" errorPhrase="Geometria jest innego typu niż powierzchnia dla rodzaju obiektu związanego z budynkiem równego t/w/i/s/r/j/d">
-			<Parametr typ="QgsExpression" sql="(rodzajObiektuZwiazanegoZBudynkiem='t' or rodzajObiektuZwiazanegoZBudynkiem='w' or rodzajObiektuZwiazanegoZBudynkiem='i' or rodzajObiektuZwiazanegoZBudynkiem='s' or rodzajObiektuZwiazanegoZBudynkiem='r' and rodzajObiektuZwiazanegoZBudynkiem='j' and rodzajObiektuZwiazanegoZBudynkiem='d') and (geometry_type($geometry)='Point' or geometry_type($geometry)='Line')"/>
+			<Parametr typ="pythonFunction" sql="KontrolaAtrybutuGeometriaBudynek(gml)"/>
 		</Kontrola>
 		<Kontrola id="egib_e1_k7" name="Kontrola atrybutu status EGB_Instytucja" class="EGB_Instytucja" errorPhrase="Atrybut status nie przyjmuje wartości pomiędzy 3 i 47, z wyłączeniem wartości 32,33,34,35">
 			<Parametr typ="QgsExpression" sql="status&lt;3 or status&gt;47 or status=32 or status=33 or status=34 or status=35"/>
@@ -96,6 +96,7 @@
 
 <!-- ChangeLog
 1.0.6   zmodyfikowano kontrole:
+			egib_e1_k6
 			egib_e1_k11 
 			egib_e1_k12
 			egib_e1_k13
