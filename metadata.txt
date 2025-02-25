@@ -21,7 +21,7 @@ repository=https://github.com/GlownyUrzadGeodezjiIKartografii/WalidatorPlikowGML
 hasProcessingProvider=no
 # Uncomment the following line and add your changelog:
 changelog=
-    1.1.7 Dodano lub poprawiono kontrole GESUT
+    1.1.7 Dodano lub poprawiono kontrole GESUT.
           Dodano lub poprawiono kontrole BDOT500.
           Dodano lub poprawiono kontrole EGiB.
           Dodano lub poprawiono kontrole BDOT10k.

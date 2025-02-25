@@ -1492,6 +1492,31 @@ def kontrolaZgodnosciFunkcjaSzczegolowaBudynkuZprzewazajacaFunkcjaBudynku(layer)
     return obiektyZbledami
 
 
+def KontrolaAtrybutuGeometriaBudynek(layer, plikGML):
+    obiektyZbledami = []
+    plikGML = plikGML.getroot()
+    ns = {'gml': 'http://www.opengis.net/gml/3.2', 'egb': 'ewidencjaGruntowIBudynkow:1.0'}
+    for featureMember in plikGML.findall('.//gml:featureMember', namespaces = ns):
+        budynek = featureMember.find('.//egb:EGB_ObiektTrwaleZwiazanyZBudynkiem', namespaces=ns)
+        if budynek is not None:
+            rodzajObiektu = budynek.find('.//egb:rodzajObiektuZwiazanegoZBudynkiem', namespaces=ns)
+            rodzajObiektu_text = rodzajObiektu.text if rodzajObiektu is not None else "Nieznane ID"
+            if rodzajObiektu_text in ['t', 'w', 'i','s','r','j','d']:
+                lokalnyId = budynek.find('.//egb:lokalnyId', namespaces=ns)
+                lokalnyId_text = lokalnyId.text if lokalnyId is not None else "Nieznane ID"
+                geometria = budynek.findall('.//egb:geometria', namespaces=ns)
+                for g in geometria:
+                    polygon = g.find('.//gml:Polygon', namespaces=ns)
+                    surface = g.find('.//gml:Surface', namespaces=ns)
+                    if polygon is None and surface in None:
+                        expression = f"\"lokalnyId\" = '{lokalnyId_text}'"
+                        request = QgsFeatureRequest().setFilterExpression(expression)
+                        for feature in layer.getFeatures(request):
+                           obiektyZbledami.append(feature)
+                           
+    return obiektyZbledami
+
+
 def KontrolaAtrybutuKlasouzytek(layer, plikGML):
     obiektyZbledami = []
     plikGML = plikGML.getroot()
