@@ -252,70 +252,99 @@ def minimalnaPTTRronda(layer):
 
 
 def minimalnaPowierzchniaBezWod(layer):
-    global obiektyZbledami # przekazanie do funkcji powyżej
+    global obiektyZbledami  # Przekazanie do funkcji powyżej
     obiektyZbledami = []
-    minPowWarstwy = {"OT_PTGN_A":1000, "OT_PTLZ_A":500, "OT_PTRK_A":1000, "OT_PTTR_A":500}
+    minPowWarstwy = {"OT_PTGN_A": 1000, "OT_PTLZ_A": 500, "OT_PTRK_A": 1000, "OT_PTTR_A": 500}
     klasa = layer.name()[-9:]
     granica = adjaMinus2cmBufor(layer)
     index_granica = QgsSpatialIndex()
     index_pokrycie = []
+    
     for layer_id, lyr in QgsProject.instance().mapLayers().items():
-       if lyr.name().__contains__("OT_PT"): # wrzucenie wszystkich warstw Pokrycia do jednej tablicy
-           index = QgsSpatialIndex()
-           for feature in lyr.getFeatures(): # umieszczenie wszystkich indeksów na obiekcie przestrzennym
-               index.insertFeature(feature)
-           index_pokrycie.append((lyr, index))
+        if "OT_PT" in lyr.name():
+            index = QgsSpatialIndex()
+            for feature in lyr.getFeatures():
+                index.insertFeature(feature)
+            index_pokrycie.append((lyr, index))
+            
     for feature in granica.getFeatures():
-           index_granica.insertFeature(feature)
-    if klasa == 'OT_PTTR_A': # dodatkowy indeks przestrzenny dla PTTR bez ronda
-       SKRW_P_layer = QgsProject().instance().mapLayersByName(layer.name().replace(klasa,"OT_SKRW_P"))[0]
-       index_SKRW_P = QgsSpatialIndex()
-       identyfikatory_bledow = set()
-       for SKRW_P_feature in SKRW_P_layer.getFeatures():
-               if SKRW_P_feature['rodzaj'] == 'rondo':
-                   index_SKRW_P.insertFeature(SKRW_P_feature)
-    for feature in layer.getFeatures(): # obiekty z przeglądanych warstw
-       geom = feature.geometry()
+        index_granica.insertFeature(feature)
+        
+    # Dodatkowy indeks dla PTTR bez ronda
+    if klasa == 'OT_PTTR_A':
+        SKRW_P_layer = QgsProject().instance().mapLayersByName(layer.name().replace(klasa, "OT_SKRW_P"))[0]
+        index_SKRW_P = QgsSpatialIndex()
+        identyfikatory_bledow = set()
+        for SKRW_P_feature in SKRW_P_layer.getFeatures():
+            if SKRW_P_feature['rodzaj'] == 'rondo':
+                index_SKRW_P.insertFeature(SKRW_P_feature)
+                
+    for feature in layer.getFeatures():
+        geom = feature.geometry()
+        
         # Sprawdzenie powierzchni
-       if klasa in minPowWarstwy and geom.area() > minPowWarstwy[klasa]:
-           continue
-       graniczy_z = set()
-       # Sprawdzanie sąsiedztwa z warstwami OT_PT
-       for lyr, index in index_pokrycie:
-           for fid in index.intersects(geom.boundingBox()):
-               lyr_feature = lyr.getFeature(fid)
-               if lyr_feature.id() != feature.id() and geom.intersects(lyr_feature.geometry()): # pomija sąsiada z tej samej warstwy
-                        graniczy_z.add(lyr.name())
-       # Sprawdzanie, czy obiekt graniczy tylko z jedną warstwą
-       if len(graniczy_z) == 1 and any(layer_name.endswith('OT_PTWP_A') for layer_name in graniczy_z):
-           continue  # Pomiń obiekt, jeśli graniczy tylko z OT_PTWP_A
-       if klasa == 'OT_PTTR_A':
-           intersects_SKRW_P = any(geom.intersects(SKRW_P_layer.getFeature(fid).geometry()) for fid in index_SKRW_P.intersects(geom.boundingBox()))
-           touches_boundary = any(geom.intersects(granica.getFeature(fid).geometry()) for fid in index_granica.intersects(geom.boundingBox()))
-           if not intersects_SKRW_P and not touches_boundary and feature.id() not in identyfikatory_bledow:
-               obiektyZbledami.append(feature)
-               identyfikatory_bledow.add(feature.id())
-       else:
-           styka = False
-           for g in granica.getFeatures():
-               if not geom.intersects(g.geometry()):
-                   styka = True
-                   obiektyZbledami.append(feature)
+        if klasa in minPowWarstwy and geom.area() > minPowWarstwy[klasa]:
+            continue
+        
+        graniczy_z = set()
+        
+        # Sprawdzenie sąsiedztwa
+        for lyr, index in index_pokrycie:
+            for fid in index.intersects(geom.boundingBox()):
+                lyr_feature = lyr.getFeature(fid)
+                if lyr_feature.id() != feature.id() and geom.intersects(lyr_feature.geometry()):
+                    graniczy_z.add(lyr.name())
+        
+        # Pominięcie obiektów graniczących tylko z OT_PTWP_A
+        if len(graniczy_z) == 1 and any(layer_name.endswith('OT_PTWP_A') for layer_name in graniczy_z):
+            continue  
+        
+        if klasa == 'OT_PTTR_A':
+            intersects_SKRW_P = any(geom.intersects(SKRW_P_layer.getFeature(fid).geometry()) for fid in index_SKRW_P.intersects(geom.boundingBox()))
+            touches_boundary = any(geom.intersects(granica.getFeature(fid).geometry()) for fid in index_granica.intersects(geom.boundingBox()))
+            
+            # Obsługa wysp (PB)– sprawdzenie, czy obiekt jest w pełni otoczony wodą
+            surrounded_by_water = all(any(lyr.name().endswith('OT_PTWP_A') for lyr, index in index_pokrycie if fid in index.intersects(geom.boundingBox())) for fid in index.intersects(geom.boundingBox()))
+            
+            if not intersects_SKRW_P and not touches_boundary and not surrounded_by_water and feature.id() not in identyfikatory_bledow:
+                obiektyZbledami.append(feature)
+                identyfikatory_bledow.add(feature.id())
+        else:
+            styka = any(geom.intersects(g.geometry()) for g in granica.getFeatures())
+            if not styka:
+                obiektyZbledami.append(feature)
     
     return obiektyZbledami
 
 
 def minimalnaPTPL(layer):
+    global obiektyZbledami
     obiektyZbledami = []
+    
+    minPowPTPL = 1000
+    
     granica = adjaMinus2cmBufor(layer)
-    for PTPL_A_feature in layer.getFeatures():
-        geom = PTPL_A_feature.geometry()
-        if geom.area() < 1000 and not 'placNazwa1' in PTPL_A_feature.fields().names():
-            styka = False
-            for g in granica.getFeatures():
-                if not geom.intersects(g.geometry()):
-                    styka = True
-                    obiektyZbledami.append(PTPL_A_feature)
+    if granica is None or not granica.isValid():
+        return obiektyZbledami
+    
+    index_granica = QgsSpatialIndex(granica.getFeatures())
+    
+    for feature in layer.getFeatures():
+        # Pomijamy place, które mają nazwę
+        if "placNazwa1" in feature.fields().names() and feature["placNazwa1"]:
+            continue
+        
+        geom = feature.geometry()
+        
+        # Sprawdzenie minimalnej powierzchni
+        if geom.area() < minPowPTPL:
+            touches_boundary = any(
+                geom.intersects(granica.getFeature(fid).geometry())
+                for fid in index_granica.intersects(geom.boundingBox())
+            )
+            
+            if not touches_boundary:
+                obiektyZbledami.append(feature)
     
     return obiektyZbledami
 
