@@ -52,6 +52,7 @@ from .utils import *
 from .walidatorPlikowGML_dialog import walidatorPlikowGMLDialog
 from .fpdf import FPDF
 from .fpdf import FontFace
+from .fpdf.enums import XPos, YPos
 import time
 
 
@@ -580,7 +581,7 @@ class walidatorPlikowGML:
         self.dlg.mQgsFileWidget_tc.setDialogTitle("Wskaż plik ZIP z danymi SHP w zakresie terenów chronionych")
         
         self.dlg.mQgsFileWidget.setDefaultRoot(sciezkaGML_ini)
-        self.wyborPliku('')
+        # self.wyborPliku('')
         self.dlg.mQgsFileWidget.fileChanged.connect(self.wyborPliku)
         
         self.dlg.mQgsFileWidget_gp.fileChanged.connect(self.wyborPlikuGranicPowiatow)
@@ -596,9 +597,7 @@ class walidatorPlikowGML:
         self.dlg.comboBox_2.currentIndexChanged.connect(self.wczytanieSzablonuKontroli)
         self.dlg.mComboBox.checkedItemsChanged.connect(self.kontrolaWybranychFormatowRaportow)
         
-        self.dlg.show()
-        result = self.dlg.exec_()
-        
+        result = self.dlg.exec()
         if not result:
             return
         
@@ -747,18 +746,18 @@ class walidatorPlikowGML:
         for layer in warstwyBledowKontroliAtrybutow.values():
             provider = layer.dataProvider()
             provider.addAttributes([
-                QgsField('gml_id', QVariant.String),
-                QgsField('nazwaKlasy', QVariant.String),
-                QgsField('trescBledu', QVariant.String)
+                QgsField('gml_id', QMetaType.Type.QString),
+                QgsField('nazwaKlasy', QMetaType.Type.QString),
+                QgsField('trescBledu', QMetaType.Type.QString)
                 ])
             layer.updateFields()
         for layer in warstwyBledowWalidacji.values():
             provider = layer.dataProvider()
             provider.addAttributes([
-                QgsField('walidowanyPlik', QVariant.String),
-                QgsField('wiersz', QVariant.String),
-                QgsField('opisBledu', QVariant.String),
-                QgsField('komunikatBledu', QVariant.String)
+                QgsField('walidowanyPlik', QMetaType.Type.QString),
+                QgsField('wiersz', QMetaType.Type.QString),
+                QgsField('opisBledu', QMetaType.Type.QString),
+                QgsField('komunikatBledu', QMetaType.Type.QString)
                 ])
             layer.updateFields()
         
@@ -829,10 +828,10 @@ class walidatorPlikowGML:
                 if len(new_features) > 0:
                     new_layer = QgsVectorLayer(f"{geometry_type}?crs={lyr.crs().authid()}", f"{lyr.name()} błędy z walidacji", "memory")
                     new_layer_data_provider = new_layer.dataProvider()
-                    new_layer_data_provider.addAttributes([QgsField("gml_id", QVariant.String),
-                                                           QgsField("wiersz", QVariant.String),
-                                                           QgsField("opisBledu", QVariant.String),
-                                                           QgsField("komunikatBledu", QVariant.String)])
+                    new_layer_data_provider.addAttributes([QgsField("gml_id", QMetaType.Type.QString),
+                                                           QgsField("wiersz", QMetaType.Type.QString),
+                                                           QgsField("opisBledu", QMetaType.Type.QString),
+                                                           QgsField("komunikatBledu", QMetaType.Type.QString)])
                     new_layer.updateFields()
                     for feature in new_features:
                         new_feature = QgsFeature(feature)
@@ -914,13 +913,13 @@ class walidatorPlikowGML:
              # tworzenie dokumentu
              class PDF(FPDF): # stopka z numerem strony
                  def header(self):
-                     logging.getLogger('fontTools.subset').setLevel(logging.ERROR) # Nie będzie wyswietlał ostrzeżeń
-                     self.add_font('Verdana', '', os.path.dirname(os.path.realpath(__file__)) + "\\fpdf\\Verdana.ttf", uni = True)
-                     self.set_font('Verdana', size = 5)
-                     self.cell(0,-5,f'Raport został wygenerowany przy pomocy wtyczki QGIS – „Walidator plików GML” w wersji {version} - udostępnionej przez GUGiK',0,0,"L")
+                     if 'verdana' not in self.fonts:
+                         self.add_font('verdana', '', os.path.dirname(os.path.realpath(__file__)) + "\\fpdf\\verdana.ttf")
+                     self.set_font('verdana', size = 5)
+                     self.cell(0, -5, f'Raport został wygenerowany przy pomocy wtyczki QGIS – „Walidator plików GML” w wersji {version} - udostępnionej przez GUGiK', new_x=XPos.RIGHT, new_y=YPos.TOP, align="L")
                  def footer(self):
                      self.set_y(-15)
-                     self.cell(0, 10, f'Strona {self.page_no()}', 0, 0, 'C')
+                     self.cell(0, 10, f'Strona {self.page_no()}', new_x=XPos.RIGHT, new_y=YPos.TOP, align='C')
              
              def create_pdf(filename):
                  czas = time.strftime("%Y-%m-%d %H:%M")
@@ -929,19 +928,19 @@ class walidatorPlikowGML:
                  pdf.add_page()
                  pdf.alias_nb_pages()
                  pdf.set_margins(10,10,10)
-                 pdf.add_font('Verdana', '', walidator_sciezka + "\\fpdf\\Verdana.ttf", uni = True)
-                 pdf.add_font("Verdana", "B", walidator_sciezka + "\\fpdf\\Verdana-bold.ttf", uni = True)
-                 pdf.set_font('Verdana', 'B',14)
-                 pdf.cell(0,5,ln = 1)
-                 pdf.cell(0,0, "Raport z kontroli", align = 'C', ln = 2)
-                 pdf.set_font("Verdana", "", 8)
-                 pdf.cell(0,10,ln = 1)
-                 pdf.cell(100,0, "Wskazany plik:", align = 'R', ln = 0)
+                 if 'verdana' not in pdf.fonts:
+                     pdf.add_font('verdana', '', walidator_sciezka + "\\fpdf\\verdana.ttf")
+                 pdf.add_font("verdana", "B", walidator_sciezka + "\\fpdf\\verdana-bold.ttf")
+                 pdf.set_font('verdana', 'B',14)
+                 pdf.cell(0,5, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+                 pdf.cell(0, 0, "Raport z kontroli", align='C', new_x=XPos.LEFT, new_y=YPos.NEXT)
+                 pdf.set_font("verdana", "", 8)
+                 pdf.cell(0,10, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+                 pdf.cell(100,0, "Wskazany plik:", align = 'R', new_x=XPos.RIGHT, new_y=YPos.TOP)
                  pdf.cell(100,0, nazwaPliku, align = "L")
-                 pdf.cell(0,6,ln = 1)
-                 
-                 pdf.set_font("Verdana", "", 10)
-                 pdf.cell(100,0, "Wynik kontroli:", align = 'R', ln = 0)
+                 pdf.cell(0,6, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+                 pdf.set_font("verdana", "", 10)
+                 pdf.cell(100,0, "Wynik kontroli:", align = 'R', new_x=XPos.RIGHT, new_y=YPos.TOP)
                  if liczbaKontroliWykonanych == 0:
                      wynik = "Pozytywny" if len(bledyWalidacji["WIERSZ"]) == 0 else "Negatywny"
                  else:
@@ -953,11 +952,10 @@ class walidatorPlikowGML:
                  else:
                      pdf.set_text_color(255, 0, 0)
                  pdf.cell(100,0, wynik, align = "L")
-                 pdf.cell(0,6, ln = 1)
+                 pdf.cell(0,6, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
                  pdf.set_text_color(0,0,0)
-                 pdf.set_font("Verdana", "", 8)
-                 
-                 pdf.cell(100,0, "Wynik walidacji:", align = "R", ln = 0)
+                 pdf.set_font("verdana", "", 8)
+                 pdf.cell(100,0, "Wynik walidacji:", align = "R", new_x=XPos.RIGHT, new_y=YPos.TOP)
                  if len(bledyWalidacji["WIERSZ"]) == 0:
                     wynikw = "Pozytywny"
                     pdf.set_text_color(0,153,0)
@@ -967,9 +965,9 @@ class walidatorPlikowGML:
                  lightblue = (143, 216, 255)
                  gray = (240,240,240)
                  pdf.cell(100,0,wynikw, align = "L")
-                 pdf.cell(0,5,ln = 1)
+                 pdf.cell(0,5, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
                  pdf.set_text_color(0,0,0)
-                 pdf.cell(100,0, "Wynik kontroli dodatkowych:", align = "R", ln = 0)
+                 pdf.cell(100,0, "Wynik kontroli dodatkowych:", align = "R", new_x=XPos.RIGHT, new_y=YPos.TOP)
                  if liczbaKontroliWykonanych != 0:
                      if len(bledyKontroli["KLASA"]) == 0:
                          wynikon = "Pozytywny"
@@ -981,59 +979,59 @@ class walidatorPlikowGML:
                      wynikon = "Nie dotyczy"
                      pdf.set_text_color(0,0,0)
                  pdf.cell(100,0, wynikon, align = "L")
-                 pdf.cell(0,5, ln = 1)
+                 pdf.cell(0,5, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
                  pdf.set_text_color(0,0,0)
-                 pdf.cell(100,0,"Data kontroli:", ln = 0, align = "R")
-                 pdf.cell(100,0, czas , ln = 1, align = "L")
-                 pdf.cell(0,5,ln = 1)
+                 pdf.cell(100, 0, "Data kontroli:", align="R", new_x=XPos.RIGHT, new_y=YPos.TOP)
+                 pdf.cell(100, 0, czas, align="L", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+                 pdf.cell(0,5, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
                  pdf.cell(100,0,"Wersja szablonu:", align = "R")
-                 pdf.cell(100,0,wersjaSzablonuKontroli, align = "L", ln = 1)
-                 pdf.cell(0,1,ln = 1)
+                 pdf.cell(100,0,wersjaSzablonuKontroli, align = "L", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+                 pdf.cell(0,1, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
                  with pdf.table(first_row_as_headings = False, col_widths = (105,95), borders_layout = "NONE", v_align = "TOP") as tabelaskp:
                      rzad = tabelaskp.row()
                      rzad.cell("Szablon kontroli:", align = "R", padding = (1,1,1,1))
                      rzad.cell(szablonKontroliPath, align = "J", padding = (1,5,1,1))
-                 pdf.cell(0,1,ln = 1)
-                 pdf.cell(100,0,"Wersja schematu aplikacyjnego GML:", align = "R", ln = 0)
-                 pdf.cell(100,0, wersjaSchematu, align = "L", ln = 1)
-                 pdf.cell(0,1,ln = 1)
+                 pdf.cell(0,1, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+                 pdf.cell(100,0,"Wersja schematu aplikacyjnego GML:", align = "R", new_x=XPos.RIGHT, new_y=YPos.TOP)
+                 pdf.cell(100,0, wersjaSchematu, align = "L", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+                 pdf.cell(0,1, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
                  with pdf.table(first_row_as_headings = False, col_widths = (105,95), borders_layout = "NONE", v_align = "TOP") as tabelaskp:
                      rzad = tabelaskp.row()
                      rzad.cell("Schemat aplikacyjny GML:", align = "R", padding = (1,1,1,1))
                      rzad.cell(xsdPath, align = "J", padding = (1,5,1,1))
-                 pdf.cell(0,1,ln = 1)
-                 pdf.cell(100,0,"Suma kontrolna schematu (CRC32):", align = "R", ln = 0)
-                 pdf.cell(100,0, sumaKontrolaSchemat, align = "L", ln = 1)
-                 pdf.cell(0,5,ln = 1)
-                 pdf.cell(100,0,"Suma kontrolna szablonu kontroli (CRC32):", align = "R", ln = 0)
+                 pdf.cell(0,1, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+                 pdf.cell(100,0,"Suma kontrolna schematu (CRC32):", align = "R", new_x=XPos.RIGHT, new_y=YPos.TOP)
+                 pdf.cell(100,0, sumaKontrolaSchemat, align = "L", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+                 pdf.cell(0,5, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+                 pdf.cell(100,0,"Suma kontrolna szablonu kontroli (CRC32):", align = "R", new_x=XPos.RIGHT, new_y=YPos.TOP)
                  pdf.cell(100,0, sumaKontrolaSzablonKontroli, align = "L")
-                 pdf.cell(0,10,ln = 1)
+                 pdf.cell(0,10, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
                  if len(nazwy) > 0:
-                     pdf.set_font("Verdana", "B", 10)
+                     pdf.set_font("verdana", "B", 10)
                      pdf.cell(0,0,"Tabela ze zleconymi kontrolami dodatkowymi", align = "C")
-                     pdf.cell(0,5,ln = 1)
-                     pdf.set_font("Verdana", "", 8)
+                     pdf.cell(0,5, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+                     pdf.set_font("verdana", "", 8)
                      pdf.set_fill_color(lightblue)
                      with pdf.table(col_widths=(12,40), text_align = "C",padding = (1)) as table:
-                         pdf.set_font("Verdana", "", 5)
+                         pdf.set_font("verdana", "", 5)
                          headings = table.row()
                          headings.cell("ID KONTROLI")
                          headings.cell("ZAKRES KONTROLI")
                          pdf.set_fill_color(gray)
                      with pdf.table(nazwy, col_widths=(12,40), first_row_as_headings = False, text_align = "L", padding = (1)):
                          pass
-                     pdf.cell(0,12,ln = 1)
+                     pdf.cell(0,12, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
                  pdf.set_fill_color(255,255,255)
-                 pdf.set_font("Verdana", "" , 6)
+                 pdf.set_font("verdana", "" , 6)
                  # tabela statystyk
                  if len(dataSlownik)> 0:
-                     pdf.set_font("Verdana", "B", 10)
+                     pdf.set_font("verdana", "B", 10)
                      pdf.cell(0,0,"Statystyki Kontroli", align = "C")
-                     pdf.cell(0,5,ln = 1)
-                     pdf.set_font("Verdana", "", 8)
+                     pdf.cell(0,5, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
+                     pdf.set_font("verdana", "", 8)
                      pdf.set_fill_color(lightblue)
                      with pdf.table(col_widths=(16,80,12), text_align = "C",padding = (1)) as table:
-                         pdf.set_font("Verdana", "", 5)
+                         pdf.set_font("verdana", "", 5)
                          headings = table.row()
                          headings.cell("IDENTYFIKATOR KONTROLI")
                          headings.cell("NAZWA KONTROLI")
@@ -1041,16 +1039,16 @@ class walidatorPlikowGML:
                          pdf.set_fill_color(gray)
                      with pdf.table(dataSlownik, col_widths=(16,80,12), first_row_as_headings = False, text_align = "L", padding = (1)):
                           pass
-                     pdf.cell(0,12,ln = 1)
+                     pdf.cell(0,12, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
                  # tabela walidacji
                  if len(bledyWalidacji["WIERSZ"]) > 0:
-                     pdf.set_font("Verdana", "B", 10)
+                     pdf.set_font("verdana", "B", 10)
                      pdf.cell(0,0,"Tabela z błędami walidacji", align = "C")
-                     pdf.set_font("Verdana", "", 8)
-                     pdf.cell(0,5,ln = 1)
+                     pdf.set_font("verdana", "", 8)
+                     pdf.cell(0,5, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
                      pdf.set_fill_color(lightblue)
                      with pdf.table(col_widths=(40,12,35,68,50), text_align = "C",padding = (1)) as table:
-                         pdf.set_font("Verdana", "", 5)
+                         pdf.set_font("verdana", "", 5)
                          headings = table.row()
                          headings.cell("WALIDOWANY PLIK")
                          headings.cell("WIERSZ")
@@ -1061,29 +1059,29 @@ class walidatorPlikowGML:
                      with pdf.table(datawalidacja, col_widths=(40,12,35,68,50), first_row_as_headings = False, text_align = "L", padding = (1)):
                          pass
                      pdf.set_fill_color(255,255,255)
-                     pdf.set_font("Verdana", "" , 6)
+                     pdf.set_font("verdana", "" , 6)
                  else:
-                     pdf.set_font("Verdana", "B", 10)
-                     pdf.cell(0,0, "Brak błędów walidacji", align = "C")
-                 pdf.cell(w = 0,h = 10,txt = " ", ln = 1)
+                     pdf.set_font("verdana", "B", 10)
+                     pdf.cell(0, 0, "Brak błędów walidacji", align = "C")
+                 pdf.cell(w = 0, h = 10, text = " ", new_x=XPos.LMARGIN, new_y=YPos.NEXT)
                  # tabela konotroli
                  if len(bledyKontroli["KLASA"]) > 0:
-                     pdf.set_font("Verdana", "B", 10)
+                     pdf.set_font("verdana", "B", 10)
                      naglowek = [["KLASA", "GMLID", "KOMUNIKAT BŁĘDU"]] # Definicja nagłówka
                      datakontrola2 = naglowek + datakontrola # dodanie do tablicy
-                     pdf.set_font("Verdana", "B", 10)
+                     pdf.set_font("verdana", "B", 10)
                      pdf.cell(0,0,"Tabela z błędami kontroli dodatkowych", align = "C")
-                     pdf.set_font("Verdana", "", 5)
-                     pdf.cell(0,5,ln = 1)
+                     pdf.set_font("verdana", "", 5)
+                     pdf.cell(0,5, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
                      headings_style = FontFace(emphasis = "BOLD", color = 0, fill_color = lightblue)
                      with pdf.table(datakontrola2, num_heading_rows = 1, col_widths = (40,50,70), cell_fill_color = (240,240,240), cell_fill_mode = "ROWS", headings_style = headings_style, first_row_as_headings = True, 
                                     text_align="C", padding = (1)):
                          pass
                  elif liczbaKontroliWykonanych != 0:
-                      pdf.set_font("Verdana", "B", 10)
+                      pdf.set_font("verdana", "B", 10)
                       pdf.cell(0,0,"Brak błędów kontroli dodatkowych", align = "C")
-                      pdf.set_font("Verdana", "", 5)
-                 pdf.output(name=filename,dest='F'.encode('utf-8'))
+                      pdf.set_font("verdana", "", 5)
+                 pdf.output(filename)
              create_pdf(pathPDF)
              # koniec tworzenia pdf
         
