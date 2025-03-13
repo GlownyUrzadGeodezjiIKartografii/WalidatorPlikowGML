@@ -746,18 +746,18 @@ class walidatorPlikowGML:
         for layer in warstwyBledowKontroliAtrybutow.values():
             provider = layer.dataProvider()
             provider.addAttributes([
-                QgsField('gml_id', QMetaType.Type.QString),
-                QgsField('nazwaKlasy', QMetaType.Type.QString),
-                QgsField('trescBledu', QMetaType.Type.QString)
+                QgsField('gml_id', QVariant.String),
+                QgsField('nazwaKlasy', QVariant.String),
+                QgsField('trescBledu', QVariant.String)
                 ])
             layer.updateFields()
         for layer in warstwyBledowWalidacji.values():
             provider = layer.dataProvider()
             provider.addAttributes([
-                QgsField('walidowanyPlik', QMetaType.Type.QString),
-                QgsField('wiersz', QMetaType.Type.QString),
-                QgsField('opisBledu', QMetaType.Type.QString),
-                QgsField('komunikatBledu', QMetaType.Type.QString)
+                QgsField('walidowanyPlik', QVariant.String),
+                QgsField('wiersz', QVariant.String),
+                QgsField('opisBledu', QVariant.String),
+                QgsField('komunikatBledu', QVariant.String)
                 ])
             layer.updateFields()
         
@@ -828,10 +828,10 @@ class walidatorPlikowGML:
                 if len(new_features) > 0:
                     new_layer = QgsVectorLayer(f"{geometry_type}?crs={lyr.crs().authid()}", f"{lyr.name()} błędy z walidacji", "memory")
                     new_layer_data_provider = new_layer.dataProvider()
-                    new_layer_data_provider.addAttributes([QgsField("gml_id", QMetaType.Type.QString),
-                                                           QgsField("wiersz", QMetaType.Type.QString),
-                                                           QgsField("opisBledu", QMetaType.Type.QString),
-                                                           QgsField("komunikatBledu", QMetaType.Type.QString)])
+                    new_layer_data_provider.addAttributes([QgsField("gml_id", QVariant.String),
+                                                           QgsField("wiersz", QVariant.String),
+                                                           QgsField("opisBledu", QVariant.String),
+                                                           QgsField("komunikatBledu", QVariant.String)])
                     new_layer.updateFields()
                     for feature in new_features:
                         new_feature = QgsFeature(feature)

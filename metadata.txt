@@ -6,7 +6,7 @@
 name=Walidator plików GML
 qgisMinimumVersion=3.34
 description=Walidacja i kontrola plików GML baz: BDOO, BDOT10k, PRNG, RCN, GESUT, EGiB, BDOT500, MGR, KARTO10k
-version=1.1.8
+version=1.1.9
 author=Marcin Lebiecki - Główny Urząd Geodezji i Kartografii
 email=marcin.lebiecki@gugik.gov.pl
 
@@ -21,6 +21,7 @@ repository=https://github.com/GlownyUrzadGeodezjiIKartografii/WalidatorPlikowGML
 hasProcessingProvider=no
 # Uncomment the following line and add your changelog:
 changelog=
+    1.1.9 Poprawa drobnych błędów.
     1.1.8 Poprawiono kontrole BDOT10k.
           Poprawa drobnych błędów.
     1.1.7 Dodano lub poprawiono kontrole GESUT.
