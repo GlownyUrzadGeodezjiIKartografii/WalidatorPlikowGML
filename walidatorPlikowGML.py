@@ -87,7 +87,7 @@ class walidatorPlikowGML:
         
         metadata_path = os.path.join(mainPath, 'metadata.txt')
         
-        blokady = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        blokady = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         
         sciezkiPlikowZrodlowych = []
         
@@ -316,8 +316,8 @@ class walidatorPlikowGML:
                                       self.dlg.button_box.buttons()[0].setEnabled(True)
                               else:
                                   self.dlg.button_box.buttons()[0].setEnabled(False)
-        except:
-              pass
+        except Exception as e:
+            print('Błąd w funkcji wyborPlikuPRNGmiejscowosci:',e)
         config.set('DEFAULT', 'prng_miejscowosci', txt)
         with open(str(mainPath)+'/Walidator_plikow_gml.ini', 'w') as configfile:
             config.write(configfile)
@@ -342,8 +342,8 @@ class walidatorPlikowGML:
                                       self.dlg.button_box.buttons()[0].setEnabled(True)
                               else:
                                   self.dlg.button_box.buttons()[0].setEnabled(False)
-        except:
-              pass
+        except Exception as e:
+            print('Błąd w funkcji wyborPlikuPRNGobiektowfizjograficznych:',e)
         config.set('DEFAULT', 'prng_obiektyfizjograficzne', txt)
         with open(str(mainPath)+'/Walidator_plikow_gml.ini', 'w') as configfile:
             config.write(configfile)
@@ -379,8 +379,8 @@ class walidatorPlikowGML:
                                       self.dlg.button_box.buttons()[0].setEnabled(True)
                               else:
                                   self.dlg.button_box.buttons()[0].setEnabled(False)
-        except: 
-              pass
+        except Exception as e:
+            print('Błąd w funkcji wyborPlikuTerenyChronione:',e)
         config.set('DEFAULT', 'tereny_chronione', txt)
         with open(str(mainPath)+'/Walidator_plikow_gml.ini', 'w') as configfile:
             config.write(configfile)
@@ -389,8 +389,6 @@ class walidatorPlikowGML:
     def wyborPlikuULIC(self, txt):
         global sciezkiPlikowZrodlowych
         if os.path.isfile(txt):
-            if self.dlg.mQgsFileWidget_ulic.filePath() == self.dlg.mQgsFileWidget.filePath():
-                QMessageBox.critical(QMessageBox(),'Uwaga!','Wybrano ten sam plik co w zakładce "Walidacja plików GML".', QMessageBox.Ok)
             if os.path.isfile(txt) and os.path.splitext(txt)[1].lower() == '.csv':
                   sciezkiPlikowZrodlowych.append(txt)
             blokady[8] = 0
@@ -405,9 +403,36 @@ class walidatorPlikowGML:
                                      self.dlg.button_box.buttons()[0].setEnabled(True)
                              else:
                                  self.dlg.button_box.buttons()[0].setEnabled(False)
-        except:
-             pass
+        except Exception as e:
+             print('Błąd w funkcji wyborPlikuULIC:',e)
         config.set('DEFAULT', 'ulic_gus', txt)
+        with open(str(mainPath)+'/Walidator_plikow_gml.ini', 'w') as configfile:
+            config.write(configfile)
+
+
+    def wyborPlikuSIMC(self, txt):
+        global sciezkiPlikowZrodlowych
+        if os.path.isfile(txt):
+            if os.path.splitext(txt)[1].lower() == '.csv':
+                if self.dlg.mQgsFileWidget_ulic.filePath() == txt:
+                    QMessageBox.critical(QMessageBox(),'Uwaga!','Wybrano ten sam plik co w Dane ULIC.', QMessageBox.Ok)
+                else:
+                    sciezkiPlikowZrodlowych.append(txt)
+            blokady[10] = 0
+        try:
+             for i in range(modelKontroli.rowCount()):
+                 item = modelKontroli.item(i)
+                 if item.checkState() in (2,1):
+                     for c in range(item.rowCount()):
+                         if item.child(c).checkState() == 2 and item.child(c).data(6).__contains__('simc_gus'):
+                             if os.path.isfile(txt):
+                                 if sum(blokady) == 0:
+                                     self.dlg.button_box.buttons()[0].setEnabled(True)
+                             else:
+                                 self.dlg.button_box.buttons()[0].setEnabled(False)
+        except Exception as e:
+             print('Błąd w funkcji wyborPlikuSIMC:',e)
+        config.set('DEFAULT', 'simc_gus', txt)
         with open(str(mainPath)+'/Walidator_plikow_gml.ini', 'w') as configfile:
             config.write(configfile)
 
@@ -431,8 +456,8 @@ class walidatorPlikowGML:
                                      self.dlg.button_box.buttons()[0].setEnabled(True)
                              else:
                                  self.dlg.button_box.buttons()[0].setEnabled(False)
-        except:
-             pass
+        except Exception as e:
+             print('Błąd w funkcji wyborPlikuGranicPowiatow:',e)
         config.set('DEFAULT', 'granicePowiatow', txt)
         with open(str(mainPath)+'/Walidator_plikow_gml.ini', 'w') as configfile:
             config.write(configfile)
@@ -483,8 +508,8 @@ class walidatorPlikowGML:
                                     self.dlg.button_box.buttons()[0].setEnabled(True)
                             else:
                                 self.dlg.button_box.buttons()[0].setEnabled(False)
-        except:
-            pass
+        except Exception as e:
+             print('Błąd w funkcji wyborPlikuZrodlowego:',e)
 
 
     def kontrolaIstnieniaPlikowGranicDlaBDOT10k(self):
@@ -539,13 +564,14 @@ class walidatorPlikowGML:
         global kontrolowanePliki_df, klasy_df, gmlid_df_k, komunikatyBledowKontroli_df, plikiZparsowane, slownikBledow, warstwyBledowKontroliAtrybutow, warstwyBledowWalidacji
         global progress, liczbaKontroliWykonanych, nazwy, unikalny_id, nazwa_pliku, timestr, version, idkontroli_LiczbaBledow
         global granicePowiatow, graniceGmin, graniceJednostekEwidencyjnych, kontroleWykonaniePojedyncze, plikZIP, pathSHP, pathGPKG
-        global ulic_gus, prng_obiektyfizjograficzne, prng_miejscowosci, tereny_chronione
+        global ulic_gus, simc_gus, prng_obiektyfizjograficzne, prng_miejscowosci, tereny_chronione
         
         sciezkaGML_ini = config['DEFAULT']['sciezkagml']
         granicePowiatow = config['DEFAULT']['granicePowiatow']
         graniceGmin = config['DEFAULT']['graniceGmin']
         graniceJednostekEwidencyjnych = config['DEFAULT']['graniceJednostekEwidencyjnych']
         ulic_gus = config['DEFAULT']['ulic_gus']
+        simc_gus = config['DEFAULT']['simc_gus']
         prng_miejscowosci  = config['DEFAULT']['prng_miejscowosci']
         prng_obiektyfizjograficzne  = config['DEFAULT']['prng_obiektyfizjograficzne']
         tereny_chronione = config['DEFAULT']['tereny_chronione']
@@ -561,6 +587,7 @@ class walidatorPlikowGML:
         self.dlg.mQgsFileWidget_prng_o.setFilter("Plik XML (*.xml)")
         self.dlg.mQgsFileWidget_tc.setFilter("Plik ZIP (*.zip)")
         self.dlg.mQgsFileWidget_ulic.setFilter("Plik CSV (*.csv)")
+        self.dlg.mQgsFileWidget_simc.setFilter("Plik CSV (*.csv)")
         
         self.dlg.mQgsFileWidget_gp.setFilePath(granicePowiatow)
         self.dlg.mQgsFileWidget_gg.setFilePath(graniceGmin)
@@ -568,6 +595,7 @@ class walidatorPlikowGML:
         self.dlg.mQgsFileWidget_prng_m.setFilePath(prng_miejscowosci)
         self.dlg.mQgsFileWidget_prng_o.setFilePath(prng_obiektyfizjograficzne)
         self.dlg.mQgsFileWidget_ulic.setFilePath(ulic_gus)
+        self.dlg.mQgsFileWidget_simc.setFilePath(simc_gus)
         self.dlg.mQgsFileWidget_tc.setFilePath(tereny_chronione)
         
         self.dlg.mQgsFileWidget.setDialogTitle("Wskaż plik z danymi do walidacji")
@@ -578,6 +606,7 @@ class walidatorPlikowGML:
         self.dlg.mQgsFileWidget_prng_m.setDialogTitle("Wskaż plik z PRNG miejscowości")
         self.dlg.mQgsFileWidget_prng_o.setDialogTitle("Wskaż plik z PRNG obiektów fizjograficznych")
         self.dlg.mQgsFileWidget_ulic.setDialogTitle("Wskaż plik z TERYT ULIC")
+        self.dlg.mQgsFileWidget_simc.setDialogTitle("Wskaż plik z TERYT SIMC")
         self.dlg.mQgsFileWidget_tc.setDialogTitle("Wskaż plik ZIP z danymi SHP w zakresie terenów chronionych")
         
         self.dlg.mQgsFileWidget.setDefaultRoot(sciezkaGML_ini)
@@ -591,6 +620,7 @@ class walidatorPlikowGML:
         self.dlg.mQgsFileWidget_prng_m.fileChanged.connect(self.wyborPlikuPRNGmiejscowosci)
         self.dlg.mQgsFileWidget_prng_o.fileChanged.connect(self.wyborPlikuPRNGobiektowfizjograficznych)
         self.dlg.mQgsFileWidget_ulic.fileChanged.connect(self.wyborPlikuULIC)
+        self.dlg.mQgsFileWidget_simc.fileChanged.connect(self.wyborPlikuSIMC)
         self.dlg.mQgsFileWidget_tc.fileChanged.connect(self.wyborPlikuTerenyChronione)
         
         self.dlg.comboBox.currentIndexChanged.connect(lambda: self.wczytanieWersjiSzablonow(self.dlg.comboBox.currentText()))
@@ -604,6 +634,10 @@ class walidatorPlikowGML:
         plik = [self.dlg.mQgsFileWidget.filePath(), self.dlg.mQgsFileWidget.filter()]
         sciezkaGML = str(pathlib.Path(plik[0]).parent)
         
+        if sciezkaGML == '.':
+            QMessageBox.critical(QMessageBox(),'Uwaga!','Nie wskazano pliku.', QMessageBox.Ok)
+            return
+            
         try:
             if not os.access(sciezkaGML, os.W_OK):
                 self.iface.messageBar().pushMessage("Uwaga!", "Brak uprawnień do zapisu raportu.", level=Qgis.Critical)
@@ -617,7 +651,7 @@ class walidatorPlikowGML:
             if inst.args[0] == 13:
                 self.iface.messageBar().pushMessage("Uwaga!", inst.args[1], level=Qgis.Critical)
             else:
-                pass
+                print(f"bład w funkcji walidacjaIKontrolaAtrybutow: {inst}")
             return
         
         crc = 0
@@ -1203,7 +1237,7 @@ class walidatorPlikowGML:
                         arkuszDaneWstepne.write(7, 1, "Negatywny" if not walidacjaZWynikiemPozytywnym else "Pozytywny", neg if not walidacjaZWynikiemPozytywnym else poz)
                 strony.save(pathXLS)
             except Exception as e:
-                print(f'Błąd : {e}')
+                print(f'Błąd w tworzeniu pliku xls: {e}')
                 return
             # koniec tworzenia xls
             
@@ -1373,7 +1407,7 @@ class walidatorPlikowGML:
                         for cell in row: # ustawienie na lewy srodek tekstu w kolumnie Grupa Kontroli
                             cell.alignment = Alignment(horizontal='left', vertical='center')
             except Exception as e:
-                 print(f'Błąd : {e}')
+                 print(f'Błąd w generacji pliku xlsx: {e}')
                  return
         
         if 'shp' in self.dlg.mComboBox.checkedItems():
@@ -1486,13 +1520,13 @@ class walidatorPlikowGML:
             error_gmlid_dic[error] = ''
             return {'taskID':task.description(), 'plikGML':plikGML, 'error':error_gmlid_dic}
         except OSError as error:
-            print(error)
+            print(f"błąd OSError: {error}")
             walidacjaZWynikiemPozytywnym = False
             error_gmlid_dic = {}
             error_gmlid_dic[error] = ''
             return {'taskID':task.description(), 'plikGML':plikGML, 'error':error_gmlid_dic}
         except Exception as e:
-            print(e)
+            print(f"błąd w funkcji walidacji: {e}")
 
 
     def wynikiWalidacji(self, exception = None, value = None):
@@ -1731,8 +1765,9 @@ class walidatorPlikowGML:
                     for child in range(item.rowCount()):
                         if files_str.__contains__(item.child(child).data(3)):
                             item.child(child).setCheckState(2)
-        except:
-            pass
+        except Exception as e:
+            print('błąd w zaznaczKontroleNaPodstawieDanych:',e)
+
 
 
     def zaznaczWszystkieKontrole(self):
@@ -1741,8 +1776,8 @@ class walidatorPlikowGML:
                 item = modelKontroli.item(i)
                 if item.checkState() in (0,1):
                     item.setCheckState(2)
-        except:
-            pass
+        except Exception as e:
+             print('błąd w zaznaczWszystkieKontrole:',e)
 
 
     def odznaczWszystkieKontrole(self):
@@ -1751,8 +1786,8 @@ class walidatorPlikowGML:
                 item = modelKontroli.item(i)
                 if item.checkState() in (1,2):
                     item.setCheckState(0)
-        except:
-            pass
+        except Exception as e:
+            print('błąd w odznaczWszystkieKontrole:',e)
 
 
     def zmianaStatusuKontroli(self, item):
@@ -1775,13 +1810,13 @@ class walidatorPlikowGML:
             if len(self.dlg.mQgsFileWidget_gg.filePath()) == 0 and item.checkState() == 2:
                blokady[3] = 1
                self.dlg.button_box.buttons()[0].setEnabled(False)
-
+               
         if not item.hasChildren() and self.dlg.comboBox.currentText() == 'BDOT10k' and item.data(6).__contains__("Granice_jednostek_ewidencyjnych"):
             blokady[4] = 0
             if len(self.dlg.mQgsFileWidget_gje.filePath()) == 0 and item.checkState() == 2:
                 blokady[4] = 1
                 self.dlg.button_box.buttons()[0].setEnabled(False)
-
+                
         if not item.hasChildren() and self.dlg.comboBox.currentText() == 'BDOT10k' and item.data(6).__contains__("(gml,gml)"):
             blokady[5] = 0
             for j in range(item.parent().rowCount()):
@@ -1802,7 +1837,7 @@ class walidatorPlikowGML:
                 if len(self.dlg.mQgsFileWidget_prng_o.filePath()) == 0 and item.parent().child(j).checkState() == 2 and item.parent().child(j).data(6).__contains__("prng_obiektyfizjograficzne"):
                     blokady[7] = 1
                     self.dlg.button_box.buttons()[0].setEnabled(False)
-
+                    
         if not item.hasChildren() and self.dlg.comboBox.currentText() == 'BDOT10k' and item.data(6).__contains__("tereny_chronione"):
             blokady[9] = 0
             for j in range(item.parent().rowCount()):
@@ -1815,6 +1850,12 @@ class walidatorPlikowGML:
             for j in range(item.parent().rowCount()):
                  if len(self.dlg.mQgsFileWidget_ulic.filePath()) == 0 and item.parent().child(j).checkState() == 2 and item.parent().child(j).data(6).__contains__("ulic_gus"):
                      blokady[8] = 1
+                     self.dlg.button_box.buttons()[0].setEnabled(False)
+        if not item.hasChildren() and self.dlg.comboBox.currentText() == 'BDOT10k' and item.data(6).__contains__("simc_gus"):
+            blokady[10] = 0
+            for j in range(item.parent().rowCount()):
+                 if len(self.dlg.mQgsFileWidget_simc.filePath()) == 0 and item.parent().child(j).checkState() == 2 and item.parent().child(j).data(6).__contains__("simc_gus"):
+                     blokady[10] = 1
                      self.dlg.button_box.buttons()[0].setEnabled(False)
         
         if sum(blokady) == 0:
@@ -1889,8 +1930,9 @@ class walidatorPlikowGML:
                                 try:
                                     for warstwaWsqltext in re.findall(r"layer:='(.*?)'", sqltxt):
                                         sqltxt = sqltxt.replace("layer:='" + warstwaWsqltext,"layer:='" + parsedFileName[:-13] + warstwaWsqltext + '_' + warstwaWsqltext)
-                                except:
-                                    pass
+                                except Exception as e:
+                                    print(f"błąd przy tworzeniu warstwy: {e}")
+                                    
                                 try:
                                     layerL1 = QgsProjectInstance.mapLayersByName(nazwaWarstwy)[0]
                                 except:
@@ -1898,6 +1940,7 @@ class walidatorPlikowGML:
                                 
                                 if parent.child(j).data(5) in ('QgsExpression','QgsExpressionWithJoin','pythonFunction','PyExpression','MgrExpression') and not layerL1 == None:
                                     try:
+                                      
                                         czyWarstwaIstnieje = False
                                         for lyr in QgsProjectInstance.mapLayers().values():
                                             if lyr.name() == nazwaWarstwy:
@@ -1937,6 +1980,8 @@ class walidatorPlikowGML:
                                                 requestFeatures = globals().get(sqltxt.replace('(gml,gml)', ''))(layerTMP[0], plikGMLzrodlowy, zparsowanyPlik)
                                             elif '(ulic_gus)' in sqltxt:
                                                 requestFeatures = globals().get(sqltxt.replace('(ulic_gus)', ''))(layerTMP[0], ulic_gus)
+                                            elif '(ulic_gus,simc_gus)' in sqltxt:
+                                                requestFeatures = globals().get(sqltxt.replace('(ulic_gus,simc_gus)', ''))(layerTMP[0], ulic_gus, simc_gus)
                                             elif '(prng_obiektyfizjograficzne)' in sqltxt:
                                                 requestFeatures = globals().get(sqltxt.replace('(prng_obiektyfizjograficzne)', ''))(layerTMP[0], prng_obiektyfizjograficzne, klasa)
                                             elif '(prng_miejscowosci)' in sqltxt:
@@ -1995,6 +2040,20 @@ class walidatorPlikowGML:
                                                     klasaDoRaportowania = gmlid
                                                     gmlid = 'nie dotyczy'
                                                 if klasa == 'OT':
+                                                    klasaDoRaportowania = 'OT' + parsedFileName[-11:-4]
+                                                if klasa == 'OT_SW':
+                                                    klasaDoRaportowania = 'OT' + parsedFileName[-11:-4]
+                                                if klasa == 'OT_SK':
+                                                    klasaDoRaportowania = 'OT' + parsedFileName[-11:-4]
+                                                if klasa == 'OT_BU':
+                                                    klasaDoRaportowania = 'OT' + parsedFileName[-11:-4]
+                                                if klasa == 'OT_SU':
+                                                    klasaDoRaportowania = 'OT' + parsedFileName[-11:-4]
+                                                if klasa == 'OT_OI':
+                                                    klasaDoRaportowania = 'OT' + parsedFileName[-11:-4]
+                                                if klasa == 'OT_BUHD':
+                                                    klasaDoRaportowania = 'OT' + parsedFileName[-11:-4]
+                                                if klasa == 'OT_BUWT':
                                                     klasaDoRaportowania = 'OT' + parsedFileName[-11:-4]
                                                 if klasa == 'OT_PT':
                                                     klasaDoRaportowania = 'nie dotyczy'

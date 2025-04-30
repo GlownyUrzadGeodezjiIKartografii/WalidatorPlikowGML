@@ -405,8 +405,8 @@
              <rect>
               <x>0</x>
               <y>0</y>
-              <width>557</width>
-              <height>645</height>
+              <width>559</width>
+              <height>671</height>
              </rect>
             </property>
             <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -706,8 +706,8 @@
                  </property>
                  <layout class="QFormLayout" name="formLayout_3">
                   <item row="0" column="0">
-                   <layout class="QHBoxLayout" name="horizontalLayout_5">
-                    <item>
+                   <layout class="QFormLayout" name="formLayout_9">
+                    <item row="0" column="0">
                      <widget class="QLabel" name="label_27">
                       <property name="minimumSize">
                        <size>
@@ -720,7 +720,7 @@
                       </property>
                      </widget>
                     </item>
-                    <item>
+                    <item row="0" column="1">
                      <widget class="QgsFileWidget" name="mQgsFileWidget_ulic">
                       <property name="minimumSize">
                        <size>
@@ -729,6 +729,16 @@
                        </size>
                       </property>
                      </widget>
+                    </item>
+                    <item row="1" column="0">
+                     <widget class="QLabel" name="label_31">
+                      <property name="text">
+                       <string>Dane SIMC:</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="1" column="1">
+                     <widget class="QgsFileWidget" name="mQgsFileWidget_simc" />
                     </item>
                    </layout>
                   </item>
@@ -909,7 +919,7 @@
           <item row="1" column="1">
            <widget class="QLabel" name="label_14">
             <property name="text">
-             <string>1.1.9</string>
+             <string>1.2.0</string>
             </property>
             <property name="scaledContents">
              <bool>true</bool>
