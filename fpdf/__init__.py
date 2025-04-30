@@ -35,7 +35,7 @@ try:
     # This module only exists in PyFPDF, it has been removed in fpdf2 since v2.5.7:
     # pylint: disable=import-self
     from . import ttfonts
-
+    
     warnings.warn(
         "You have both PyFPDF & fpdf2 installed. "
         "Both packages cannot be installed at the same time as they share the same module namespace. "
