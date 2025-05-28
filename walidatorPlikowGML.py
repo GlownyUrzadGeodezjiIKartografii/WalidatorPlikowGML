@@ -8,7 +8,7 @@
                               -------------------
         begin                : 2022-12-23
         git sha              : $Format:%H$
-        copyright            : (C) 2024 by Marcin Lebiecki - Główny Urząd Geodezji i Kartografii
+        copyright            : (C) 2025 by Marcin Lebiecki - Główny Urząd Geodezji i Kartografii
         email                : marcin.lebiecki@gugik.gov.pl
  ***************************************************************************/
 
@@ -54,8 +54,6 @@ from .fpdf import FPDF
 from .fpdf import FontFace
 from .fpdf.enums import XPos, YPos
 import time
-
-
 
 
 
@@ -108,10 +106,10 @@ class walidatorPlikowGML:
                 text_property = widget.find('property[@name="text"]')
                 if text_property is not None:
                     text_property.find('string').text = version
-
+                    
         # Zapisz zmodyfikowany plik
         tree.write(ui_path)
-
+        
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
         return QCoreApplication.translate('walidatorPlikowGML', message)
@@ -146,7 +144,7 @@ class walidatorPlikowGML:
             text=self.tr(u'walidatorPlikowGML'),
             callback=self.run,
             parent=self.iface.mainWindow())
-
+            
         self.first_start = True
 
 
@@ -226,9 +224,82 @@ class walidatorPlikowGML:
         xsdPath = os.path.join(xsdPath_tmp, self.dlg.comboBox_xsd.currentText())
 
 
+    def sprawdz_zip_i_wyodrebnij_zwiniete(self, lista_sciezek):
+        """
+            Sprawdza, czy którykolwiek plik .gml/.xml w ZIP zawiera zwinięte rekordy.
+            Jeśli tak, pokazuje ostrzeżenie. Zwraca pierwszą wypakowaną ścieżkę do walidacji.
+        """
+        try:
+            bledne_pliki = []
+            for pelna_sciezka in lista_sciezek:
+                if not self.sprawdz_dlugosc_linii(pelna_sciezka, tylko_sprawdzaj=True):
+                    bledne_pliki.append(os.path.basename(pelna_sciezka))
+                    
+            if bledne_pliki:
+                if len(bledne_pliki) == 1:
+                    tekst = f"Znaleziono zwinięty rekord lub rekordy w następującym pliku:\n\n{bledne_pliki[0]}"
+                else:
+                    tekst = "Znaleziono zwinięte rekord lub rekordy w następujących plikach:\n\n" + "\n".join(bledne_pliki)
+                    
+                tekst += "\n\nW przypadku błędu może zostać wskazany nieprawidłowy numer wiersza w raporcie XLS.\n\nCzy chcesz kontynuować?"
+                try:
+                    ret = QMessageBox.warning(QMessageBox(), "Ostrzeżenie", tekst, QMessageBox.Ok | QMessageBox.Cancel)
+                    if ret != QMessageBox.Ok:
+                        return False
+                except Exception as e:
+                    QMessageBox.critical(QMessageBox(), 'Błąd', f'Błąd podczas wyświetlania komunikatu ostrzegawczego: {e}', QMessageBox.Ok)
+                    return False
+                    
+            return lista_sciezek[0]  # Pierwszy do walidacji
+            
+        except Exception as e:
+            QMessageBox.critical(QMessageBox(), 'Uwaga!', f'Błąd rozpakowywania ZIP: {e}', QMessageBox.Ok)
+            return None
+
+
+    def sprawdz_dlugosc_linii(self, input_path, tylko_sprawdzaj=False):
+          if not input_path.lower().endswith(('.xml', '.gml')):
+            return True
+          try:
+              licznik_zwinietych = 0
+              try:
+                  with open(input_path, 'r', encoding='utf-8') as f:
+                      linie = f.readlines()
+              except UnicodeDecodeError:
+                  with open(input_path, 'r', encoding='windows-1250') as f:
+                      linie = f.readlines()
+              for linia in linie:
+                  if '</gml:featureMember>' in linia and linia.count('><') >= 1:
+                      licznik_zwinietych += 1
+                      if licznik_zwinietych >= 1: # liczba_zbitek:
+                          break
+              if licznik_zwinietych >= 1: # liczba_zbitek:
+                   if tylko_sprawdzaj:
+                      return False
+                   try:
+                       ret = QMessageBox.warning(
+                           QMessageBox(),
+                           'Ostrzeżenie',
+                           'Plik zawiera zwinięty przynajmniej jeden rekord!\n\n W przypadku błędu może zostać wskazany nieprawidłowy numer wiersza w raporcie XLS.\n\nCzy chcesz kontynuować?',
+                           QMessageBox.Ok | QMessageBox.Cancel
+                           )
+                       if ret != QMessageBox.Ok:
+                           return False
+                   except Exception as e:
+                         QMessageBox.critical(QMessageBox(), 'Błąd', f'Błąd podczas wyświetlania komunikatu ostrzegawczego: {e}', QMessageBox.Ok)
+                         return False
+              return True
+          
+          except Exception as e:
+              QMessageBox.critical(QMessageBox(), 'Błąd', f'Błąd sprawdzania pliku: {e}', QMessageBox.Ok)
+          return False
+
+
     def wyborPliku(self, txt):
-        global files, plikZIP, blokady
+        global files, plikZIP, blokady, plikDoWeryfikacji, wypakowane_sciezki
         files = []
+        wypakowane_sciezki = []
+        plikDoWeryfikacji = None
         if os.path.isfile(txt):
             if self.dlg.mQgsFileWidget_dz.filePath() == self.dlg.mQgsFileWidget.filePath():
                 QMessageBox.critical(QMessageBox(),'Uwaga!','Wybrano ten sam plik co w zakładce "Dane źródłowe".', QMessageBox.Ok)
@@ -254,7 +325,11 @@ class walidatorPlikowGML:
                     QMessageBox.critical(QMessageBox(),'Uwaga!','Występuje problem z walidacją plików większych niż 2GB', QMessageBox.Ok)
             else:
                 try:
-                    plikDoWeryfikacji = open(plikZIP.extract(files[0], os.path.dirname(txt)), 'r', encoding='utf-8')
+                    for f in files:
+                        pelna_sciezka = plikZIP.extract(f, os.path.dirname(txt))
+                        wypakowane_sciezki.append(pelna_sciezka) # przekazanie sciezek do kontroli zwiniecia
+                    sciezka_rozpakowanego = wypakowane_sciezki[0]
+                    plikDoWeryfikacji = open(sciezka_rozpakowanego, 'r', encoding='utf-8')
                     if os.path.getsize(plikDoWeryfikacji.name) > 2147483648:
                         QMessageBox.critical(QMessageBox(),'Uwaga!','Występuje problem z walidacją plików większych niż 2GB', QMessageBox.Ok)
                 except:
@@ -630,9 +705,17 @@ class walidatorPlikowGML:
         result = self.dlg.exec()
         if not result:
             return
-        
-        plik = [self.dlg.mQgsFileWidget.filePath(), self.dlg.mQgsFileWidget.filter()]
+        # Sprawdzenie, czy plik nie zawiera długiej linii lub zwiniętych znaczników
+        sciezka_wejsciowa = self.dlg.mQgsFileWidget.filePath()
+        plik = [sciezka_wejsciowa, self.dlg.mQgsFileWidget.filter()]
         sciezkaGML = str(pathlib.Path(plik[0]).parent)
+        if zipfile.is_zipfile(sciezka_wejsciowa):
+            sciezka_do_walidacji = self.sprawdz_zip_i_wyodrebnij_zwiniete(wypakowane_sciezki)
+        else:
+            sciezka_do_walidacji = sciezka_wejsciowa if self.sprawdz_dlugosc_linii(sciezka_wejsciowa) else None
+
+        if not sciezka_do_walidacji:
+            return  # Błąd lub brak GML/XML
         
         if sciezkaGML == '.':
             QMessageBox.critical(QMessageBox(),'Uwaga!','Nie wskazano pliku.', QMessageBox.Ok)
@@ -1977,7 +2060,10 @@ class walidatorPlikowGML:
                                                 requestFeatures = globals().get(sqltxt.replace('(gml,klasa)', ''))(layerTMP[0], lxml.etree.parse(zparsowanyPlik), klasa)
                                             elif sqltxt.count('(gml,gml)') > 0:
                                                 plikGMLzrodlowy = self.zwrocPlikZrodlowy(parsedFileName[-11:-4])
-                                                requestFeatures = globals().get(sqltxt.replace('(gml,gml)', ''))(layerTMP[0], plikGMLzrodlowy, zparsowanyPlik)
+                                                if plikGMLzrodlowy is not None:
+                                                    requestFeatures = globals().get(sqltxt.replace('(gml,gml)', ''))(layerTMP[0], plikGMLzrodlowy, zparsowanyPlik)
+                                                else:
+                                                    requestFeatures = []
                                             elif '(ulic_gus)' in sqltxt:
                                                 requestFeatures = globals().get(sqltxt.replace('(ulic_gus)', ''))(layerTMP[0], ulic_gus)
                                             elif '(ulic_gus,simc_gus)' in sqltxt:
@@ -2105,9 +2191,10 @@ class walidatorPlikowGML:
 
 
     def zwrocPlikZrodlowy(self, klasa):
+        plikGMLzrodlowy = None
         if len(sciezkiPlikowZrodlowych) > 0:
             for sciezkaPlikuZrodlowego in sciezkiPlikowZrodlowych:
-                if sciezkaPlikuZrodlowego.__contains__(klasa):
+                if klasa in sciezkaPlikuZrodlowego:
                     plikGMLzrodlowy = plikZIPzrodlowy.extract(sciezkaPlikuZrodlowego, os.path.join(sciezkaGML,"daneZrodlowe"))
-        
+                    break
         return plikGMLzrodlowy

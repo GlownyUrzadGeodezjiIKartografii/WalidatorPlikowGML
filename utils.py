@@ -8,7 +8,7 @@
                               -------------------
         begin                : 2022-12-23
         git sha              : $Format:%H$
-        copyright            : (C) 2022 by Marcin Lebiecki - Główny Urząd Geodezji i Kartografii
+        copyright            : (C) 2025 by Marcin Lebiecki - Główny Urząd Geodezji i Kartografii
         email                : marcin.lebiecki@gugik.gov.pl
  ***************************************************************************/
 
@@ -27,6 +27,7 @@ from qgis import processing
 from qgis.PyQt.QtWidgets import *
 import pathlib
 import configparser
+import copy
 import sys
 import re
 from datetime import datetime
@@ -138,27 +139,31 @@ def validateGeometry(layer):
 
 
 def adjaMinus2cmBufor(layer):
-    granica = []
     config = configparser.ConfigParser()
     mainPath = pathlib.Path(QgsApplication.qgisSettingsDirPath()) / pathlib.Path(r"python/plugins/Walidator_plikow_gml/")
     config.read(str(mainPath) + '/Walidator_plikow_gml.ini')
     granicePowiatowPath = config['DEFAULT']['granicepowiatow']
     granicePowiatow = QgsVectorLayer(granicePowiatowPath, 'GranicePowiatow', 'ogr')
-    
-    # Obsługa MultiPart
+    if not granicePowiatow.isValid():
+        return QgsVectorLayer("LineString?crs=epsg:2180", "pusta", "memory")
     granicePowiatow = processing.run("native:multiparttosingleparts", {
         'INPUT': granicePowiatow,
         'OUTPUT': 'memory:'
     })['OUTPUT']
-    
-    terytPowiatu = int(layer.name()[-15:-11])
+    match = re.search(r"\.(\d{4})__", layer.name())
+    if not match:
+        return QgsVectorLayer("LineString?crs=epsg:2180", "pusta", "memory")
+    terytPowiatu = match.group(1)
     powiat_z_PRG = QgsVectorLayer("Polygon?crs=epsg:2180&field=gml_id:string(254)", "granica powiatu z PRG", "memory")
-    
+    dopasowane = False
     for obj in granicePowiatow.getFeatures():
         if str(obj['JPT_KOD_JE']) == str(terytPowiatu):
             powiat_z_PRG.dataProvider().addFeatures([obj])
+            dopasowane = True
             break
-    
+    if not dopasowane:
+        print(f"Nie znaleziono powiatu o kodzie {terytPowiatu}.")
+        return QgsVectorLayer("LineString?crs=epsg:2180", "pusta", "memory")
     bufor = processing.run("native:buffer", {
         'INPUT': powiat_z_PRG, 
         'DISTANCE': -0.02,
@@ -166,8 +171,6 @@ def adjaMinus2cmBufor(layer):
         'DISSOLVE': True,
         'OUTPUT': 'memory:'
     })['OUTPUT']
-    
-    # Zamiana poligonu na linie
     granica = processing.run("native:polygonstolines", {
         'INPUT': bufor,
         'OUTPUT': 'memory:'
@@ -471,76 +474,109 @@ def minimalnaBUBD(layer):
         ptut_index, ptut_dict = QgsSpatialIndex(), {}
         if ptut_layer:
             for f in ptut_layer.getFeatures():
-                if f["rodzaj"] == "ogródki działkowe" and f.geometry():
-                    ptut_index.insertFeature(f)
-                    ptut_dict[f.id()] = f
-        bubd_index, bubd_dict = QgsSpatialIndex(), {}
+                if f["rodzaj"] == "ogródki działkowe":
+                    geom = f.geometry()
+                    if geom:
+                        ptut_index.insertFeature(f)
+                        ptut_dict[f.id()] = (f, geom)
+        bubd_index, bubd_dict, geom_cache, area_cache, funkcja_cache = QgsSpatialIndex(), {}, {}, {}, {}
+        excluded_funkcje = {
+            "dzwonnica",
+            "budynek kontroli ruchu kolejowego",
+            "budynek kontroli ruchu powietrznego",
+            "latarnia morska",
+            "kapitanat lub bosmanat portu",
+            "stacja kolejki górskiej lub wyciągu krzesełkowego"
+        }
         for f in layer.getFeatures():
-            g = f.geometry()
-            if g:
-                bubd_index.insertFeature(f)
-                bubd_dict[f.id()] = f
-        bubd_dict = {fid: f for fid, f in bubd_dict.items() if f["przewazajacaFunkcjaBudynku"] != "dzwonnica"}
-        
+            geom = f.geometry()
+            if not geom:
+                continue
+            fid = f.id()
+            bubd_index.insertFeature(f)
+            bubd_dict[fid] = f
+            geom_cache[fid] = geom
+            area_cache[fid] = geom.area()
+            funkcja_cache[fid] = (f["funkcjaOgolnaBudynku"], f["przewazajacaFunkcjaBudynku"])
         for fid, f in bubd_dict.items():
-            if fid in already_marked: continue
-            geom, area = f.geometry(), f.geometry().area()
-            if ptut_layer and geom and area < 40:
+            funkcja_og, przew_funkcja = funkcja_cache[fid]
+            if funkcja_og == "budynki mieszkalne" or przew_funkcja in excluded_funkcje:
+                continue
+            if fid in already_marked:
+                continue
+            geom, area = geom_cache[fid], area_cache[fid]
+            if area >= 40:
+                continue
+            if ptut_layer:
                 for cid in ptut_index.intersects(geom.boundingBox()):
-                    if geom.within(ptut_dict[cid].geometry()):
+                    ptut_f, ptut_geom = ptut_dict[cid]
+                    if geom.within(ptut_geom):
                         obiektyZbledami.append(f)
                         already_marked.add(fid)
                         break
-        
         for fid, f in bubd_dict.items():
-            if fid in already_marked: continue
-            geom, area = f.geometry(), f.geometry().area()
-            funkcja = f["funkcjaOgolnaBudynku"]
-            if area >= 16 or funkcja == "budynki mieszkalne": continue
-            touching = [cid for cid in bubd_index.intersects(geom.boundingBox()) if cid != fid and geom.touches(bubd_dict[cid].geometry())]
-            if len(touching) == 0:
-                if any(bubd_dict[cid].geometry().area() > 40 for cid in bubd_index.intersects(geom.buffer(50, 5).boundingBox())):
+            if fid in already_marked:
+                continue
+            funkcja_og, przew_funkcja = funkcja_cache[fid]
+            if funkcja_og == "budynki mieszkalne" or przew_funkcja in excluded_funkcje:
+                continue
+            geom, area = geom_cache[fid], area_cache[fid]
+            if area >= 16:
+                continue
+            touching = [cid for cid in bubd_index.intersects(geom.boundingBox())
+                        if cid != fid and geom.touches(geom_cache[cid])]
+            if not touching:
+                buf_ids = bubd_index.intersects(geom.buffer(50, 1).boundingBox())
+                if any(area_cache[cid] > 40 for cid in buf_ids if cid != fid):
                     obiektyZbledami.append(f)
                     already_marked.add(fid)
             elif len(touching) == 1:
-                sasiad = bubd_dict[touching[0]]
-                if sasiad.geometry().area() >= 40:
+                sasiad_id = touching[0]
+                if area_cache[sasiad_id] >= 40:
                     obiektyZbledami.append(f)
                     already_marked.add(fid)
-        
         for fid, f in bubd_dict.items():
-            if fid in already_marked: continue
-            geom, area = f.geometry(), f.geometry().area()
-            funkcja = f["funkcjaOgolnaBudynku"]
-            if area >= 16 or funkcja == "budynki mieszkalne":
+            if fid in already_marked:
                 continue
-            touching = [cid for cid in bubd_index.intersects(geom.boundingBox()) if cid != fid and geom.touches(bubd_dict[cid].geometry())]
+            funkcja_og, przew_funkcja = funkcja_cache[fid]
+            if funkcja_og == "budynki mieszkalne" or przew_funkcja in excluded_funkcje:
+                continue
+            geom, area = geom_cache[fid], area_cache[fid]
+            if area >= 16:
+                continue
+            touching = [cid for cid in bubd_index.intersects(geom.boundingBox())
+                        if cid != fid and geom.touches(geom_cache[cid])]
             if len(touching) == 1:
                 oid = touching[0]
-                if oid in already_marked: continue
-                o = bubd_dict[oid]
-                o_geom, o_area = o.geometry(), o.geometry().area()
+                if oid in already_marked:
+                    continue
+                o_geom, o_area = geom_cache[oid], area_cache[oid]
                 if area + o_area < 39:
-                    o_touching = [cid for cid in bubd_index.intersects(o_geom.boundingBox()) if cid not in (fid, oid) and o_geom.touches(bubd_dict[cid].geometry())]
+                    o_touching = [cid for cid in bubd_index.intersects(o_geom.boundingBox())
+                                  if cid not in (fid, oid) and o_geom.touches(geom_cache[cid])]
                     bb = geom.combine(o_geom).boundingBox().buffered(50)
                     others = [cid for cid in bubd_index.intersects(bb) if cid not in (fid, oid)]
                     if others and not o_touching:
-                        obiektyZbledami += [f, o]
-                        already_marked |= {fid, oid}
-        
+                        obiektyZbledami.extend([f, bubd_dict[oid]])
+                        already_marked.update((fid, oid))
         for fid, f in bubd_dict.items():
-            if fid in already_marked: continue
-            geom, area = f.geometry(), f.geometry().area()
-            funkcja = f["funkcjaOgolnaBudynku"]
-            if area < 39 and funkcja != "budynki mieszkalne":
-                touching = [cid for cid in bubd_index.intersects(geom.boundingBox()) if cid != fid and geom.touches(bubd_dict[cid].geometry())]
-                if len(touching) == 0:
-                    buffer_geom = geom.buffer(15, 5)
-                    others_in_buffer = [cid for cid in bubd_index.intersects(buffer_geom.boundingBox()) if cid != fid and bubd_dict[cid].geometry().intersects(buffer_geom)]
-                    has_large_building = any(bubd_dict[cid].geometry().area() >= 40 for cid in others_in_buffer)
-                    if has_large_building:
-                        obiektyZbledami.append(f)
-                        already_marked.add(fid)
+            if fid in already_marked:
+                continue
+            funkcja_og, przew_funkcja = funkcja_cache[fid]
+            if funkcja_og == "budynki mieszkalne" or przew_funkcja in excluded_funkcje:
+                continue
+            geom, area = geom_cache[fid], area_cache[fid]
+            if area >= 39:
+                continue
+            touching = [cid for cid in bubd_index.intersects(geom.boundingBox())
+                        if cid != fid and geom.touches(geom_cache[cid])]
+            if not touching:
+                buffer_geom = geom.buffer(15, 1)
+                in_buf = [cid for cid in bubd_index.intersects(buffer_geom.boundingBox())
+                          if cid != fid and geom_cache[cid].intersects(buffer_geom)]
+                if any(area_cache[cid] >= 40 for cid in in_buf):
+                    obiektyZbledami.append(f)
+                    already_marked.add(fid)
         return obiektyZbledami
     except Exception as e:
         print(f"Błąd w kontroli minimalnaBUBD: {e}")
@@ -661,6 +697,108 @@ def czyObiektyWewnatrzPowiatu(layer, teryt):
         obiektyZbledami.extend(liniePrzecinajace['OUTPUT'].getFeatures())
         obiektyZbledami.extend(rozlaczne['OUTPUT'].getFeatures())
     
+    return obiektyZbledami
+
+
+
+def czyPunktyWewnatrzPowiatu(layer):
+    punktowe_warstwy = {
+        "OT_SKRW_P", "OT_OIPR_P", "OT_OIOR_P",
+        "OT_OIKM_P", "OT_KUPG_P", "OT_KUKO_P", "OT_BUZT_P",
+        "OT_BUWT_P", "OT_BUIT_P", "OT_ADMS_P"
+    }
+    if not any(layer.name().endswith(suf) for suf in punktowe_warstwy):
+        return []
+    match = re.search(r"\.(\d{4})__", layer.name())
+    if not match:
+        return []
+    teryt = match.group(1)
+    config = configparser.ConfigParser()
+    settings_dir = pathlib.Path(QgsApplication.qgisSettingsDirPath())
+    plugin_path = settings_dir / "python/plugins/Walidator_plikow_gml/"
+    config.read(str(plugin_path / "Walidator_plikow_gml.ini"))
+    granicePowiatowPath = config['DEFAULT']['granicepowiatow']
+    granice = QgsVectorLayer(granicePowiatowPath, "GranicePowiatow", "ogr")
+    if not granice.isValid():
+        return []
+    granice = processing.run("native:multiparttosingleparts", {
+        'INPUT': granice,
+        'OUTPUT': 'memory:'
+    })['OUTPUT']
+    
+    req = QgsFeatureRequest(QgsExpression(f"JPT_KOD_JE = '{teryt}'"))
+    granica_powiatu = QgsVectorLayer("Polygon?crs=epsg:2180", "granica", "memory")
+    granica_powiatu.dataProvider().addFeatures(granice.getFeatures(req))
+    if granica_powiatu.featureCount() == 0:
+        return []
+    bufor = processing.run("native:buffer", {
+        'INPUT': granica_powiatu,
+        'DISTANCE': 0.005,
+        'SEGMENTS': 5,
+        'DISSOLVE': True,
+        'OUTPUT': 'memory:'
+    })['OUTPUT']
+    
+    geometria_bufora = QgsGeometry.unaryUnion([f.geometry() for f in bufor.getFeatures()])
+    if geometria_bufora is None or geometria_bufora.isEmpty():
+        return []
+        
+    obiektyZbledami = []
+    for feat in layer.getFeatures():
+        geom = feat.geometry()
+        if geom and not geometria_bufora.contains(geom):
+            obiektyZbledami.append(feat)
+            
+    return obiektyZbledami
+
+
+def czyPunktyWewnatrzPowiatu_RTPW(layer):
+
+    if not layer.isValid():
+        return []
+    
+    layer_name = layer.name()
+    if not layer_name.endswith("OT_RTPW_P"):
+        return []
+    match = re.search(r"\.(\d{4})__", layer_name)
+    if not match:
+        return []
+    teryt = match.group(1)
+    config = configparser.ConfigParser()
+    settings_dir = pathlib.Path(QgsApplication.qgisSettingsDirPath())
+    plugin_path = settings_dir / "python/plugins/Walidator_plikow_gml/"
+    config.read(str(plugin_path / "Walidator_plikow_gml.ini"))
+    granicePowiatowPath = config['DEFAULT']['granicepowiatow']
+    granice = QgsVectorLayer(granicePowiatowPath, "GranicePowiatow", "ogr")
+    if not granice.isValid():
+        return []
+    granice_single = processing.run("native:multiparttosingleparts", {
+        'INPUT': granice,
+        'OUTPUT': 'memory:'
+    })['OUTPUT']
+    
+    req = QgsFeatureRequest(QgsExpression(f"JPT_KOD_JE = '{teryt}'"))
+    granica_powiatu = QgsVectorLayer("Polygon?crs=epsg:2180", "granica", "memory")
+    granica_powiatu.dataProvider().addFeatures(granice_single.getFeatures(req))
+    if granica_powiatu.featureCount() == 0:
+        return []
+    bufor = processing.run("native:buffer", {
+        'INPUT': granica_powiatu,
+        'DISTANCE': 0.005,
+        'SEGMENTS': 5,
+        'DISSOLVE': True,
+        'OUTPUT': 'memory:'
+    })['OUTPUT']
+    geometria_bufora = QgsGeometry.unaryUnion([f.geometry() for f in bufor.getFeatures()])
+    if geometria_bufora is None or geometria_bufora.isEmpty():
+        return []
+        
+    obiektyZbledami = []
+    for feat in layer.getFeatures():
+        geom = feat.geometry()
+        if geom and not geometria_bufora.contains(geom):
+            obiektyZbledami.append(feat)
+            
     return obiektyZbledami
 
 
@@ -1031,12 +1169,11 @@ def kontrolaTERCpowierzchnia(layer):
 
 def fullCoverage(layer):
     obiektyZbledami = []
-    adja = None
-    wszystkieObiektyZPokrycia = QgsVectorLayer("Polygon?crs=epsg:" + str(2180), "Wszystkie obiekty z pokrycia", "memory")
     pokrycie = []
+    wszystkieObiektyZPokrycia = QgsVectorLayer("Polygon?crs=epsg:2180", "Wszystkie obiekty z pokrycia", "memory")
     config = configparser.ConfigParser()
-    mainPath = pathlib.Path(QgsApplication.qgisSettingsDirPath()) / pathlib.Path(r"python/plugins/Walidator_plikow_gml/")
-    config.read(str(mainPath) + '/Walidator_plikow_gml.ini')
+    mainPath = pathlib.Path(QgsApplication.qgisSettingsDirPath()) / "python/plugins/Walidator_plikow_gml"
+    config.read(str(mainPath / "Walidator_plikow_gml.ini"))
     granicePowiatowPath = config['DEFAULT']['granicepowiatow']
     granicePowiatow = QgsVectorLayer(granicePowiatowPath, 'GranicePowiatow', 'ogr')
     
@@ -1044,107 +1181,164 @@ def fullCoverage(layer):
         'INPUT': granicePowiatow,
         'OUTPUT': 'memory:'
     })['OUTPUT']
-    
+    match = re.search(r"\.(\d{4})__", layer.name())
+    if not match:
+        return []
+    terytPowiatu = match.group(1)
     powiat_z_PRG = QgsVectorLayer("Polygon?crs=epsg:2180&field=gml_id:string(254)", "granica powiatu z PRG", "memory")
-    terytPowiatu = int(layer.name()[-15:-11])
-    
+    adja_geom = None
     for obj in granicePowiatow.getFeatures():
         if str(obj['JPT_KOD_JE']) == str(terytPowiatu):
             powiat_z_PRG.dataProvider().addFeatures([obj])
+            adja_geom = obj.geometry()
             break
-    
-    adja = powiat_z_PRG
-    
-    for layer_id, lyr in QgsProject.instance().mapLayers().items():
+    for lyr in QgsProject.instance().mapLayers().values():
         if "OT_PT" in lyr.name():
             pokrycie.append(lyr)
-    
     for l in pokrycie:
         for feature in l.getFeatures():
             wszystkieObiektyZPokrycia.dataProvider().addFeatures([feature])
             
-    if adja and not QgsProject.instance().mapLayersByName("nakładania w pokryciu terenu") and not QgsProject.instance().mapLayersByName("dziury w pokryciu terenu"):
-        nakladanie = QgsVectorLayer("Polygon?crs=epsg:2180&field=gml_id:string(254)", "nakładania w pokryciu terenu", "memory")
-        dziury = QgsVectorLayer("Polygon?crs=epsg:2180&field=gml_id:string(254)", "dziury w pokryciu terenu", "memory")
+    # WALIDACJA GEOMETRII
+    isvalid = processing.run("qgis:checkvalidity", {
+        'INPUT_LAYER': wszystkieObiektyZPokrycia,
+        'METHOD': 2,
+        'IGNORE_RING_SELF_INTERSECTION': False,
+        'VALID_OUTPUT': 'memory:',
+        'INVALID_OUTPUT': 'memory:',
+        'ERROR_OUTPUT': 'memory:'
+    })
+    
+    if isvalid['INVALID_OUTPUT'].featureCount() > 0:
+        isvalid['INVALID_OUTPUT'].setName("błędne geometrie obiektów pokrycia terenu")
+        QgsProject.instance().addMapLayer(isvalid['INVALID_OUTPUT'])
+    if isvalid['ERROR_OUTPUT'].featureCount() > 0:
+        isvalid['ERROR_OUTPUT'].setName("lokalizacje błędów geometrii obiektów pokrycia terenu")
+        QgsProject.instance().addMapLayer(isvalid['ERROR_OUTPUT'])
+    valid = isvalid['VALID_OUTPUT']
+    
+    # NAKŁADANIA
+    nakladanie = QgsVectorLayer("Polygon?crs=epsg:2180&field=gml_id:string(254)", "nakładania w pokryciu terenu", "memory")
+    geom_union = set()
+    union = processing.run("qgis:union", {
+        'INPUT': valid,
+        'OUTPUT': 'memory:'
+    })
+    index_layer = QgsSpatialIndex(layer.getFeatures())
+    for f in union['OUTPUT'].getFeatures():
+        g = f.geometry()
+        if g.isEmpty():
+            continue
+        geom_hash = hash(g.asWkb())
+        if geom_hash in geom_union:
+            if g.area() > 0.009:
+                nakladanie.dataProvider().addFeatures([f])
+                point = g.centroid().asPoint()
+                nearest_ids = index_layer.nearestNeighbor(point, 1)
+                if nearest_ids:
+                    nearest = layer.getFeature(nearest_ids[0])
+                    if nearest.id() not in [o.id() for o in obiektyZbledami]:
+                        obiektyZbledami.append(nearest)
+        else:
+            geom_union.add(geom_hash)
+            
+    if nakladanie.featureCount() > 0:
+        nakladanie.setName("nakładania w pokryciu terenu")
+        nakladanie.startEditing()
+        for n in nakladanie.getFeatures():
+            n.setAttribute(0, 'nie dotyczy')
+            nakladanie.updateFeature(n)
+        nakladanie.commitChanges()
+        QgsProject.instance().addMapLayer(nakladanie)
         
-        isvalid_wszystkieObiektyZPokrycia = processing.run("qgis:checkvalidity", {
-            'INPUT_LAYER': wszystkieObiektyZPokrycia,
-            'METHOD': 2,
-            'IGNORE_RING_SELF_INTERSECTION': False,
-            'VALID_OUTPUT': 'memory:',
-            'INVALID_OUTPUT': 'memory:',
-            'ERROR_OUTPUT': 'memory:'
-        })
+    # DZIURY
+    dziury = QgsVectorLayer("Polygon?crs=epsg:2180&field=gml_id:string(254)", "dziury w pokryciu terenu", "memory")
+    buforMinus1cm = processing.run("native:buffer", {
+        'INPUT': powiat_z_PRG,
+        'DISTANCE': -0.01,
+        'SEGMENTS': 10,
+        'DISSOLVE': True,
+        'OUTPUT': 'memory:'
+    })['OUTPUT']
+    roznica = processing.run("qgis:difference", {
+        'INPUT': buforMinus1cm,
+        'OVERLAY': valid,
+        'OUTPUT': 'memory:'
+    })['OUTPUT']
+    pojedynczeDziury = processing.run("native:multiparttosingleparts", {
+        'INPUT': roznica,
+        'OUTPUT': 'memory:'
+    })['OUTPUT']
+
+    dziury.startEditing()
+    spatial_index_layer = QgsSpatialIndex(layer.getFeatures())
+    for n in pojedynczeDziury.getFeatures():
+        if n.geometry().area() > 0.009:
+            
+            nowy = QgsFeature(dziury.fields())
+            nowy.setGeometry(n.geometry())
+            nowy.setAttribute(0, 'nie dotyczy')
+            dziury.addFeature(nowy)
+            obiektyZbledami.append(nowy)
+            
+            rect = n.geometry().boundingBox()
+            ids = spatial_index_layer.intersects(rect)
+            for fid in ids:
+                f = layer.getFeature(fid)
+                if f.geometry().intersects(n.geometry()):
+                    if f.id() not in [o.id() for o in obiektyZbledami]:
+                        obiektyZbledami.append(f)
+                    break
+    dziury.commitChanges()
+    if dziury.featureCount() > 0:
+        QgsProject.instance().addMapLayer(dziury)
         
-        if isvalid_wszystkieObiektyZPokrycia['INVALID_OUTPUT'].featureCount() > 0:
-            isvalid_wszystkieObiektyZPokrycia['INVALID_OUTPUT'].setName("błędne geometrie obiektów pokrycia terenu")
-            QgsProject.instance().addMapLayer(isvalid_wszystkieObiektyZPokrycia['INVALID_OUTPUT'])
+    # NIESPÓJNOŚCI WERTEKSÓW
+    niespojnosci = QgsVectorLayer("Point?crs=epsg:2180&field=gml_id:string(254)", "niespójność werteksów", "memory")
+    pr = niespojnosci.dataProvider()
+    geometrie_dict = {}
+    licznik_wierzcholkow = defaultdict(set)
+    index = QgsSpatialIndex()
+    for f in valid.getFeatures():
+        fid = f.id()
+        geometrie_dict[fid] = f
+        index.insertFeature(f)
+        geom = f.geometry()
+        for v in geom.vertices():
+            xy = (round(v.x(), 2), round(v.y(), 2))
+            licznik_wierzcholkow[xy].add(fid)
             
-        if isvalid_wszystkieObiektyZPokrycia['ERROR_OUTPUT'].featureCount() > 0:
-            isvalid_wszystkieObiektyZPokrycia['ERROR_OUTPUT'].setName("lokalizacje błędów geometrii obiektów pokrycia terenu")
-            QgsProject.instance().addMapLayer(isvalid_wszystkieObiektyZPokrycia['ERROR_OUTPUT'])
+    tolerancja = 0.01
+    for xy, ids in licznik_wierzcholkow.items():
+        if len(ids) != 1:
+            continue
+        fid = list(ids)[0]
+        geom1 = geometrie_dict[fid].geometry()
+        pt = QgsPointXY(*xy)
+        geom_pt = QgsGeometry.fromPointXY(pt)
+        candidates = index.intersects(geom1.boundingBox())
+        for cid in candidates:
+            if cid == fid:
+                continue
+            geom2 = geometrie_dict[cid].geometry()
+            if geom2.touches(geom_pt):
+                if any(QgsPointXY(round(p.x(), 2), round(p.y(), 2)).distance(pt) < tolerancja for p in geom2.vertices()):
+                    continue
+                feat = QgsFeature(niespojnosci.fields())
+                feat.setGeometry(geom_pt)
+                feat.setAttribute(0, 'nie dotyczy')
+                pr.addFeature(feat)
+                for f_layer in layer.getFeatures(QgsFeatureRequest().setFilterRect(geom_pt.boundingBox())):
+                    if f_layer.geometry().intersects(geom_pt):
+                        if f_layer.id() not in [o.id() for o in obiektyZbledami]:
+                            obiektyZbledami.append(f_layer)
+                        break
+    if niespojnosci.featureCount() > 0:
+        QgsProject.instance().addMapLayer(niespojnosci)
+    for niesp in niespojnosci.getFeatures():
+        if niesp.id() not in [o.id() for o in obiektyZbledami]:
+            obiektyZbledami.append(niesp)
             
-        try:
-            union = processing.run("qgis:union", {
-                'INPUT': isvalid_wszystkieObiektyZPokrycia['VALID_OUTPUT'],
-                'OUTPUT': 'memory:'
-            })
-        except:
-            return []
-            
-        geom_union = set()
-        for f in union['OUTPUT'].getFeatures():
-            g = f.geometry()
-            geom_wkt = g.asWkt()
-            if geom_wkt not in geom_union:
-                geom_union.add(geom_wkt)
-            else:
-                if f.geometry().area() > 2:
-                    nakladanie.dataProvider().addFeatures([f])
-                    
-        if nakladanie.featureCount() > 0:
-            QgsProject.instance().addMapLayer(nakladanie)
-            nakladanie.startEditing()
-            for n in nakladanie.getFeatures():
-                n.setAttribute(0, 'nie dotyczy')
-                nakladanie.updateFeature(n)
-                obiektyZbledami.append(n)
-            nakladanie.commitChanges()
-            QgsProject.instance().addMapLayer(nakladanie)
-            
-        if not QgsProject.instance().mapLayersByName("dziury w pokryciu terenu"):
-            buforMinus1cm = processing.run("native:buffer", {
-                'INPUT': adja,
-                'DISTANCE': -0.02,
-                'SEGMENTS': 10,
-                'DISSOLVE': True,
-                'OUTPUT': 'memory:'
-            })['OUTPUT']
-            
-            roznica = processing.run("qgis:difference", {
-                'INPUT': buforMinus1cm,
-                'OVERLAY': isvalid_wszystkieObiektyZPokrycia['VALID_OUTPUT'],
-                'OUTPUT': 'memory:'
-            })['OUTPUT']
-            
-            pojedynczeDziury = processing.run("native:multiparttosingleparts", {
-                'INPUT': roznica,
-                'OUTPUT': 'memory:'
-            })['OUTPUT']
-            
-            dziury.startEditing()
-            for n in pojedynczeDziury.getFeatures():
-                if n.geometry().area() > 2:
-                    nowyRekord = QgsFeature(dziury.fields())
-                    nowyRekord.setAttribute(0, 'nie dotyczy')
-                    nowyRekord.setGeometry(n.geometry())
-                    dziury.addFeature(nowyRekord)
-                    obiektyZbledami.append(nowyRekord)
-            dziury.commitChanges()
-            
-            if dziury.featureCount() > 0:
-                QgsProject.instance().addMapLayer(dziury)
-                
     return obiektyZbledami
 
 
@@ -1557,6 +1751,83 @@ def KontrolaAtrybutuKlasouzytek4(layer, plikGML):
     
     return obiektyZbledami
 
+def kontrolaGeometriaOtWody(layer, plikGML):
+    obiektyZbledami = []
+    plikGML = plikGML.getroot()
+    ns = {'gml': 'http://www.opengis.net/gml/3.2', 'ot': 'bazaDanychObiektowTopograficznych500:1.0'}
+    
+    for featureMember in plikGML.findall('.//gml:featureMember', namespaces=ns):
+        ot_wody = featureMember.find('.//ot:OT_Wody', namespaces=ns)
+        
+        if ot_wody is not None:
+            rodzajObiektu = ot_wody.find('.//ot:rodzajObiektu', namespaces=ns)
+            rodzajObiektu_text = rodzajObiektu.text if rodzajObiektu is not None else "Nieznane ID"
+            
+            if rodzajObiektu_text in ['p','s','j','l','z','t','o']:
+                ot_geometria =  ot_wody.findall('.//ot:geometria', namespaces=ns)
+                lokalnyId = ot_wody.find('.//ot:lokalnyId', namespaces=ns)
+                lokalnyId_text = lokalnyId.text if lokalnyId is not None else "Nieznane ID"
+                expression = f"\"lokalnyId\" = '{lokalnyId_text}'"
+                request = QgsFeatureRequest().setFilterExpression(expression)
+                
+                if not ot_geometria: # całkowity brak atrybutu
+                    for feature in layer.getFeatures(request):
+                        obiektyZbledami.append(feature)
+                else: # obiekt posiada niepoprawną geometrię w atrybucie
+                    
+                    for g in ot_geometria:
+                        # QgsMessageLog.logMessage(f"3.g:\t{g}", "Walidator", level=Qgis.Info)
+                        isValid = False
+                        validGeometry = ['Polygon', 'Surface'] # akceptowalna geometria
+                        for vg in validGeometry:
+                            if g.find(f'.//gml:{vg}', namespaces=ns) is not None:
+                                isValid = True
+                                break # wyjście jeśli znajdzie poprawny obiekt
+                        if isValid: continue
+                        request = QgsFeatureRequest().setFilterExpression(expression)
+                        for feature in layer.getFeatures(request):
+                            obiektyZbledami.append(feature)
+    
+    return obiektyZbledami
+
+
+def kontrolaGeometriaOtWody2(layer, plikGML):
+    obiektyZbledami = []
+    plikGML = plikGML.getroot()
+    ns = {'gml': 'http://www.opengis.net/gml/3.2', 'ot': 'bazaDanychObiektowTopograficznych500:1.0'}
+    
+    for featureMember in plikGML.findall('.//gml:featureMember', namespaces=ns):
+        ot_wody = featureMember.find('.//ot:OT_Wody', namespaces=ns)
+        
+        if ot_wody is not None:
+            rodzajObiektu = ot_wody.find('.//ot:rodzajObiektu', namespaces=ns)
+            rodzajObiektu_text = rodzajObiektu.text if rodzajObiektu is not None else "Nieznane ID"
+            
+            if rodzajObiektu_text in ['w','g']:
+                ot_geometria =  ot_wody.findall('.//ot:geometria', namespaces=ns)
+                lokalnyId = ot_wody.find('.//ot:lokalnyId', namespaces=ns)
+                lokalnyId_text = lokalnyId.text if lokalnyId is not None else "Nieznane ID"
+                expression = f"\"lokalnyId\" = '{lokalnyId_text}'"
+                request = QgsFeatureRequest().setFilterExpression(expression)
+                
+                if not ot_geometria: # całkowity brak atrybutu
+                    for feature in layer.getFeatures(request):
+                        obiektyZbledami.append(feature)
+                else: # obiekt posiada niepoprawną geometrię w atrybucie
+                    for g in ot_geometria:
+                        isValid = False
+                        validGeometry = ['Polygon', 'Surface', 'MultiSurface'] # akceptowalna geometria
+                        for vg in validGeometry:
+                            if g.find(f'.//gml:{vg}', namespaces=ns) is not None:
+                                isValid = True
+                                break # wyjście jeśli znajdzie poprawny obiekt
+                        if isValid: continue
+                        request = QgsFeatureRequest().setFilterExpression(expression)
+                        for feature in layer.getFeatures(request):
+                            obiektyZbledami.append(feature)
+    
+    return obiektyZbledami
+
 
 def KontrolaGeometriaSchody(layer, plikGML):
     obiektyZbledami = []
@@ -1700,71 +1971,71 @@ def miastoWiesCzyNakladajaSie(layer):
 def sprawdzLokalnyId(layer):
     obiektyZbledami = []
     if layer.name()[-6:] in ['RTLW_L', 'RTPW_P']:
-        # funkcja nie wykona się dla warstw z rzeźbą terenu
         return obiektyZbledami
-    uuid_pattern = re.compile(r'^[A-Za-z0-9]{8}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{12}$|^$')
-    # Zbiór do sprawdzania unikalności
+    uuid_pattern = re.compile(r'^[A-Za-z0-9]{8}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{12}$')
     unique_ids = set()
     for f in layer.getFeatures():
         lokalny = f.attribute('lokalnyId')
-        matches_pattern = bool(uuid_pattern.match(lokalny))
-        if not isinstance(lokalny, str):
-            lokalny = str(lokalny) # konwersja pustej wartosci na string
-        is_unique = lokalny not in unique_ids
-        if is_unique and not matches_pattern:
-            unique_ids.add(lokalny)
+        try:
+            lokalny_str = str(lokalny)
+        except Exception:
             obiektyZbledami.append(f)
-    
+            continue
+        if not uuid_pattern.match(lokalny_str):
+            obiektyZbledami.append(f)
+            continue
+        if lokalny_str in unique_ids:
+            obiektyZbledami.append(f)
+        else:
+            unique_ids.add(lokalny_str)
     return obiektyZbledami
 
 
 def sprawdzPrzestrzenNazw(layer):
     obiektyZbledami = []
     if layer.name()[-6:] in ['RTLW_L', 'RTPW_P']:
-        # funkcja nie wykona się dla warstw z rzeźbą terenu
         return obiektyZbledami
+        
     dozwolone_kody = {
-    '02': '337',  # dolnośląskie
-    '04': '994',  # kujawsko-pomrskie
-    '06': '3700', # lubelskie
-    '26': '370',  # świętokrzyskie
-    '08': '333',  # lubuskie
-    '10': '340',  # łódzkie
-    '12': '283',  # małopolskie
-    '14': '330',  # mazowieckie
-    '16': '1833', # opolskie
-    '18': '332',  # podlaskie
-    '20': '335',  # podkarpackie
-    '22': '336',  # pomorskie
-    '24': '238',  # śląskie
-    '28': '341',  # warmińsko-mazurskie
-    '30': '308',  # wielkopolskie
-    '32': '339'   # zachodniopomorskie
+        '02': '337',  # dolnośląskie
+        '04': '994',  # kujawsko-pomrskie
+        '06': '3700', # lubelskie
+        '26': '370',  # świętokrzyskie
+        '08': '333',  # lubuskie
+        '10': '340',  # łódzkie
+        '12': '283',  # małopolskie
+        '14': '330',  # mazowieckie
+        '16': '1833', # opolskie
+        '18': '332',  # podlaskie
+        '20': '335',  # podkarpackie
+        '22': '336',  # pomorskie
+        '24': '238',  # śląskie
+        '28': '341',  # warmińsko-mazurskie
+        '30': '308',  # wielkopolskie
+        '32': '339'   # zachodniopomorskie
     }
     pattern = re.compile(r'^PL\.PZGiK\.(\d{3,4})\.BDOT10k$')
-    # Zbiór do sprawdzania unikalności
-    unique_ids = set()
     for f in layer.getFeatures():
         przestrzen = f.attribute('przestrzenNazw')
-        match = pattern.match(przestrzen)
-        if not isinstance(przestrzen, str):
-            przestrzen = str(przestrzen) # konwersja pustej wartosci na string
-        if not match: # sprawdza, czy są niezgodne z schematem
+        try:
+            przestrzen_str = str(przestrzen)
+        except Exception:
             obiektyZbledami.append(f)
-        else: 
-            woj = layer.name()[13:15] # sprawdza niezgodnosci cyfr w wojewodztwach
-            if woj in ['.1', '.0']:
-                woj = layer.name()[14:16]
-            cyfry = match.group(1) if match.group(1) else None
-            expected_cyfry = dozwolone_kody.get(woj, None)
-            if isinstance(expected_cyfry, list):
-                valid = cyfry in expected_cyfry
-            else:
-                valid = cyfry == expected_cyfry
-                
-            if not valid:
-                    obiektyZbledami.append(f)
-    
+            continue
+        match = pattern.match(przestrzen_str)
+        if not match:
+            obiektyZbledami.append(f)
+            continue
+        woj = layer.name()[13:15]
+        if woj in ['.1', '.0']:
+            woj = layer.name()[14:16]
+        cyfry = match.group(1) if match.group(1) else None
+        expected_cyfry = dozwolone_kody.get(woj, None)
+        
+        valid = cyfry == expected_cyfry if expected_cyfry else False
+        if not valid:
+            obiektyZbledami.append(f)
+            
     return obiektyZbledami
 
 
@@ -1866,7 +2137,7 @@ def przestrzenNazw(layer,teryt):
 
 def zapisWspolrzednych(layer, plikGML):
     obiektyZbledami = []
-    plikGML = plikGML.getroot()   
+    plikGML = plikGML.getroot()
     ns = {
         'gml': 'http://www.opengis.net/gml/3.2',
         'ot': 'urn:gugik:specyfikacje:gmlas:bazaDanychObiektowTopograficznych10k:2.0'
@@ -1878,7 +2149,7 @@ def zapisWspolrzednych(layer, plikGML):
     for featureMember in plikGML.findall('.//gml:featureMember', namespaces=ns):
         matches = featureMember.find(otklasa, namespaces=ns)
         if matches is None:
-            continue       
+            continue
         lokalnyId_elem = matches.find('.//ot:lokalnyId', namespaces=ns)
         lokalnyId_text = lokalnyId_elem.text.strip() if lokalnyId_elem is not None else "Nieznane ID"
         feature = lokalnyId_to_feature.get(lokalnyId_text)
@@ -1937,51 +2208,80 @@ def minDlugoscOIPR(layer):
 
 
 def minDlugoscBUUO(layer):
-    obiektyZbledami = []
-    if layer.name()[-6:] == 'BUUO_L':
-        BUUO_L_layer = QgsProject().instance().mapLayersByName(layer.name())[0]
-    granica = adjaMinus2cmBufor(layer)
-    for BUUO_L_feature in BUUO_L_layer.getFeatures():
-        geom = BUUO_L_feature.geometry()
-        if geom.length() < 10 and BUUO_L_feature['rodzaj'] in ['falochron','ostroga']:
-            styka = False
-            for g in granica['OUTPUT'].getFeatures():
-                if not geom.intersects(g.geometry()):
-                    styka = True
-                    obiektyZbledami.append(BUUO_L_feature)
-    
-    return obiektyZbledami
+    try:
+        if not layer.isValid():
+            return []
+        obiektyZbledami = []
+        layer_name = layer.name()
+        if not layer_name.endswith("BUUO_L"):
+            return []
+        BUUO_L_layers = QgsProject.instance().mapLayersByName(layer_name)
+        if not BUUO_L_layers:
+            return []
+        BUUO_L_layer = BUUO_L_layers[0]
+        buuo_features = list(BUUO_L_layer.getFeatures())
+        granica = adjaMinus2cmBufor(layer)
+        if granica is None or not granica.isValid():
+            return []
+        granica_geoms = [g.geometry() for g in granica.getFeatures()]
+        for feat in buuo_features:
+            geom = feat.geometry()
+            if geom is None or geom.isEmpty():
+                continue
+            if geom.length() < 10 and feat['rodzaj'] in ['falochron', 'ostroga']:
+                styka_z_granica = any(geom.intersects(g) or geom.crosses(g) for g in granica_geoms)
+                if not styka_z_granica:
+                    obiektyZbledami.append(feat)
+        return obiektyZbledami
+    except Exception as e:
+        print(f"Błąd w minDlugoscBUUO: {e}")
+        return []
 
 
 def minDlugoscSUPRnaKUPG(layer):
-    obiektyZbledami = []
-    if layer.name()[-6:] == 'SUPR_L':
-        KUPG_A_layer = QgsProject().instance().mapLayersByName(layer.name().replace("OT_SUPR_L","OT_KUPG_A"))[0]
-        SUPR_L_layer = QgsProject().instance().mapLayersByName(layer.name())[0]
-    granica = adjaMinus2cmBufor(layer)
-    
-    for g in granica.getFeatures():
-        PGR_geom = g.geometry()
-    
-    for SUPR_L_feature in SUPR_L_layer.getFeatures():
-        SUPR_L_geom = SUPR_L_feature.geometry()
-        SUPR_L_id = SUPR_L_feature.id()
-        if SUPR_L_geom.length() < 100 and not SUPR_L_geom.intersects(PGR_geom):
-            for KUPG_A_feature in KUPG_A_layer.getFeatures():
-                KUPG_A_geom = KUPG_A_feature.geometry()
-                if SUPR_L_geom.intersects(KUPG_A_geom):
-                    przecina = False
-                    for SUPR_L_feature_o in SUPR_L_layer.getFeatures():
-                        SUPR_L_id_o = SUPR_L_feature_o.id()
-                        if SUPR_L_id_o != SUPR_L_id:
-                            SUPR_L_geom_o = SUPR_L_feature_o.geometry()
-                            if SUPR_L_geom_o.intersects(SUPR_L_geom):
-                                przecina = True
-                                break
-                    if not przecina:
-                        obiektyZbledami.append(SUPR_L_feature)
-    
-    return obiektyZbledami
+    try:
+        if not layer.isValid():
+            return []
+        obiektyZbledami = []
+        layer_name = layer.name()
+        if not layer_name.endswith("SUPR_L"):
+            return []
+        kupg_name = layer_name.replace("OT_SUPR_L", "OT_KUPG_A")
+        supr_layers = QgsProject.instance().mapLayersByName(layer_name)
+        kupg_layers = QgsProject.instance().mapLayersByName(kupg_name)
+        if not supr_layers or not kupg_layers:
+            return []
+        SUPR_L_layer = supr_layers[0]
+        KUPG_A_layer = kupg_layers[0]
+        supr_features = list(SUPR_L_layer.getFeatures())
+        kupg_features = list(KUPG_A_layer.getFeatures())
+        granica = adjaMinus2cmBufor(layer)
+        if granica is None or not granica.isValid():
+            return []
+        granica_geoms = [g.geometry() for g in granica.getFeatures()]
+        kupg_geoms = [f.geometry() for f in kupg_features]
+        for feat in supr_features:
+            geom = feat.geometry()
+            if geom is None or geom.isEmpty():
+                continue
+            if geom.length() < 100:
+                styka_z_granica = any(geom.intersects(g) or geom.crosses(g) for g in granica_geoms)
+                if styka_z_granica:
+                    continue
+                styka_z_kupg = any(geom.intersects(k) or geom.crosses(k) for k in kupg_geoms)
+                if not styka_z_kupg:
+                    continue
+                styka_z_innym_SUPR = any(
+                    feat.id() != f.id() and (geom.intersects(f.geometry()) or geom.crosses(f.geometry()))
+                    for f in supr_features
+                )
+                if styka_z_innym_SUPR:
+                    continue
+                obiektyZbledami.append(feat)
+        return obiektyZbledami
+    except Exception as e:
+        print(f"Błąd w minDlugoscSUPRnaKUPG: {e}")
+        return []
 
 
 def kontrolaZgodnosciIdentyfikatoraUlicyZNazwa(layer, plikcsv_ulic, plikcsv_simc):
@@ -2510,100 +2810,151 @@ def kompletnoscPlikowBDOT10k(pliki):
 
 def kompletnoscObiektowBDOT10k(layer, plikGMLzrodlowy, plikGML):
     obiektyZbledami = []
-    
-    ns = {'gml': 'http://www.opengis.net/gml/3.2', 'ot': 'urn:gugik:specyfikacje:gmlas:bazaDanychObiektowTopograficznych10k:2.0'}
-    lokalnyIdsKontrolowane = [element.text for element in lxml.etree.parse(plikGML).getroot().findall('.//ot:lokalnyId', namespaces=ns)]
-    lokalnyIdsZrodla = [element.text for element in lxml.etree.parse(plikGMLzrodlowy).getroot().findall('.//ot:lokalnyId', namespaces=ns)]
-    
-    set_difference = set(lokalnyIdsZrodla) - set(lokalnyIdsKontrolowane)
-    list_difference_result = list(set_difference)
-    
-    if len(list_difference_result) > 0:
-        layerDaneZrodlowe = QgsVectorLayer(plikGMLzrodlowy, 'BDOT10k_dane_zrodlowe', 'ogr')
+    ns = {
+        'gml': 'http://www.opengis.net/gml/3.2',
+        'ot': 'urn:gugik:specyfikacje:gmlas:bazaDanychObiektowTopograficznych10k:2.0'
+    }
+    rootKontrolowane = lxml.etree.parse(plikGML).getroot()
+    lokalnyIdsKontrolowane = [
+        el.text for el in rootKontrolowane.findall('.//ot:lokalnyId', namespaces=ns)
+    ]
+    try:
+        rootZrodla = lxml.etree.parse(plikGMLzrodlowy).getroot()
+        lokalnyIdsZrodla = [
+            el.text for el in rootZrodla.findall('.//ot:lokalnyId', namespaces=ns)
+        ]
+    except Exception:
+        return obiektyZbledami
         
-        for diff in list_difference_result:
-            expression = QgsExpression(f'"lokalnyId" = \'{diff}\'')
-            request = QgsFeatureRequest(expression)
-            for feature in layerDaneZrodlowe.getFeatures(request):
-                obiektyZbledami.append(feature)
-    
+    if not lokalnyIdsZrodla:
+        return obiektyZbledami
+    brakujace = set(lokalnyIdsZrodla) - set(lokalnyIdsKontrolowane)
+    if brakujace:
+        layerZrodlo = QgsVectorLayer(plikGMLzrodlowy, 'BDOT10k_dane_zrodlowe', 'ogr')
+        if not layerZrodlo.isValid():
+            return obiektyZbledami
+        for lokalnyId in brakujace:
+            expr = QgsExpression(f'"lokalnyId" = \'{lokalnyId}\'')
+            request = QgsFeatureRequest(expr)
+            for feat in layerZrodlo.getFeatures(request):
+                obiektyZbledami.append(feat)
     return obiektyZbledami
-
+    
 
 def kontrolaZmianAtrybutowWzgledemWersji(layer, plikGMLzrodlowy, plikGML):
     obiektyZbledami = set()
     parser = etree.XMLParser(remove_blank_text=True)
-    k = lxml.etree.parse(plikGML, parser).getroot()
-    z = lxml.etree.parse(plikGMLzrodlowy, parser).getroot()
-    
-    # usuwanie gml:id
-    for elem in k.xpath('//*[@gml:id]', namespaces={'gml': 'http://www.opengis.net/gml/3.2'}):
+    k_root = etree.parse(plikGML, parser).getroot()
+    try:
+        z_root = etree.parse(plikGMLzrodlowy, parser).getroot()
+    except Exception:
+        return obiektyZbledami
+        
+    for elem in k_root.xpath('//*[@gml:id]', namespaces={'gml': 'http://www.opengis.net/gml/3.2'}):
         del elem.attrib['{http://www.opengis.net/gml/3.2}id']
-    for elem in z.xpath('//*[@gml:id]', namespaces={'gml': 'http://www.opengis.net/gml/3.2'}):
+    for elem in z_root.xpath('//*[@gml:id]', namespaces={'gml': 'http://www.opengis.net/gml/3.2'}):
         del elem.attrib['{http://www.opengis.net/gml/3.2}id']
+    for root in (k_root, z_root):
+        for posList_elem in root.xpath('//gml:posList', namespaces={'gml': 'http://www.opengis.net/gml/3.2'}):
+            if posList_elem.text:
+                posList_elem.text = posList_elem.text.strip()
+    ns = {
+        'gml': 'http://www.opengis.net/gml/3.2',
+        'ot': 'urn:gugik:specyfikacje:gmlas:bazaDanychObiektowTopograficznych10k:2.0'
+    }
+    fMembers_K = k_root.findall('.//gml:featureMember', namespaces=ns)
+    fMembers_Z = z_root.findall('.//gml:featureMember', namespaces=ns)
     
-    # usuwanie zbędnych spacji z gml:posList
-    for posList_elem in k.xpath('//gml:posList', namespaces={'gml': 'http://www.opengis.net/gml/3.2'}):
-        if posList_elem.text:
-            posList_elem.text = posList_elem.text.strip()
-    for posList_elem in z.xpath('//gml:posList', namespaces={'gml': 'http://www.opengis.net/gml/3.2'}):
-        if posList_elem.text:
-            posList_elem.text = posList_elem.text.strip()
-    
-    ns = {'gml': 'http://www.opengis.net/gml/3.2', 'ot': 'urn:gugik:specyfikacje:gmlas:bazaDanychObiektowTopograficznych10k:2.0'}
-    fMembers_K = k.findall('.//gml:featureMember', namespaces=ns)
-    fMembers_Z = z.findall('.//gml:featureMember', namespaces=ns)
+    if not fMembers_K or not fMembers_Z:
+        return obiektyZbledami
     
     fMembers_K_dic = {}
     fMembers_Z_dic = {}
     badfMember_Z_dic = {}
     
     for fMember in fMembers_K:
-        fMembers_K_dic[fMember.find('.//ot:lokalnyId', namespaces=ns).text] = fMember
-    fMembers_K_dic = dict(sorted(fMembers_K_dic.items()))
+        lokalnyIdEl = fMember.find('.//ot:lokalnyId', namespaces=ns)
+        if lokalnyIdEl is not None and lokalnyIdEl.text:
+            fMembers_K_dic[lokalnyIdEl.text] = fMember
     for fMember in fMembers_Z:
-        fMembers_Z_dic[fMember.find('.//ot:lokalnyId', namespaces=ns).text] = fMember
-    fMembers_Z_dic = dict(sorted(fMembers_Z_dic.items()))
-    del fMembers_K, fMembers_Z
+        lokalnyIdEl = fMember.find('.//ot:lokalnyId', namespaces=ns)
+        if lokalnyIdEl is not None and lokalnyIdEl.text:
+            fMembers_Z_dic[lokalnyIdEl.text] = fMember
+            
+    if not fMembers_K_dic or not fMembers_Z_dic:
+        return obiektyZbledami
     
-    for fMember_Z_dic in fMembers_Z_dic:
-        if fMember_Z_dic in fMembers_K_dic and etree.tostring(fMembers_K_dic[fMember_Z_dic], method="c14n", exclusive=True) != etree.tostring(fMembers_Z_dic[fMember_Z_dic], method="c14n", exclusive=True):
-            if fMembers_K_dic[fMember_Z_dic].find('.//ot:wersja', namespaces=ns).text == fMembers_Z_dic[fMember_Z_dic].find('.//ot:wersja', namespaces=ns).text:
-                atrybutyZRoznica = set()
-                for element in fMembers_Z_dic[fMember_Z_dic].iter():
-                    elementyIdentyczne = False
-                    for fM_K_dic_element in fMembers_K_dic[fMember_Z_dic].findall('.//' + element.tag):
-                        if fM_K_dic_element.text == element.text:
-                            elementyIdentyczne = True
-                    if not elementyIdentyczne and element.tag != '{http://www.opengis.net/gml/3.2}featureMember':
-                        if not element.tag.split("}")[1].startswith('OT_'):
-                            if element.tag.split("}")[1] in ['posList','LinearRing','LineString','exterior','interior','Polygon','segments','LineStringSegment','Curve','pos','Point']:
-                                atrybutyZRoznica.add('geometria')
-                            else:
-                                atrybutyZRoznica.add(element.tag.split("}")[1])
-                for element in fMembers_K_dic[fMember_Z_dic].iter():
-                    elementyIdentyczne = False
-                    for fM_Z_dic_element in fMembers_Z_dic[fMember_Z_dic].findall('.//' + element.tag):
-                        if fM_Z_dic_element.text == element.text:
-                            elementyIdentyczne = True
-                    if not elementyIdentyczne and element.tag != '{http://www.opengis.net/gml/3.2}featureMember':
-                        if not element.tag.split("}")[1].startswith('OT_'):
-                            if element.tag.split("}")[1] in ['posList','LinearRing','LineString','exterior','interior','Polygon','segments','LineStringSegment','Curve','pos','Point']:
-                                atrybutyZRoznica.add('geometria')
-                            else:
-                                atrybutyZRoznica.add(element.tag.split("}")[1])
-                if len(atrybutyZRoznica) > 0:
-                    badfMember_Z_dic[fMember_Z_dic] = atrybutyZRoznica
-    
-    if len(badfMember_Z_dic) > 0:
+    for lokalnyId in fMembers_Z_dic:
+        if lokalnyId in fMembers_K_dic:
+            k_fm = fMembers_K_dic[lokalnyId]
+            z_fm = fMembers_Z_dic[lokalnyId]
+            wersja_k = k_fm.find('.//ot:wersja', namespaces=ns)
+            wersja_z = z_fm.find('.//ot:wersja', namespaces=ns)
+            
+            # NIEUZASADNIONA ZMIANA WERSJI
+            if wersja_k is not None and wersja_z is not None and wersja_k.text != wersja_z.text:
+                
+                k_fm_copy = copy.deepcopy(k_fm)
+                z_fm_copy = copy.deepcopy(z_fm)
+                
+                for fm in (k_fm_copy, z_fm_copy):
+                    wersja_elem = fm.find('.//ot:wersja', namespaces=ns)
+                    if wersja_elem is not None:
+                        wersja_elem.getparent().remove(wersja_elem)
+                        
+                wykluczone = ['lokalnyId', 'przestrzenNazw', 'poczatekWersjiObiektu', 'oznaczenieZmiany']
+                
+                for fm_copy in (k_fm_copy, z_fm_copy):
+                    for tag in wykluczone:
+                        for elem in fm_copy.findall('.//gml:' + tag, namespaces=ns):
+                            elem.getparent().remove(elem)
+                k_fm_str = etree.tostring(k_fm_copy, method="c14n", exclusive=True)
+                z_fm_str = etree.tostring(z_fm_copy, method="c14n", exclusive=True)
+                if k_fm_str == z_fm_str:
+                    badfMember_Z_dic[lokalnyId] = {'nieuzasadniona zmiana wersji'}
+                    
+            # ZMIANA ATRYBUTÓW BEZ ZMIANY WERSJI
+            elif wersja_k is not None and wersja_z is not None and wersja_k.text == wersja_z.text:
+                if etree.tostring(k_fm, method="c14n", exclusive=True) != etree.tostring(z_fm, method="c14n", exclusive=True):
+                    atrybutyZRoznica = set()
+                    for elem_z in z_fm.iter():
+                        if elem_z.tag.endswith('featureMember'):
+                            continue
+                        tagname = elem_z.tag.split("}")[-1]
+                        if not tagname.startswith('OT_'):
+                            znaleziono = any(elem_k.text == elem_z.text for elem_k in k_fm.findall('.//' + elem_z.tag))
+                            if not znaleziono:
+                                if tagname in ['posList', 'LinearRing', 'LineString', 'exterior', 'interior',
+                                               'Polygon', 'segments', 'LineStringSegment', 'Curve', 'pos', 'Point']:
+                                    atrybutyZRoznica.add('geometria')
+                                else:
+                                    atrybutyZRoznica.add(tagname)
+                    for elem_k in k_fm.iter():
+                        if elem_k.tag.endswith('featureMember'):
+                            continue
+                        tagname = elem_k.tag.split("}")[-1]
+                        if not tagname.startswith('OT_'):
+                            znaleziono = any(elem_z.text == elem_k.text for elem_z in z_fm.findall('.//' + elem_k.tag))
+                            if not znaleziono:
+                                if tagname in ['posList', 'LinearRing', 'LineString', 'exterior', 'interior',
+                                               'Polygon', 'segments', 'LineStringSegment', 'Curve', 'pos', 'Point']:
+                                    atrybutyZRoznica.add('geometria')
+                                else:
+                                    atrybutyZRoznica.add(tagname)
+                    if atrybutyZRoznica:
+                        badfMember_Z_dic[lokalnyId] = {'obiekt ma tą samą wersję i zmienione atrybuty: ' + ','.join(atrybutyZRoznica)}
+                        
+    if badfMember_Z_dic:
         for feature in layer.getFeatures():
-            if feature['lokalnyId'] in badfMember_Z_dic:
-                gml_id = feature["gml_id"] + "|" + ','.join(badfMember_Z_dic[feature['lokalnyId']])
+            lokalnyId = feature['lokalnyId']
+            if lokalnyId in badfMember_Z_dic:
+                komunikat = '|'.join(badfMember_Z_dic[lokalnyId])
+                gml_id = feature["gml_id"] + "|" + komunikat
                 feature.setAttribute(layer.fields().indexFromName("gml_id"), gml_id)
                 layer.updateFeature(feature)
                 obiektyZbledami.add(feature)
-                layer.commitChanges()
-    
+        layer.commitChanges()
+        
     del fMembers_Z_dic, fMembers_K_dic, badfMember_Z_dic
     
     return obiektyZbledami
@@ -3522,8 +3873,10 @@ def przecinanieRTLW_SK_BUZM(layer):
                 idx = QgsSpatialIndex()
                 geometrie = {}
                 for f in w.getFeatures():
-                    if nazwa.startswith("OT_SK") and f.fields().indexOf("polozenie") >= 0:
-                        if f["polozenie"] != "na powierzchni gruntu":
+                    if f.fields().indexOf("polozenie") >= 0:
+                        if nazwa.startswith("OT_SK") and f["polozenie"] != "na powierzchni gruntu":
+                            continue
+                        elif nazwa.startswith("OT_SW") and f["polozenie"] != "na powierzchni":
                             continue
                     g = f.geometry()
                     if g and not g.isEmpty():
