@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SzablonKontroli xmlns="http://www.gugik.gov.pl" id="bdot500" version="1.0.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<GrupaKontroli id="bdot500_b1" name="Kontrole atrybutowe">
+		<Kontrola id="bdot500_b1_k1" name="Kontrola atrybutów rodzajNawierzchni i rodzajObiektu" class="OT_Komunikacja" errorPhrase="Atrybut 'rodzajNawierzchni' ma pustą wartość dla obiektów o rodzaju 'j/c'.">
+			<Parametr typ="QgsExpression" sql="(rodzajObiektu='j' or rodzajObiektu='c') and rodzajNawierzchni='NULL'"/>
+		</Kontrola>
+		<Kontrola id="bdot500_b1_k2" name="Kontrola atrybutów polozenie i rodzajObiektu" class="OT_Komunikacja" errorPhrase="Atrybut 'polozenie' ma pustą wartość dla obiektów o rodzaju 'j'.">
+			<Parametr typ="QgsExpression" sql="rodzajObiektu='j' and (polozenie=' ' or polozenie IS NULL)"/>
+		</Kontrola>	
+		<Kontrola id="bdot500_b1_k3" name="Kontrola atrybutu geometria dla rodzaju obiektu równego t/w/i/s/r/j/d" class="OT_RodzajObiektuZwiazanegoZBudynkiem" errorPhrase="Geometria ma inny typ niż 'powierzchnia' dla obiektów o rodzajach: t/w/i/s/r/j/d.">
+			<Parametr typ="QgsExpression" sql="(rodzajObiektu='t' or rodzajObiektu='w' or rodzajObiektu= 'i' or rodzajObiektu='s' or rodzajObiektu='r' or rodzajObiektu='j' or rodzajObiektu='d') and (geometry_type($geometry)='Polygon')"/>
+		</Kontrola>		
+		<Kontrola id="bdot500_b1_k4" name="Kontrola atrybutu geometria dla rodzaju budowli=f" class="OT_Budowle" errorPhrase="Geometria nie jest typu 'punkt' dla budowli o rodzaju 'f'.">
+			<Parametr typ="QgsExpression" sql="rodzajBudowli='f' and (geometry_type($geometry)='Line' or geometry_type($geometry)='Polygon')"/>
+		</Kontrola>	
+		<Kontrola id="bdot500_b1_k5" name="Kontrola atrybutu geometria dla rodzaju budowli=d" class="OT_Budowle" errorPhrase="Geometria ma inny typ niż 'punkt', 'wielopunkt' lub 'powierzchnia' dla budowli o rodzaju 'd'.">
+			<Parametr typ="QgsExpression" sql="rodzajBudowli='d' and (geometry_type($geometry)='Line' or geometry_type($geometry)='MultiLine' or geometry_type($geometry)='MultiPolygon'"/>
+		</Kontrola>	
+		<Kontrola id="bdot500_b1_k6" name="Kontrola atrybutu geometria dla rodzaju budowli=n" class="OT_Budowle" errorPhrase="Geometria ma inny typ niż 'linia' lub 'powierzchnia' dla budowli o rodzaju 'n'.">
+			<Parametr typ="QgsExpression" sql="rodzajBudowli='n' and geometry_type($geometry)='Point'"/>
+		</Kontrola>		
+		<Kontrola id="bdot500_b1_k7" name="Kontrola atrybutu geometria dla rodzaju budowli=t/p" class="OT_Budowle" errorPhrase="Geometria ma inny typ niż 'punkt' lub 'powierzchnia' dla budowli o rodzaju 't' lub 'p'.">
+			<Parametr typ="QgsExpression" sql="(rodzajBudowli='t' or rodzajBudowli='p') and geometry_type($geometry)='Line'"/>
+		</Kontrola>			
+		<Kontrola id="bdot500_b1_k8" name="Kontrola atrybutu geometria dla rodzaju budowli równego r" class="OT_Budowle" errorPhrase="Budowla o rodzaju 'r' ma inny typ geometrii niż 'powierzchnia' lub 'wielopowierzchnia'.">
+			<Parametr typ="QgsExpression" sql="rodzajBudowli='r' and (geometry_type($geometry)='Point' or geometry_type($geometry)='Line' or geometry_type($geometry)='MultiLine' or geometry_type($geometry)='MultiPoint')"/>
+		</Kontrola>			
+		<Kontrola id="bdot500_b1_k9" name="Kontrola atrybutu geometria dla rodzaju budowli=k/o/c/z/s/w/b/a/m" class="OT_Budowle" errorPhrase="Geometria dla budowli o rodzaju 'k/o/c/z/s/w/b/a/m' ma inny typ niż 'powierzchnia'.">
+			<Parametr typ="QgsExpression" sql="(rodzajBudowli='k' or rodzajBudowli='o' or rodzajBudowli='c' or rodzajBudowli='z' or rodzajBudowli='s' or rodzajBudowli='w' or rodzajBudowli='b' or rodzajBudowli= 'a' or rodzajBudowli='m') and (geometry_type($geometry)='Line' or geometry_type($geometry)='Point')"/>
+		</Kontrola>
+		<Kontrola id="bdot500_b1_k10" name="Kontrola atrybutu geometria dla rodzaju obiektu=k/b/y/t/l" class="OT_Komunikacja" errorPhrase="Geometria obiektu o rodzaju 'k/b/y/t/l' ma inny typ niż 'linia'.">
+			<Parametr typ="QgsExpression" sql="(rodzajObiektu='k'or rodzajObiektu='b'or rodzajObiektu='y'or rodzajObiektu='t'or rodzajObiektu='l') and (geometry_type($geometry)='Point' or geometry_type($geometry)='Polygon')"/>
+		</Kontrola>
+		<Kontrola id="bdot500_b1_k11" name="Kontrola atrybutu geometria dla rodzaju obiektu=z/i" class="OT_Komunikacja" errorPhrase="Geometria dla obiektu typu 'z/i' musi być linią lub powierzchnią">
+			<Parametr typ="QgsExpression" sql="(rodzajObiektu='z'or rodzajObiektu='i') and geometry_type($geometry)='Point'"/>
+		</Kontrola>
+		<Kontrola id="bdot500_b1_k12" name="Kontrola atrybutu geometria dla rodzaju obiektu=j/c/g/u/r/s/m/z/w/e/n/a" class="OT_Komunikacja" errorPhrase="Geometria obiektu o rodzaju 'j/c/g/u/r/s/m/z/w/e/n/a' jest innego typu niż 'powierzchnia' lub 'linia'.">
+			<Parametr typ="QgsExpression" sql="(rodzajObiektu='j' or rodzajObiektu='c' or rodzajObiektu='g' or rodzajObiektu='u' or rodzajObiektu='r' or rodzajObiektu='s' or rodzajObiektu='m' or rodzajObiektu='z' or rodzajObiektu='w' or rodzajObiektu='e' or rodzajObiektu='n' or rodzajObiektu='a') and geometry_type($geometry)='Point'"/>
+		</Kontrola>
+		<Kontrola id="bdot500_b1_k13" name="Kontrola atrybutu geometria dla rodzaju obiektu=m OT_Komunikacja" class="OT_Komunikacja" errorPhrase="Geometria obiektu o rodzaju 'm' jest innego typu niż 'linia', 'wielolinia' lub 'powierzchnia'.">
+			<Parametr typ="QgsExpression" sql="rodzajObiektu='m' and (geometry_type($geometry)='Point' or geometry_type($geometry)='MultiPoint' or geometry_type($geometry)='MultiPolygon')"/>
+		</Kontrola>
+		<Kontrola id="bdot500_b1_k14" name="Kontrola atrybutów rodzajObiektu i geometria" class="OT_ZagospodarowanieTerenu" errorPhrase="Geometria obiektu o rodzaju 'z/k/c/t' jest innego typu niż 'powierzchnia'.">
+			<Parametr typ="QgsExpression" sql="(rodzajObiektu='z' or rodzajObiektu='k' or rodzajObiektu='c' or rodzajObiektu='t') and (geometry_type($geometry)='Point' or geometry_type($geometry)='Line')"/>
+		</Kontrola>	
+		<Kontrola id="bdot500_b1_k15" name="Kontrola atrybutu geometria dla rodzaju obiektu=w" class="OT_SportIRekreacja" errorPhrase="Geometria obiektu o rodzaju 'w' jest innego typu niż 'linia'.">
+			<Parametr typ="QgsExpression" sql="rodzajObiektu='w' and (geometry_type($geometry)='Point' or geometry_type($geometry)='Polygon')"/>
+		</Kontrola>		
+		<Kontrola id="bdot500_b1_k16" name="Kontrola atrybutu geometria dla rodzaju obiektu=b/p/z/i" class="OT_SportIRekreacja" errorPhrase="Geometria obiektu o rodzaju 'b/p/z/i' jest innego typu niż 'powierzchnia'.">
+			<Parametr typ="QgsExpression" sql="(rodzajObiektu='b' or rodzajObiektu='p' or rodzajObiektu='z' or rodzajObiektu='i') and (geometry_type($geometry)='Point' or geometry_type($geometry)='Line')"/>
+		</Kontrola>	
+			<Kontrola id="bdot500_b1_k17" name="Kontrola atrybutu geometria dla rodzaju obiektu=p/s/j/l/z/t/o" class="OT_Wody" errorPhrase="Geometria obiektu o rodzaju 'p/s/j/l/z/t/o' jest innego typu niż 'powierzchnia'.">
+			<Parametr typ="pythonFunction" sql="kontrolaGeometriaOtWody(gml)"/>
+		</Kontrola>		
+		<Kontrola id="bdot500_b1_k18" name="Kontrola atrybutu geometria dla rodzaju obiektu=w/g" class="OT_Wody" errorPhrase="Geometria obiektu o rodzaju 'w/g' jest innego typu niż 'powierzchnia' lub 'wielopowierzchnia'.">
+			<Parametr typ="pythonFunction" sql="kontrolaGeometriaOtWody2(gml)"/>
+		</Kontrola>	
+		<Kontrola id="bdot500_b1_k19" name="Kontrola atrybutu geometria dla rodzaju obiektu=m OT_Wody" class="OT_Wody" errorPhrase="Geometria obiektu o rodzaju 'm' jest innego typu niż 'linia', 'wielolinia' lub 'powierzchnia'.">
+			<Parametr typ="QgsExpression" sql="rodzajObiektu='m' and (geometry_type($geometry)='Point' or geometry_type($geometry)='MultiPoint' or geometry_type($geometry)='MultiPolygon')"/>
+		</Kontrola>	
+		<Kontrola id="bdot500_b1_k20" name="Kontrola atrybutu geometria dla rodzaju obiektu=o" class="OT_RodzajObiektuZwiazanegoZBudynkiem" errorPhrase="Geometria obiektu o rodzaju 'o' jest innego typu niż 'powierzchnia', 'multipowierzchnia', 'punkt' lub 'multipunkt'.">
+			<Parametr typ="QgsExpression" sql="rodzajObiektu='o' and (geometry_type($geometry)='Line' or geometry_type($geometry)='MultiLine')"/>
+		</Kontrola>	
+		<Kontrola id="bdot500_b1_k21" name="Kontrola atrybutów rodzajObiektu i geometria dla rodzaju obiektu=l/g" class="OT_ZagospodarowanieTerenu" errorPhrase="Geometria obiektu o rodzaju 'l/g' jest innego typu niż 'punkt'.">
+			<Parametr typ="QgsExpression" sql="(rodzajObiektu='l' or rodzajObiektu='g') and (geometry_type($geometry)='Surface' or geometry_type($geometry)='Line')"/>
+		</Kontrola>			
+	</GrupaKontroli>
+	<!-- ....................................................................................................................................................... -->
+	<GrupaKontroli id="bdot500_b2" name="Kontrole geometryczne">
+		<Kontrola id="bdot500_b2_k1" name="OT_Komunikacja - Kontrola typu geometrii" class="OT_Komunikacja" errorPhrase="Obiekt w pliku GML zawiera geometrię o nieobsługiwanym typie (np. ArcString zamiast LineStringSegment)">
+			<Parametr typ="pythonFunction" sql="kontrolaGeometriiGML_luki(gml,klasa)"/>
+		</Kontrola>
+		<Kontrola id="bdot500_b2_k2" name="OT_BudynekNiewykazanyWEGIB - Kontrola typu geometrii" class="OT_BudynekNiewykazanyWEGIB" errorPhrase="Obiekt w pliku GML zawiera geometrię o nieobsługiwanym typie (np. ArcString zamiast LineStringSegment)">
+			<Parametr typ="pythonFunction" sql="kontrolaGeometriiGML_luki(gml,klasa)"/>
+		</Kontrola>
+		<Kontrola id="bdot500_b2_k3" name="OT_BlokBudynku - Kontrola typu geometrii" class="OT_BlokBudynku" errorPhrase="Obiekt w pliku GML zawiera geometrię o nieobsługiwanym typie (np. ArcString zamiast LineStringSegment)">
+			<Parametr typ="pythonFunction" sql="kontrolaGeometriiGML_luki(gml,klasa)"/>
+		</Kontrola>
+		<Kontrola id="bdot500_b2_k4" name="OT_ObiektTrwaleZwiazanyZBudynkami - Kontrola typu geometrii" class="OT_ObiektTrwaleZwiazanyZBudynkami" errorPhrase="Obiekt w pliku GML zawiera geometrię o nieobsługiwanym typie (np. ArcString zamiast LineStringSegment)">
+			<Parametr typ="pythonFunction" sql="kontrolaGeometriiGML_luki(gml,klasa)"/>
+		</Kontrola>
+		<Kontrola id="bdot500_b2_k5" name="OT_Ogrodzenia - Kontrola typu geometrii" class="OT_Ogrodzenia" errorPhrase="Obiekt w pliku GML zawiera geometrię o nieobsługiwanym typie (np. ArcString zamiast LineStringSegment)">
+			<Parametr typ="pythonFunction" sql="kontrolaGeometriiGML_luki(gml,klasa)"/>
+		</Kontrola>
+		<Kontrola id="bdot500_b2_k6" name="OT_SportIRekreacja - Kontrola typu geometrii" class="OT_SportIRekreacja" errorPhrase="Obiekt w pliku GML zawiera geometrię o nieobsługiwanym typie (np. ArcString zamiast LineStringSegment)">
+			<Parametr typ="pythonFunction" sql="kontrolaGeometriiGML_luki(gml,klasa)"/>
+		</Kontrola>
+		<Kontrola id="bdot500_b2_k7" name="OT_ZagospodarowanieTerenu - Kontrola typu geometrii" class="OT_ZagospodarowanieTerenu" errorPhrase="Obiekt w pliku GML zawiera geometrię o nieobsługiwanym typie (np. ArcString zamiast LineStringSegment)">
+			<Parametr typ="pythonFunction" sql="kontrolaGeometriiGML_luki(gml,klasa)"/>
+		</Kontrola>
+		<Kontrola id="bdot500_b2_k8" name="OT_Wody - Kontrola typu geometrii" class="OT_Wody" errorPhrase="Obiekt w pliku GML zawiera geometrię o nieobsługiwanym typie (np. ArcString zamiast LineStringSegment)">
+			<Parametr typ="pythonFunction" sql="kontrolaGeometriiGML_luki(gml,klasa)"/>
+		</Kontrola>
+		<Kontrola id="bdot500_b2_k9" name="OT_Skarpa - Kontrola typu geometrii" class="OT_Skarpa" errorPhrase="Obiekt w pliku GML zawiera geometrię o nieobsługiwanym typie (np. ArcString zamiast LineStringSegment)">
+			<Parametr typ="pythonFunction" sql="kontrolaGeometriiGML_luki(gml,klasa)"/>
+		</Kontrola>
+	</GrupaKontroli>
+</SzablonKontroli>
+
+<!-- ChangeLog
+1.0.8   zmodyfikowano kontrole:
+			bdot500_b1_k17
+			bdot500_b1_k18
+1.0.7   dodano kontrole:
+			bdot500_b1_k2
+1.0.6   zmodyfikowano kontrole:
+			bdot500_b1_k12
+1.0.5 	dodano kontrole
+            bdot500_b2_k1
+			bdot500_b2_k2
+			bdot500_b2_k3
+			bdot500_b2_k4
+			bdot500_b2_k5
+			bdot500_b2_k6
+			bdot500_b2_k7
+			bdot500_b2_k8
+			bdot500_b2_k9
+        zmodyfikowano kontrole:
+			bdot500_b1_k12
+			bdot500_b1_k14
+			bdot500_b1_k16
+			bdot500_b1_k17
+		usunięto kontrole:
+			bdot500_b1_k2
+1.0.4 	dodano ChangeLog
+		zmodyfikowano kontrole:
+			bdot500_b1_k2
+			bdot500_b1_k11
+			bdot500_b1_k3
+			bdot500_b1_k12
+			bdot500_b1_k14
+			bdot500_b1_k16
+			bdot500_b1_k17
+1.0.3	wprowadzono kontrole:
+			bdot500_b1_k1
+			bdot500_b1_k4
+			bdot500_b1_k5
+			bdot500_b1_k6
+			bdot500_b1_k7
+			bdot500_b1_k8
+			bdot500_b1_k9
+			bdot500_b1_k10
+			bdot500_b1_k13
+			bdot500_b1_k15
+			bdot500_b1_k18
+			bdot500_b1_k19
+			bdot500_b1_k20
+			bdot500_b1_k21
+			bdot500_b1
+
+-->
