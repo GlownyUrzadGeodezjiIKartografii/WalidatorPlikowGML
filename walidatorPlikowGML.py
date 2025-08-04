@@ -787,7 +787,7 @@ class walidatorPlikowGML:
         slownikBledow = {}
         slownikWalidacji = {}
         idkontroli_LiczbaBledow = {}
-        kontrole_doInterpretacji = ['topo_e3_k5', 'topo_e3_k175', 'topo_e3_k176', 'topo_e3_k177', 'topo_e3_k178', 'topo_e3_k179', 'topo_e3_k180', 'topo_e3_k181', 'topo_e3_k182', 'topo_e3_k183', 'topo_e4_k25', 'topo_e4_k27']
+        kontrole_doInterpretacji = ['topo_e3_k5', 'topo_e3_k159', 'topo_e3_k175', 'topo_e3_k176', 'topo_e3_k177', 'topo_e3_k178', 'topo_e3_k179', 'topo_e3_k180', 'topo_e3_k181', 'topo_e3_k182', 'topo_e3_k183', 'topo_e4_k25', 'topo_e4_k27']
         slownik_liczba_bledow = {}
         slownik_grupa = {}
         i = 0
@@ -1890,6 +1890,7 @@ class walidatorPlikowGML:
             print('błąd w zaznaczKontroleNaPodstawieDanych:',e)
 
 
+
     def zaznaczWszystkieKontrole(self):
         try:
             for i in range(modelKontroli.rowCount()):
@@ -1930,13 +1931,13 @@ class walidatorPlikowGML:
             if len(self.dlg.mQgsFileWidget_gg.filePath()) == 0 and item.checkState() == 2:
                blokady[3] = 1
                self.dlg.button_box.buttons()[0].setEnabled(False)
-               
+
         if not item.hasChildren() and self.dlg.comboBox.currentText() == 'BDOT10k' and item.data(6).__contains__("Granice_jednostek_ewidencyjnych"):
             blokady[4] = 0
             if len(self.dlg.mQgsFileWidget_gje.filePath()) == 0 and item.checkState() == 2:
                 blokady[4] = 1
                 self.dlg.button_box.buttons()[0].setEnabled(False)
-                
+
         if not item.hasChildren() and self.dlg.comboBox.currentText() == 'BDOT10k' and item.data(6).__contains__("(gml,gml)"):
             blokady[5] = 0
             for j in range(item.parent().rowCount()):
@@ -2052,7 +2053,7 @@ class walidatorPlikowGML:
                                         sqltxt = sqltxt.replace("layer:='" + warstwaWsqltext,"layer:='" + parsedFileName[:-13] + warstwaWsqltext + '_' + warstwaWsqltext)
                                 except Exception as e:
                                     print(f"błąd przy tworzeniu warstwy: {e}")
-                                    
+
                                 try:
                                     layerL1 = QgsProjectInstance.mapLayersByName(nazwaWarstwy)[0]
                                 except:
@@ -2163,6 +2164,8 @@ class walidatorPlikowGML:
                                                     klasaDoRaportowania = gmlid
                                                     gmlid = 'nie dotyczy'
                                                 if klasa == 'OT':
+                                                    klasaDoRaportowania = 'OT' + parsedFileName[-11:-4]
+                                                if klasa == 'OT_TC':
                                                     klasaDoRaportowania = 'OT' + parsedFileName[-11:-4]
                                                 if klasa == 'OT_SW':
                                                     klasaDoRaportowania = 'OT' + parsedFileName[-11:-4]
