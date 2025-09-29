@@ -169,14 +169,15 @@ class walidatorPlikowGML:
         self.dlg.pushButton.clicked.connect(self.zaznaczKontroleNaPodstawieDanych)
         self.dlg.pushButton_1.clicked.connect(self.zaznaczWszystkieKontrole)
         self.dlg.pushButton_2.clicked.connect(self.odznaczWszystkieKontrole)
-        self.dlg.comboBox.currentIndexChanged.connect(self.wyborXSD)
+        self.dlg.comboBox.currentIndexChanged.connect(self.uzupelnienieWyboruXSD)
         self.dlg.comboBox_xsd.currentIndexChanged.connect(self.zmianaXSD)
         self.dlg.pushButton.setEnabled(False) # wylaczona na start
         self.dlg.comboBox.currentIndexChanged.connect(self.szarzenieNieBDOT)
-        self.wyborXSD(0)
+        self.uzupelnienieWyboruXSD(0)
         self.walidacjaIKontrolaAtrybutow()
         
-    def szarzenieNieBDOT(self): # jesli jest wybrana opcja inna niż BDOT10k przycisk będzie dezaktywowany
+    def szarzenieNieBDOT(self):
+         """Dezaktywacja przycisku gdy jest wybrana opcja inna niż BDOT10k"""
          wybranaBaza = self.dlg.comboBox.currentText()
          if wybranaBaza != 'BDOT10k':
              self.dlg.pushButton.setEnabled(False)
@@ -208,7 +209,7 @@ class walidatorPlikowGML:
                     return os.path.join(szablonPath, file)
 
 
-    def wyborXSD(self, txt):
+    def uzupelnienieWyboruXSD(self, txt):
         global xsdPath
         nazwaBazyDanych = walidowanaBaza[txt]
         xsdPath_tmp = os.path.join(mainPath, 'XSD', nazwaBazyDanych)
@@ -218,10 +219,15 @@ class walidatorPlikowGML:
                 self.dlg.comboBox_xsd.addItem(file)
 
 
-    def zmianaXSD(self, txt):
-        global xsdPath
+    def zmianaXSD(self):
+        global xsdPath, wersjaSchematu
         xsdPath_tmp = os.path.join(mainPath, 'XSD', self.dlg.comboBox.currentText())
         xsdPath = os.path.join(xsdPath_tmp, self.dlg.comboBox_xsd.currentText())
+        filename = os.path.basename(xsdPath)
+        if filename != '':
+            tree = et.parse(xsdPath)
+            root = tree.getroot()
+            wersjaSchematu = root.get('version')
 
 
     def sprawdz_zip_i_wyodrebnij_zwiniete(self, lista_sciezek):
@@ -347,9 +353,6 @@ class walidatorPlikowGML:
                 elif '<ges2021:GES_' in line or '<ges:GES' in line:
                     self.dlg.comboBox.setCurrentIndex(self.dlg.comboBox.findText('GESUT'))
                     break
-                elif '<ogr:A' in line:
-                    self.dlg.comboBox.setCurrentIndex(self.dlg.comboBox.findText('PRG'))
-                    break
                 elif 'MapaGlebowoRolnicza.xsd' in line:
                     self.dlg.comboBox.setCurrentIndex(self.dlg.comboBox.findText('MGR'))
                     break
@@ -359,7 +362,14 @@ class walidatorPlikowGML:
                 elif '<ot2021:OT_' in line or '<ot:OT_' in line:
                     self.dlg.comboBox.setCurrentIndex(self.dlg.comboBox.findText('BDOT500'))
                     break
-                
+                else:
+                    match = re.search(r"EGIB[-_]?1[._](\d+)[._]XSD", line.upper())
+                    if match:
+                        self.dlg.comboBox.setCurrentIndex(self.dlg.comboBox.findText('EGIB'))
+                        n = int(match.group(1))
+                        if 6 <= n <= 11:
+                            self.dlg.comboBox_xsd.setCurrentIndex(self.dlg.comboBox_xsd.findText(f'EGIB_1.{n}.xsd'))
+            
             self.wczytanieWersjiSzablonow(self.dlg.comboBox.currentText())
             
             blokady[0] = 0
@@ -392,9 +402,9 @@ class walidatorPlikowGML:
                               else:
                                   self.dlg.button_box.buttons()[0].setEnabled(False)
         except Exception as e:
-            print('Błąd w funkcji wyborPlikuPRNGmiejscowosci:',e)
+            print('Błąd w funkcji wyborPlikuPRNGmiejscowosci:', e)
         config.set('DEFAULT', 'prng_miejscowosci', txt)
-        with open(str(mainPath)+'/Walidator_plikow_gml.ini', 'w') as configfile:
+        with open(str(mainPath) + '/Walidator_plikow_gml.ini', 'w') as configfile:
             config.write(configfile)
 
 
@@ -402,7 +412,7 @@ class walidatorPlikowGML:
         global sciezkiPlikowZrodlowych
         if os.path.isfile(txt):
             if self.dlg.mQgsFileWidget_prng_o.filePath() == self.dlg.mQgsFileWidget.filePath():
-                QMessageBox.critical(QMessageBox(),'Uwaga!','Wybrano ten sam plik co w zakładce "Walidacja plików GML".', QMessageBox.Ok)
+                QMessageBox.critical(QMessageBox(), 'Uwaga!', 'Wybrano ten sam plik co w zakładce "Walidacja plików GML".', QMessageBox.Ok)
             if os.path.isfile(txt) and os.path.splitext(txt)[1].lower() == '.xml':
                  sciezkiPlikowZrodlowych.append(txt)
             blokady[7] = 0
@@ -446,7 +456,7 @@ class walidatorPlikowGML:
         try:
               for i in range(modelKontroli.rowCount()):
                   item = modelKontroli.item(i)
-                  if item.checkState() in (2,1):
+                  if item.checkState() in (2, 1):
                       for c in range(item.rowCount()):
                           if item.child(c).checkState() == 2 and item.child(c).data(6).__contains__('tereny_chronione'):
                               if os.path.isfile(txt):
@@ -490,7 +500,7 @@ class walidatorPlikowGML:
         if os.path.isfile(txt):
             if os.path.splitext(txt)[1].lower() == '.csv':
                 if self.dlg.mQgsFileWidget_ulic.filePath() == txt:
-                    QMessageBox.critical(QMessageBox(),'Uwaga!','Wybrano ten sam plik co w Dane ULIC.', QMessageBox.Ok)
+                    QMessageBox.critical(QMessageBox(), 'Uwaga!', 'Wybrano ten sam plik co w Dane ULIC.', QMessageBox.Ok)
                 else:
                     sciezkiPlikowZrodlowych.append(txt)
             blokady[10] = 0
@@ -506,9 +516,9 @@ class walidatorPlikowGML:
                              else:
                                  self.dlg.button_box.buttons()[0].setEnabled(False)
         except Exception as e:
-             print('Błąd w funkcji wyborPlikuSIMC:',e)
+             print('Błąd w funkcji wyborPlikuSIMC:', e)
         config.set('DEFAULT', 'simc_gus', txt)
-        with open(str(mainPath)+'/Walidator_plikow_gml.ini', 'w') as configfile:
+        with open(str(mainPath) + '/Walidator_plikow_gml.ini', 'w') as configfile:
             config.write(configfile)
 
 
@@ -619,7 +629,7 @@ class walidatorPlikowGML:
             if graniceJednostekEwidencyjnych == "":
                 for i in range(modelKontroli.rowCount()):
                     item = modelKontroli.item(i)
-                    if item.checkState() in (1,2):
+                    if item.checkState() in (1, 2):
                         for child in range(item.rowCount()):
                             if item.child(child).checkState() == 2 and item.child(child).data(6).__contains__("Granice_jednostek_ewidencyjnych"):
                                 blokady[4] = 1
@@ -651,7 +661,7 @@ class walidatorPlikowGML:
         prng_obiektyfizjograficzne  = config['DEFAULT']['prng_obiektyfizjograficzne']
         tereny_chronione = config['DEFAULT']['tereny_chronione']
         
-        kontroleWykonaniePojedyncze = {"topo_e3_k6":False,"topo_e5_k1":False}
+        kontroleWykonaniePojedyncze = {"topo_e4_k6":False,"topo_e6_k1":False}
         
         self.dlg.mQgsFileWidget.setFilter("Plik GML (*.gml);;Plik XML (*.xml);;Plik skompresowany (*.zip)")
         self.dlg.mQgsFileWidget_gp.setFilter("Plik GML (*.gml)")
@@ -718,7 +728,7 @@ class walidatorPlikowGML:
             return  # Błąd lub brak GML/XML
         
         if sciezkaGML == '.':
-            QMessageBox.critical(QMessageBox(),'Uwaga!','Nie wskazano pliku.', QMessageBox.Ok)
+            QMessageBox.critical(QMessageBox(), 'Uwaga!', 'Nie wskazano pliku.', QMessageBox.Ok)
             return
             
         try:
@@ -787,7 +797,7 @@ class walidatorPlikowGML:
         slownikBledow = {}
         slownikWalidacji = {}
         idkontroli_LiczbaBledow = {}
-        kontrole_doInterpretacji = ['topo_e3_k5', 'topo_e3_k159', 'topo_e3_k175', 'topo_e3_k176', 'topo_e3_k177', 'topo_e3_k178', 'topo_e3_k179', 'topo_e3_k180', 'topo_e3_k181', 'topo_e3_k182', 'topo_e3_k183', 'topo_e4_k25', 'topo_e4_k27']
+        kontrole_doInterpretacji = ['topo_e4_k5', 'topo_e4_k159', 'topo_e4_k175', 'topo_e4_k176', 'topo_e4_k177', 'topo_e4_k178', 'topo_e4_k179', 'topo_e4_k180', 'topo_e4_k181', 'topo_e4_k182', 'topo_e4_k183', 'topo_e5_k25', 'topo_e5_k27', 'topo_e6_k4']
         slownik_liczba_bledow = {}
         slownik_grupa = {}
         i = 0
@@ -1078,16 +1088,14 @@ class walidatorPlikowGML:
                  pdf.cell(0,6, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
                  pdf.set_font("verdana", "", 10)
                  pdf.cell(100,0, "Wynik kontroli:", align = 'R', new_x=XPos.RIGHT, new_y=YPos.TOP)
-                 if liczbaKontroliWykonanych == 0:
-                     wynik = "Pozytywny" if len(bledyWalidacji["WIERSZ"]) == 0 else "Negatywny"
-                 else:
-                     wynik = "Pozytywny" if len(bledyKontroli["KLASA"]) == 0 and len(bledyWalidacji["WIERSZ"]) == 0 else "Negatywny"
                  
+                 wynik = "Pozytywny" if kontrolaZWynikiemPozytywnym == True else "Negatywny"
                  # Ustaw kolor tekstu w zależności od wyniku
                  if wynik == "Pozytywny":
                      pdf.set_text_color(0, 153, 0)
                  else:
                      pdf.set_text_color(255, 0, 0)
+                 
                  pdf.cell(100,0, wynik, align = "L")
                  pdf.cell(0,6, new_x=XPos.LMARGIN, new_y=YPos.NEXT)
                  pdf.set_text_color(0,0,0)
@@ -1814,7 +1822,7 @@ class walidatorPlikowGML:
 
     # wczytanie szablonu kontroli
     def wczytanieSzablonuKontroli(self):
-        global modelKontroli, wersjaSzablonuKontroli, wersjaSchematu, sumaKontrolaSchemat, metaSchemat, szablonKontroliPath, sumaKontrolaSzablonKontroli, sumaKontrolnaWskazanyPlik, SumaKontrolnaDaneZrodlowe
+        global modelKontroli, wersjaSzablonuKontroli, sumaKontrolaSchemat, szablonKontroliPath, sumaKontrolaSzablonKontroli, sumaKontrolnaWskazanyPlik, SumaKontrolnaDaneZrodlowe
         
         szablonKontroliPath = self.sciezkaDoWskazanegoSzablonuKontroli(self.dlg.comboBox_2.currentText(), self.dlg.comboBox.currentText())
         buf_size = 5000000  # Czytaj plik w blokach o rozmiarze 64KB
@@ -1931,13 +1939,13 @@ class walidatorPlikowGML:
             if len(self.dlg.mQgsFileWidget_gg.filePath()) == 0 and item.checkState() == 2:
                blokady[3] = 1
                self.dlg.button_box.buttons()[0].setEnabled(False)
-
+               
         if not item.hasChildren() and self.dlg.comboBox.currentText() == 'BDOT10k' and item.data(6).__contains__("Granice_jednostek_ewidencyjnych"):
             blokady[4] = 0
             if len(self.dlg.mQgsFileWidget_gje.filePath()) == 0 and item.checkState() == 2:
                 blokady[4] = 1
                 self.dlg.button_box.buttons()[0].setEnabled(False)
-
+                
         if not item.hasChildren() and self.dlg.comboBox.currentText() == 'BDOT10k' and item.data(6).__contains__("(gml,gml)"):
             blokady[5] = 0
             for j in range(item.parent().rowCount()):
@@ -1958,7 +1966,7 @@ class walidatorPlikowGML:
                 if len(self.dlg.mQgsFileWidget_prng_o.filePath()) == 0 and item.parent().child(j).checkState() == 2 and item.parent().child(j).data(6).__contains__("prng_obiektyfizjograficzne"):
                     blokady[7] = 1
                     self.dlg.button_box.buttons()[0].setEnabled(False)
-
+                    
         if not item.hasChildren() and self.dlg.comboBox.currentText() == 'BDOT10k' and item.data(6).__contains__("tereny_chronione"):
             blokady[9] = 0
             for j in range(item.parent().rowCount()):
@@ -2005,7 +2013,7 @@ class walidatorPlikowGML:
         global liczbaKontroliWykonanych, progress, slownikBledow, warstwyBledowKontroliAtrybutow, kontroleWykonaniePojedyncze
         global idkontroli_LiczbaBledow, warstwa, kontrolePojedynczyKomunikat, idKontroli
         geometryType = {0:'Point',1:'Line',2:'Polygon'}
-        kontrolePojedynczyKomunikat = {"topo_e3_k6":False,"topo_e4_k27":False,"topo_e4_k25":False}
+        kontrolePojedynczyKomunikat = {"topo_e4_k6":False,"topo_e5_k27":False,"topo_e5_k25":False}
         QgsProjectInstance = QgsProject().instance()
         QApplication.processEvents()
         
@@ -2053,7 +2061,7 @@ class walidatorPlikowGML:
                                         sqltxt = sqltxt.replace("layer:='" + warstwaWsqltext,"layer:='" + parsedFileName[:-13] + warstwaWsqltext + '_' + warstwaWsqltext)
                                 except Exception as e:
                                     print(f"błąd przy tworzeniu warstwy: {e}")
-
+                                    
                                 try:
                                     layerL1 = QgsProjectInstance.mapLayersByName(nazwaWarstwy)[0]
                                 except:
@@ -2143,9 +2151,9 @@ class walidatorPlikowGML:
                                         
                                         liczbaBledow = 0
                                         for feature in requestFeatures:
-                                            if idKontroli not in 'topo_e3_k6' or not kontrolePojedynczyKomunikat[idKontroli]:
+                                            if idKontroli not in 'topo_e4_k6' or not kontrolePojedynczyKomunikat[idKontroli]:
                                                 liczbaBledow += 1
-                                                gmlid = feature['gml_id']
+                                                gmlid = feature['gml_id'] if 'gml_id' in feature.fields().names() else 'nie dotyczy'
                                                 # Sprawdzenie czy klucz errorPhrase już istnieje w słowniku
                                                 if errorPhrase not in slownikBledow:
                                                     slownikBledow[errorPhrase] = []
@@ -2155,12 +2163,12 @@ class walidatorPlikowGML:
                                                 
                                                 if typ_geometrii == 'Point':
                                                     warstwa = warstwyBledowKontroliAtrybutow['Point']
-                                                elif typ_geometrii == 'LineString' or typ_geometrii == 'CompoundCurve' or typ_geometrii == 'CircularString':
+                                                elif typ_geometrii in ('LineString', 'CompoundCurve', 'CircularString', 'MultiLineString'):
                                                     warstwa = warstwyBledowKontroliAtrybutow['LineString']
-                                                elif typ_geometrii == 'Polygon' or typ_geometrii == 'CurvePolygon':
+                                                elif typ_geometrii in ('Polygon', 'CurvePolygon', 'MultiPolygon'):
                                                     warstwa = warstwyBledowKontroliAtrybutow['Polygon']
                                                 
-                                                if idKontroli in ['topo_e5_k1']:
+                                                if idKontroli in ['topo_e6_k1']:
                                                     klasaDoRaportowania = gmlid
                                                     gmlid = 'nie dotyczy'
                                                 if klasa == 'OT':
