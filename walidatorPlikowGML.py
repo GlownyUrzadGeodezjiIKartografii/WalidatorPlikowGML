@@ -661,7 +661,7 @@ class walidatorPlikowGML:
         prng_obiektyfizjograficzne  = config['DEFAULT']['prng_obiektyfizjograficzne']
         tereny_chronione = config['DEFAULT']['tereny_chronione']
         
-        kontroleWykonaniePojedyncze = {"topo_e4_k6":False,"topo_e6_k1":False}
+        kontroleWykonaniePojedyncze = {"topo_e3_k6":False,"topo_e5_k1":False}
         
         self.dlg.mQgsFileWidget.setFilter("Plik GML (*.gml);;Plik XML (*.xml);;Plik skompresowany (*.zip)")
         self.dlg.mQgsFileWidget_gp.setFilter("Plik GML (*.gml)")
@@ -770,7 +770,6 @@ class walidatorPlikowGML:
         
         if result and self.dlg.mComboBox.currentText() != '':
             self.iface.messageBar().pushMessage("Walidacja pliku " + str(pathlib.Path(plik[0]).name) + " rozpoczęta ...", level=Qgis.Info)
-            QCoreApplication.processEvents()
             
             timestr = time.strftime("%Y-%m-%d_%H.%M")
             
@@ -797,7 +796,7 @@ class walidatorPlikowGML:
         slownikBledow = {}
         slownikWalidacji = {}
         idkontroli_LiczbaBledow = {}
-        kontrole_doInterpretacji = ['topo_e4_k5', 'topo_e4_k159', 'topo_e4_k175', 'topo_e4_k176', 'topo_e4_k177', 'topo_e4_k178', 'topo_e4_k179', 'topo_e4_k180', 'topo_e4_k181', 'topo_e4_k182', 'topo_e4_k183', 'topo_e5_k25', 'topo_e5_k27', 'topo_e6_k4']
+        kontrole_doInterpretacji = ['topo_e3_k5', 'topo_e3_k159', 'topo_e3_k175', 'topo_e3_k176', 'topo_e3_k177', 'topo_e3_k178', 'topo_e3_k179', 'topo_e3_k180', 'topo_e3_k181', 'topo_e3_k182', 'topo_e3_k183', 'topo_e4_k25', 'topo_e4_k27', 'topo_e5_k4']
         slownik_liczba_bledow = {}
         slownik_grupa = {}
         i = 0
@@ -904,7 +903,6 @@ class walidatorPlikowGML:
         if odp == 16384 or odp == 0:
             progress = QProgressBar()
             
-            QCoreApplication.processEvents()
             progressMessageBar = iface.messageBar().createMessage("Postęp wykonania kontroli dodatkowych")
             progress.setMaximum(liczbaKontroliDoWykonania)
             progress.setAlignment(Qt.AlignLeft|Qt.AlignVCenter)
@@ -985,7 +983,6 @@ class walidatorPlikowGML:
                     
                     QgsProject.instance().addMapLayer(new_layer)
                     warstwyZbledamiWalidacji.append(new_layer)
-                QCoreApplication.processEvents()
                 progressWalidacjaWyniki.setValue(index)
             progressWalidacjaWyniki.reset()
             
@@ -2013,7 +2010,7 @@ class walidatorPlikowGML:
         global liczbaKontroliWykonanych, progress, slownikBledow, warstwyBledowKontroliAtrybutow, kontroleWykonaniePojedyncze
         global idkontroli_LiczbaBledow, warstwa, kontrolePojedynczyKomunikat, idKontroli
         geometryType = {0:'Point',1:'Line',2:'Polygon'}
-        kontrolePojedynczyKomunikat = {"topo_e4_k6":False,"topo_e5_k27":False,"topo_e5_k25":False}
+        kontrolePojedynczyKomunikat = {"topo_e3_k6":False,"topo_e4_k27":False,"topo_e4_k25":False}
         QgsProjectInstance = QgsProject().instance()
         QApplication.processEvents()
         
@@ -2080,7 +2077,6 @@ class walidatorPlikowGML:
                                         if not czyWarstwaIstnieje:
                                             liczbaKontroliWykonanych += 1
                                             progress.setValue(liczbaKontroliWykonanych)
-                                            QCoreApplication.processEvents()
                                             continue
                                         
                                         layer = QgsProjectInstance.mapLayersByName(nazwaWarstwy)[0]
@@ -2151,7 +2147,7 @@ class walidatorPlikowGML:
                                         
                                         liczbaBledow = 0
                                         for feature in requestFeatures:
-                                            if idKontroli not in 'topo_e4_k6' or not kontrolePojedynczyKomunikat[idKontroli]:
+                                            if idKontroli not in 'topo_e3_k6' or not kontrolePojedynczyKomunikat[idKontroli]:
                                                 liczbaBledow += 1
                                                 gmlid = feature['gml_id'] if 'gml_id' in feature.fields().names() else 'nie dotyczy'
                                                 # Sprawdzenie czy klucz errorPhrase już istnieje w słowniku
@@ -2168,7 +2164,7 @@ class walidatorPlikowGML:
                                                 elif typ_geometrii in ('Polygon', 'CurvePolygon', 'MultiPolygon'):
                                                     warstwa = warstwyBledowKontroliAtrybutow['Polygon']
                                                 
-                                                if idKontroli in ['topo_e6_k1']:
+                                                if idKontroli in ['topo_e5_k1']:
                                                     klasaDoRaportowania = gmlid
                                                     gmlid = 'nie dotyczy'
                                                 if klasa == 'OT':
@@ -2222,7 +2218,6 @@ class walidatorPlikowGML:
                                         print(f'Błąd przy wykonaniu {parent.child(j).data(1)}: {e}')
                                     liczbaKontroliWykonanych += 1
                                     progress.setValue(liczbaKontroliWykonanych)
-                                    QCoreApplication.processEvents()
 
 
     def kontrolaWybranychFormatowRaportow(self, txt):

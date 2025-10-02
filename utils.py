@@ -86,6 +86,34 @@ def findDuplicates(layer):
     return obiektyZbledami
 
 
+def findDuplicatesOT(layer):
+    obiektyZbledami = []
+    try:
+        # wykluczenie
+        if layer.name()[-6:] in ['RTLW_L', 'RTPW_P', 'ADJA_A', 'ADMS_A']:
+            return obiektyZbledami
+        extractbyexpression = processing.run("native:extractbyexpression", {
+            'INPUT': layer,
+            'EXPRESSION': '1=1',
+            'OUTPUT': 'memory:'
+        })
+        deleteduplicategeometries = processing.run("native:deleteduplicategeometries", {
+            'INPUT': extractbyexpression['OUTPUT'],
+            'OUTPUT': 'memory:'
+        })
+        liczbaUsunietychObiektow = extractbyexpression['OUTPUT'].featureCount() - deleteduplicategeometries['OUTPUT'].featureCount()
+        if liczbaUsunietychObiektow > 0:
+            kept_ids = {f['gml_id'] for f in deleteduplicategeometries['OUTPUT'].getFeatures()}
+            for obj in extractbyexpression['OUTPUT'].getFeatures():
+                if obj['gml_id'] not in kept_ids:
+                    obiektyZbledami.append(obj)
+    except Exception as e:
+        print(f"Błąd w kontroli findDuplicatesOT: {e}")
+        obiektyZbledami = []
+
+    return obiektyZbledami
+
+
 def validateGeometry(layer, kontrola_id=None):
     obiektyZbledami = set()   
     def geomHasDuplicateVertices(geom):
