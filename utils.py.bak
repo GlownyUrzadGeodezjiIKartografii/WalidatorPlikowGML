@@ -28,8 +28,6 @@ from qgis.PyQt.QtWidgets import *
 import pathlib
 import configparser
 import copy
-import math
-import unicodedata
 import sys
 import re
 from datetime import datetime
@@ -144,191 +142,73 @@ def findDuplicatesOT(layer):
     return obiektyZbledami
 
 
-def validateGeometryRTLW(layer):
-    obiektyZbledami = []
-    def has_duplicate_vertices(pts, closed):
-        seen = set()
-        limit = len(pts)-1 if closed else len(pts)
-        for i in range(limit):
-            p = (pts[i].x(), pts[i].y())
-            if p in seen: return True
-            seen.add(p)
-        return False
-    def seg_intersect(a,b,c,d):
-        def orient(p,q,r):
-            return (q.x()-p.x())*(r.y()-p.y()) - (q.y()-p.y())*(r.x()-p.x())
-        o1 = orient(a,b,c)
-        o2 = orient(a,b,d)
-        o3 = orient(c,d,a)
-        o4 = orient(c,d,b)
-        return o1*o2 < 0 and o3*o4 < 0
-    def has_self_intersection(pts, closed):
-        segs = [(pts[i], pts[i+1], i) for i in range(len(pts)-1)]
-        grid = defaultdict(list)
-        cell = 50
-        for a,b,i in segs:
-            cx = int((a.x()+b.x())//2//cell)
-            cy = int((a.y()+b.y())//2//cell)
-            grid[(cx,cy)].append((a,b,i))
-        for bucket in grid.values():
-            n = len(bucket)
-            for i in range(n):
-                a1,b1,i1 = bucket[i]
-                for j in range(i+1,n):
-                    a2,b2,i2 = bucket[j]
-                    if abs(i1-i2)<=1: continue
-                    if closed and {i1,i2}=={0,len(pts)-2}: continue
-                    if seg_intersect(a1,b1,a2,b2):
-                        return True
-        return False
-    for f in layer.getFeatures():
-        g = f.geometry()
-        if not g or g.type()!=QgsWkbTypes.LineGeometry:
-            continue
-        lines = g.asMultiPolyline() if g.isMultipart() else [g.asPolyline()]
-        for pts in lines:
-            if len(pts)<4: continue
-            closed = pts[0]==pts[-1]
-            if has_duplicate_vertices(pts, closed):
-                obiektyZbledami.append(f); break
-            if has_self_intersection(pts, closed):
-                obiektyZbledami.append(f); break
-
-    return obiektyZbledami
-
-
-
-lokalizator_bledow = None
-def validateGeometry(layer):
-    """Kontrola geometrii: checkValidity, zdublowane wierzchołki, samoprzecięcia linii."""
-    global lokalizator_bledow
-    obiektyZbledami = []
-    def get_attr(f, name, default=""):
-        try: return f[name]
-        except: return default
-    def extract_coords(geom):
-        if geom.isEmpty(): return []
-        t = geom.type()
-        if t == QgsWkbTypes.PointGeometry:
-            return [[(geom.asPoint().x(), geom.asPoint().y())]]
-        elif t == QgsWkbTypes.LineGeometry:
-            lines = geom.asMultiPolyline() if geom.isMultipart() else [geom.asPolyline()]
-            return [[(pt.x(), pt.y()) for pt in line] for line in lines]
-        elif t == QgsWkbTypes.PolygonGeometry:
-            polys = geom.asMultiPolygon() if geom.isMultipart() else [geom.asPolygon()]
-            return [[(pt.x(), pt.y()) for pt in ring] for poly in polys for ring in poly]
-        return []
-    def find_adjacent_duplicates(coords_list):
-        dup = set()
-        for ring in coords_list:
-            for i in range(len(ring)-1):
-                if round(ring[i][0],2) == round(ring[i+1][0],2) and round(ring[i][1],2) == round(ring[i+1][1],2):
-                    dup.add((round(ring[i][0],2), round(ring[i][1],2)))
-        return list(dup)
-    def seg_intersection(p1,p2,p3,p4):
-        x1,y1=p1; x2,y2=p2; x3,y3=p3; x4,y4=p4
-        denom=(x1-x2)*(y3-y4)-(y1-y2)*(x3-x4)
-        if denom == 0: return None
-        px=((x1*y2-y1*x2)*(x3-x4)-(x1-x2)*(x3*y4-y3*x4))/denom
-        py=((x1*y2-y1*x2)*(y3-y4)-(y1-y2)*(x3*y4-y3*x4))/denom
-        return (px,py)
-    def line_self_intersection(coords, tol=0.01):
-        n = len(coords)
-        if n < 4: return False, None
-        def ccw(ax,ay,bx,by,cx,cy):
-            return (cy-ay)*(bx-ax) > (by-ay)*(cx-ax)
-        def same_point(a,b):
-            return abs(a[0]-b[0])<=tol and abs(a[1]-b[1])<=tol
-        for i in range(n-1):
-            for j in range(i+2, n-1):
-                if j == i+1: continue
-                p1,p2 = coords[i], coords[i+1]
-                p3,p4 = coords[j], coords[j+1]
-                if ccw(*p1,*p3,*p4)!=ccw(*p2,*p3,*p4) and ccw(*p1,*p2,*p3)!=ccw(*p1,*p2,*p4):
-                    pt = seg_intersection(p1,p2,p3,p4)
-                    if not pt: continue
-                    if (same_point(pt,p1) or same_point(pt,p2) or
-                        same_point(pt,p3) or same_point(pt,p4)):
-                        continue
-                    return True, pt
-        return False, None
-    def is_closed_like_circle(coords, tol=0.1):
-        if not coords: return False
-        x0,y0=coords[0]; x1,y1=coords[-1]
-        return math.sqrt((x1-x0)**2 + (y1-y0)**2) <= tol
-    isvalid = processing.run("qgis:checkvalidity", {
-        'INPUT_LAYER':layer,'METHOD':2,
-        'VALID_OUTPUT':'memory:','INVALID_OUTPUT':'memory:','ERROR_OUTPUT':'memory:'
-    })
-    dp = None
-    if lokalizator_bledow is None:
-        lokalizator_bledow = QgsVectorLayer("Point?crs=EPSG:2180", "lokalizator_bledow_geometrii", "memory")
-        dp = lokalizator_bledow.dataProvider()
-        dp.addAttributes([
-            QgsField("gml_id", QVariant.String),
-            QgsField("lokalnyId", QVariant.String),
-            QgsField("warstwa", QVariant.String),
-            QgsField("trescBledu", QVariant.String)
-        ])
-        lokalizator_bledow.updateFields()
-    else:
-        dp = lokalizator_bledow.dataProvider()
-    layer.startEditing()
-    for f in layer.getFeatures():
-        geom = f.geometry()
-        if not geom or geom.isEmpty(): continue
-        coords_list = extract_coords(geom)
-        lista_bledow = []
-        lokalizatory = set()
-        if geom.type() == QgsWkbTypes.PolygonGeometry and not geom.isGeosValid():
-            lista_bledow.append("samoprzecięcie pierścienia")
-        dup = find_adjacent_duplicates(coords_list)
-        if dup:
-            lista_bledow.append("zdublowane wierzchołki")
-            lokalizatory = {(d[0], d[1]) for d in dup}
+def validateGeometry(layer, kontrola_id=None):
+    obiektyZbledami = set()   
+    def geomHasDuplicateVertices(geom):
+        if geom.isEmpty(): return False
+        seqs = []
         if geom.type() == QgsWkbTypes.LineGeometry:
-            for line in coords_list:
-                if not line or len(line)<=3 or is_closed_like_circle(line): continue
-                inter, pt = line_self_intersection(line)
-                if inter:
-                    lista_bledow.append("samoprzecięcie linii")
-                    if pt: lokalizatory.add((round(pt[0],2), round(pt[1],2)))
-        if lista_bledow:
-            gml_id = get_attr(f,"gml_id")
-            lokalnyId = get_attr(f,"lokalnyId","")
-            tresc = " | ".join(lista_bledow)
-            obiektyZbledami.append(f)
-            for pt in lokalizatory:
-                feat = QgsFeature(lokalizator_bledow.fields())
-                feat.setGeometry(QgsGeometry.fromPointXY(QgsPointXY(pt[0], pt[1])))
-                feat.setAttributes([gml_id, lokalnyId, layer.name(), tresc])
-                dp.addFeature(feat)
-    layer.commitChanges()
-    layer.triggerRepaint()
-    if dp is not None:
-        for f in isvalid['ERROR_OUTPUT'].getFeatures():
-            geom = f.geometry()
-            if not geom or geom.isEmpty(): continue
-            coords_list = extract_coords(geom)
-
-            for ring in coords_list:
-                for i in range(len(ring)-1):
-                    for j in range(i+2, len(ring)-1):
-                        p1=ring[i]; p2=ring[i+1]
-                        p3=ring[j]; p4=ring[j+1]
-                        pt = seg_intersection(p1,p2,p3,p4)
-                        if pt:
-                            feat = QgsFeature(lokalizator_bledow.fields())
-                            feat.setGeometry(QgsGeometry.fromPointXY(QgsPointXY(round(pt[0],2), round(pt[1],2))))
-                            feat.setAttributes([None, None, layer.name(), "samoprzecięcie pierścienia"])
-                            dp.addFeature(feat)
-
-    if lokalizator_bledow and dp.featureCount()>0 and lokalizator_bledow not in QgsProject.instance().mapLayers().values():
-        lokalizator_bledow.updateExtents()
-        QgsProject.instance().addMapLayer(lokalizator_bledow)
+            seqs = geom.asMultiPolyline() if geom.isMultipart() else [geom.asPolyline()]
+        elif geom.type() == QgsWkbTypes.PolygonGeometry:
+            polys = geom.asMultiPolygon() if geom.isMultipart() else [geom.asPolygon()]
+            for poly in polys:
+                for ring in poly:
+                    flat = [QgsPointXY(p[0], p[1]) if not isinstance(p, QgsPointXY) else p for p in ring]
+                    if len(flat) > 1:
+                        seqs.append(flat[:-1])
+        else:
+            return False
+        for seq in seqs:
+            prev = None
+            for pt in seq:
+                c = (round(pt.x(),2), round(pt.y(),2))
+                if prev == c: return True
+                prev = c
+        return False
+    def isLineException(geom):
+        if geom.type() != QgsWkbTypes.LineGeometry: return False
+        try:
+            line = geom.asPolyline()
+            if not line or len(line) < 3: return False
+            is_closed = (round(line[0].x(),2), round(line[0].y(),2)) == (round(line[-1].x(),2), round(line[-1].y(),2))
+            if not is_closed:
+                return False
+            prev = (round(line[0].x(),2), round(line[0].y(),2))
+            for pt in line[1:-1]:
+                curr = (round(pt.x(),2), round(pt.y(),2))
+                if prev == curr:
+                    return False
+                prev = curr
+            return True
+        except:
+            return False
+    isvalid = processing.run("qgis:checkvalidity", {
+        'INPUT_LAYER': layer,
+        'METHOD': 2,
+        'VALID_OUTPUT': 'memory:',
+        'INVALID_OUTPUT': 'memory:',
+        'ERROR_OUTPUT': 'memory:'
+    })
+    if isvalid['ERROR_OUTPUT'].featureCount() > 0:
+        layer_suffix = layer.name().split("__")[-1] if "__" in layer.name() else layer.name()
+        base_name = f"lokalizacja błędu geometrii {layer_suffix}"
+        if kontrola_id:
+            base_name += f" {kontrola_id}"
+        existing_names = [l.name() for l in QgsProject.instance().mapLayers().values()]
+        final_name = base_name
+        counter = 1
+        while final_name in existing_names:
+            counter += 1
+            final_name = f"{base_name} ({counter})"
+        isvalid['ERROR_OUTPUT'].setName(final_name)
+        QgsProject.instance().addMapLayer(isvalid['ERROR_OUTPUT']) 
+    obiektyZbledami.update(isvalid['INVALID_OUTPUT'].getFeatures())
+    for feature in layer.getFeatures():
+        geom = feature.geometry()
+        if geom and geomHasDuplicateVertices(geom) and not isLineException(geom):
+            obiektyZbledami.add(feature)
 
     return obiektyZbledami
-
 
 
 def adjaMinus2cmBufor(layer):
@@ -2169,7 +2049,7 @@ def KontrolaAtrybutuGeometriaBudynek(layer, plikGML):
                 for g in geometria:
                     polygon = g.find('.//gml:Polygon', namespaces=ns)
                     surface = g.find('.//gml:Surface', namespaces=ns)
-                    if polygon is None or surface is None:
+                    if polygon is None and surface in None:
                         expression = f"\"lokalnyId\" = '{lokalnyId_text}'"
                         request = QgsFeatureRequest().setFilterExpression(expression)
                         for feature in layer.getFeatures(request):
@@ -2697,7 +2577,7 @@ def przestrzenNazw(layer,teryt):
 
 def zapisWspolrzednych(layer, plikGML):
     """
-    Kontrola zapisu geometrii z wykrywaniem błędów geometrycznych typu spike, niezamknięty poligon, nieparzysta liczba współrzędnych,
+    Kontrola zapisu geometrii z wykrywaniem błędów geometrycznych typu spike, niezamknięty polygon, nieparzysta liczba współrzędnych,
     niewystarczająca liczba punktów dla linii, błędny format współrzędnych.
     """  
     try:
@@ -2763,18 +2643,15 @@ def zapisWspolrzednych(layer, plikGML):
                     wsp_list = geomPkt.text.strip().split()
                     typ_geom = "Point"
                 elif geomList is not None and geomList.text.strip():
-                    wsp_list = geomList.text.strip().split()                  
-                    # Linie
-                    if g.find('.//gml:LineString', namespaces=ns) is not None \
-                       or g.find('.//gml:Curve', namespaces=ns) is not None:
-                        typ_geom = "LineString"
-                        if len(wsp_list) < 4:
-                            lista_bledow.append("niewystarczająca liczba punktów dla linii")                   
-                    # Poligony
-                    elif g.find('.//gml:Polygon', namespaces=ns) is not None:
+                    wsp_list = geomList.text.strip().split()
+                    if g.find('.//gml:Polygon', namespaces=ns) is not None:
                         typ_geom = "Polygon"
                         if len(wsp_list) < 8 or wsp_list[0] != wsp_list[-2] or wsp_list[1] != wsp_list[-1]:
                             lista_bledow.append("niezamknięty poligon")
+                    else:
+                        typ_geom = "LineString"
+                        if len(wsp_list) < 4:
+                            lista_bledow.append("niewystarczająca liczba punktów dla linii")
                 if wsp_list:
                     if any(not wsp_pattern.match(coord) for coord in wsp_list):
                         lista_bledow.append("błędny format współrzędnych")
@@ -2791,7 +2668,7 @@ def zapisWspolrzednych(layer, plikGML):
                         spike_points = []
                   # ustawienie kąta zależnie od warstwy
                         if layer.name().endswith("OT_BUBD_A"):
-                            spike_angle_threshold = 10
+                            spike_angle_threshold = 25
                         else:
                             spike_angle_threshold = 3
                         for i in range(1, len(geom_pts)-1):
@@ -4995,7 +4872,7 @@ def zawieranieOI(layer):
         raport_bledu = []
         warunki_OIPR_P = {
             "OT_PTLZ_A": lambda rodzaj, pomnik: rodzaj in ["drzewo lub grupa drzew", "kępa krzewów lub kosodrzewiny", "mały las"] and (pomnik == "obiekt niebędący pomnikiem przyrody" or not pomnik),
-            "OT_PTZB_A": lambda rodzaj, pomnik: rodzaj not in ["drzewo lub grupa drzew", "mały las", "źródło", "kępa krzewów lub kosodrzewiny", "odosobniona skała", "głaz narzutowy lub grupa głazów"],
+            "OT_PTZB_A": lambda rodzaj, pomnik: rodzaj not in ["drzewo lub grupa drzew", "mały las", "źródło", "kępa krzewów lub kosodrzewiny"],
             "OT_PTUT_A": lambda rodzaj, pomnik: rodzaj in ["drzewo lub grupa drzew", "kępa krzewów lub kosodrzewiny", "mały las"] and (pomnik == "obiekt niebędący pomnikiem przyrody" or not pomnik),
             "OT_PTRK_A": lambda rodzaj, pomnik: rodzaj in ["drzewo lub grupa drzew", "kępa krzewów lub kosodrzewiny", "mały las"] and (pomnik == "obiekt niebędący pomnikiem przyrody" or not pomnik),
             "OT_PTPL_A": lambda rodzaj, pomnik: rodzaj not in ["drzewo lub grupa drzew", "głaz narzutowy lub grupa głazów"]
@@ -5175,101 +5052,105 @@ def przecinanieRTLW_SK_BUZM(layer):
 def przecinanieRTLW(layer):
     """
     Kontrola przecinania w OT_RTLW_L: poziomica–poziomica, skarpa–skarpa, wąwóz–wąwóz.
-    Ignoruje zamknięte linie i styki krańców linii. Zapisuje punkty kolizji.
+    Ignoruje zamknięte linie i styki krańców linii.
     """
-    obiektyZbledami=[]
-    tolerance=0.02
-    lokalizator=QgsVectorLayer("Point?crs=EPSG:2180","lokalizator_kolizji_RTLW_L","memory")
-    dp_loc=lokalizator.dataProvider()
-    dp_loc.addAttributes([QgsField("gml_id",QVariant.String),QgsField("obiekt w kolizji",QVariant.String)])
-    lokalizator.updateFields()
-    def dodaj_punkt(p, gml, obiekt_w_kolizji):
-        feat = QgsFeature(lokalizator.fields())
-        feat.setGeometry(QgsGeometry.fromPointXY(p))
-        feat.setAttributes([gml, obiekt_w_kolizji])
-        dp_loc.addFeature(feat)
-    def get_attr(f,name):
+    obiektyZbledami = []
+    tolerance = 0.02
+    def get_attr(f, name):
         try:
             if name in f.fields().names():
-                v=f[name]
-                if v is None: return "__MISSING__"
-                s=str(v).strip().lower()
+                val = f[name]
+                if val is None:
+                    return "__MISSING__"
+                s = str(val).strip().lower()
                 return s if s else "__MISSING__"
             return "__MISSING__"
-        except: return "__MISSING__"
+        except:
+            return "__MISSING__"
     try:
-        if not layer or not layer.isValid() or not layer.name().endswith("OT_RTLW_L"): return []
-        if layer.geometryType()!=QgsWkbTypes.LineGeometry: return []
+        if not layer or not layer.isValid() or not layer.name().endswith("OT_RTLW_L"):
+            return []
+        if layer.geometryType() != QgsWkbTypes.LineGeometry:
+            return []
+
         def is_closed_line(g):
             try:
-                pts=g.asPolyline() if not g.isMultipart() else g.asMultiPolyline()[0]
-                return bool(pts) and pts[0]==pts[-1]
-            except: return False
-        dop=["poziomica","skarpa","wąwóz"]
-        feats=[(f,get_attr(f,"rodzaj"),get_attr(f,"wysokosc")) for f in layer.getFeatures() if get_attr(f,"rodzaj") in dop]
-        if not feats: return []
-        feats_by_r={r:{} for r in dop}
-        for f,r,w in feats: feats_by_r[r][f.id()] = (f,r,w)
-        idx_gml=layer.fields().indexFromName("gml_id")
-        kolizje=set()
-        for rodzaj in dop:
-            group=feats_by_r[rodzaj]
-            idx=QgsSpatialIndex()
-            ends={}
-            for f,r,w in group.values():
-                g=f.geometry()
-                if not g or g.isEmpty() or is_closed_line(g): continue
+                pts = g.asPolyline() if not g.isMultipart() else g.asMultiPolyline()[0]
+                return bool(pts) and pts[0] == pts[-1]
+            except:
+                return False
+        dopuszczalne_rodzaje = ["poziomica", "skarpa", "wąwóz"]
+        feats = [(f, get_attr(f, "rodzaj"), get_attr(f, "wysokosc")) for f in layer.getFeatures() if get_attr(f, "rodzaj") in dopuszczalne_rodzaje]
+        if not feats:
+            return []
+
+        feats_by_rodzaj = {r: {} for r in dopuszczalne_rodzaje}
+        for f, rodzaj, wysokosc in feats:
+            feats_by_rodzaj[rodzaj][f.id()] = (f, rodzaj, wysokosc)
+        idx_gml = layer.fields().indexFromName("gml_id")
+        kolizje = set()
+        for rodzaj in dopuszczalne_rodzaje:
+            group = feats_by_rodzaj[rodzaj]
+            idx = QgsSpatialIndex()
+            ends = {}
+            for f, r, wys in group.values():
+                g = f.geometry()
+                if not g or g.isEmpty() or is_closed_line(g):
+                    continue
                 idx.insertFeature(f)
-                pts=g.asPolyline() if not g.isMultipart() else g.asMultiPolyline()[0]
-                ends[f.id()] = (QgsPointXY(pts[0]),QgsPointXY(pts[-1]),w)
-            for fid,(e1s,e1e,w1) in ends.items():
-                f1,r1,w1=group[fid]
-                g1=f1.geometry()
+                pts = g.asPolyline() if not g.isMultipart() else g.asMultiPolyline()[0]
+                ends[f.id()] = (QgsPointXY(pts[0]), QgsPointXY(pts[-1]), wys)
+            for fid, (e1s, e1e, w1) in ends.items():
+                f1, r1, wys1 = group[fid]
+                g1 = f1.geometry()
                 for cid in idx.intersects(g1.boundingBox()):
-                    if cid<=fid or cid not in ends: continue
-                    if (fid,cid) in kolizje: continue
-                    kolizje.add((fid,cid))
-                    f2,r2,w2=group[cid]
-                    g2=f2.geometry()
-                    e2s,e2e,w2=ends[cid]
-                    if rodzaj=="poziomica":
-                        styka=any(e1.distance(e2)<=tolerance for e1 in [e1s,e1e] for e2 in [e2s,e2e])
-                        if styka and w1==w2: continue
-                        try:
-                            inter=g1.intersection(g2)
-                            if not inter.isEmpty():
-                                obiektyZbledami.extend([f1,f2])
-                                if inter.type()==QgsWkbTypes.PointGeometry:
-                                    pts=[inter.asPoint()] if not inter.isMultipart() else [p for part in inter.asMultiPoint() for p in part]
-                                    for p in pts: dodaj_punkt(p,f1["gml_id"],r2)
-                        except: obiektyZbledami.extend([f1,f2])
+                    if cid <= fid or cid not in ends:
                         continue
-                    if rodzaj in ["skarpa","wąwóz"]:
+                    if (fid, cid) in kolizje:
+                        continue
+                    kolizje.add((fid, cid))
+                    f2, r2, wys2 = group[cid]
+                    g2 = f2.geometry()
+                    e2s, e2e, w2 = ends[cid]
+                    # poziomice: dopuszczony tylko styk końców o tej samej wysokości
+                    if rodzaj == "poziomica":
+                        styka_sie_koncami = any(e1.distance(e2) <= tolerance for e1 in [e1s, e1e] for e2 in [e2s, e2e])
+                        if styka_sie_koncami and wys1 == w2:
+                            continue
                         try:
-                            inter=g1.intersection(g2)
-                            if inter.isEmpty(): continue
-                            if inter.type()==QgsWkbTypes.PointGeometry:
-                                pts=[inter.asPoint()] if not inter.isMultipart() else [p for part in inter.asMultiPoint() for p in part]
-                                for p in pts:
-                                    p1s=p.distance(e1s)>tolerance and p.distance(e1e)>tolerance
-                                    p2s=p.distance(e2s)>tolerance and p.distance(e2e)>tolerance
-                                    if p1s and p2s:
-                                        obiektyZbledami.extend([f1,f2])
-                                        dodaj_punkt(p,f1["gml_id"],r2)
+                            inter = g1.intersection(g2)
+                            if not inter.isEmpty():
+                                obiektyZbledami.extend([f1, f2])
+                        except:
+                            obiektyZbledami.extend([f1, f2])
+                        continue                        
+                    # Skarpa i wąwóz
+                    if rodzaj in ["skarpa", "wąwóz"]:
+                        try:
+                            inter = g1.intersection(g2)
+                            if inter.isEmpty():
+                                continue
+                            if inter.type() == QgsWkbTypes.PointGeometry:
+                                pts_inter = [inter.asPoint()] if not inter.isMultipart() else [p for part in inter.asMultiPoint() for p in part]
+                                for p in pts_inter:
+                                    p_w_srodku_f1 = p.distance(e1s) > tolerance and p.distance(e1e) > tolerance
+                                    p_w_srodku_f2 = p.distance(e2s) > tolerance and p.distance(e2e) > tolerance
+                                    if p_w_srodku_f1 and p_w_srodku_f2:
+                                        obiektyZbledami.extend([f1, f2])
                                         break
-                        except: pass
-        obiektyZbledami=list({f.id():f for f in obiektyZbledami}.values())
+                        except:
+                            pass
+        obiektyZbledami = list({f.id(): f for f in obiektyZbledami}.values())
         layer.startEditing()
         for f in obiektyZbledami:
-            gml=f["gml_id"] or ""
-            rodz=get_attr(f,"rodzaj")
-            f.setAttribute(idx_gml,f"{gml}| {rodz}")
+            gml = f["gml_id"] or ""
+            rodzaj_f = get_attr(f, "rodzaj")
+            f.setAttribute(idx_gml, f"{gml}| {rodzaj_f}")
             layer.updateFeature(f)
         layer.commitChanges()
-        if dp_loc.featureCount()>0:
-            lokalizator.updateExtents()
-            QgsProject.instance().addMapLayer(lokalizator)
+
         return obiektyZbledami
+
     except Exception as e:
         print(f"Błąd w funkcji przecinanieRTLW dla warstwy {layer.name()}: {e}")
         return []
