@@ -2151,7 +2151,7 @@ class walidatorPlikowGML(WalidatorEGIB):
                                 suffix = f"_InnyTypGeometrii"
                             outSHP = (
                                 f'{sciezkaGML}/RaportBledow_{nazwa_pliku}_'
-                                '{timestr}_błędy z kontroli atrybutów{suffix}.shp'
+                                f'{timestr}_błędy z kontroli atrybutów{suffix}.shp'
                             )
                         elif "błędy z walidacji" in layer.name():
                             outSHP = (
@@ -2161,13 +2161,14 @@ class walidatorPlikowGML(WalidatorEGIB):
                         else:
                             outSHP = (
                                 f'{sciezkaGML}/RaportBledow_'
-                                '{nazwa_pliku}_{timestr}_{layer.name()}.shp'
+                                f'{nazwa_pliku}_{timestr}_{layer.name()}.shp'
                             )
                         options = QgsVectorFileWriter.SaveVectorOptions()
                         options.driverName = 'ESRI Shapefile'
                         options.layerName = layer.name()
                         options.fileEncoding = 'UTF-8'
                         options.destCRS = QgsCoordinateReferenceSystem(epsg)
+                        options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteFile
                         error =  QgsVectorFileWriter.writeAsVectorFormatV3(layer, outSHP, QgsCoordinateTransformContext(), options)
         
         if 'gpkg' in self.dlg.mComboBox.checkedItems():
@@ -2209,7 +2210,7 @@ class walidatorPlikowGML(WalidatorEGIB):
                                 suffix = f"_InnyTypGeometrii"
                             outGPKG = (
                                 f'{sciezkaGML}/RaportBledow_{nazwa_pliku}_'
-                                '{timestr}_błędy z kontroli atrybutów{suffix}.gpkg'
+                                f'{timestr}_błędy z kontroli atrybutów{suffix}.gpkg'
                             )
                         elif "błędy z walidacji" in layer.name():
                             outGPKG = (
@@ -2218,13 +2219,14 @@ class walidatorPlikowGML(WalidatorEGIB):
                         else:
                             outGPKG = (
                                 f'{sciezkaGML}/RaportBledow_{nazwa_pliku}_'
-                                '{timestr}_{layer.name()}.gpkg'
+                                f'{timestr}_{layer.name()}.gpkg'
                             )
                         options = QgsVectorFileWriter.SaveVectorOptions()
                         options.driverName = 'GPKG'
                         options.layerName = layer.name()
                         options.fileEncoding = 'UTF-8'
                         options.destCRS = QgsCoordinateReferenceSystem(epsg)
+                        options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteFile
                         error =  QgsVectorFileWriter.writeAsVectorFormatV3(layer, outGPKG, QgsCoordinateTransformContext(), options)
 
 
