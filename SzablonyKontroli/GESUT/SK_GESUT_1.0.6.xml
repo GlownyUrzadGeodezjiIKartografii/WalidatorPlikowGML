@@ -11,7 +11,7 @@
 		<Parametr typ="QgsExpression" sql="(rodzajUrzadzenia='l' or rodzajUrzadzenia='o') and (geometry_type($geometry)='Point' or geometry_type($geometry)='Polygon' or geometry_type($geometry)='MultiPolygon' or geometry_type($geometry)='MultiPoint')"/>
 		</Kontrola>
 		<Kontrola id="gesut_g1_k4" name="Kontrola atrybutów rodzajUrzadzenia i ksztaltUrzadzenia" class="GES_InneUrzadzeniaTowarzyszace" errorPhrase="Atrybut ksztaltUrzadzenia przyjmuje wartość pustą dla rodzaju urządzenia równego k/w">
-		<Parametr typ="PyExpression" sql="(rodzajUrzadzenia='k' or rodzajUrzadzenia='w') and ksztaltUrzadzenia= 'NULL'"/>
+		<Parametr typ="PyExpression" sql="rodzajUrzadzenia IN ('k', 'w') AND (ksztaltUrzadzenia IS NULL OR ksztaltUrzadzenia = '')"/>
 		</Kontrola>
 		<Kontrola id="gesut_g1_k5" name="Kontrola atrybutu geometria dla rodzaju urzadzenia=p" class="GES_InneUrzadzeniaTowarzyszace" errorPhrase="Geometria jest innego typu niż punkt/wielopunkt dla rodzaju urządzenia równego p">
 		<Parametr typ="QgsExpression" sql="rodzajUrzadzenia='p' and (geometry_type($geometry)='Line' or geometry_type($geometry)='Polygon' or geometry_type($geometry)='MultiPolygon' or geometry_type($geometry)='MultiLine')"/>
@@ -94,9 +94,6 @@
 		<Kontrola id="gesut_g1_k31" name="Kontrola atrybutu geometria dla rodzaju urządzenia=k/w" class="GES_InneUrzadzeniaTowarzyszace" errorPhrase="Geometria jest innego typu niż linia dla rodzaju urządzenia równego k/w">
 		<Parametr typ="QgsExpression" sql="(rodzajUrzadzenia='k' or rodzajUrzadzenia='w') and  geometry_type($geometry)='Line'"/>
 		</Kontrola>
-		<Kontrola id="gesut_g1_k32" name="GES_Rzedna - kontrola występowania relacji" class="GES_Rzedna" errorPhrase="Brak relacji obiektu GES_Rzedna z innym obiektem bazy GESUT">
-		<Parametr typ="pythonFunction" sql="kontrolaRelacjiGESRzedna"/>
-		</Kontrola>
 	</GrupaKontroli>
 
 	<!-- ....................................................................................................................................................... -->
@@ -165,8 +162,8 @@
 </SzablonKontroli>
 
 <!-- ChangeLog
-1.0.6 zmieniono kontrole:
-            gesut_g1_k32
+1.0.6 zmieniono kontrole
+			gesut_g1_k4
 1.0.5 zmieniono kontrole
 			gesut_g1_k4
 1.0.4   dodano kontrole:
