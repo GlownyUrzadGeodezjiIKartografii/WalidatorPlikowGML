@@ -39,15 +39,10 @@ import xml.etree.ElementTree as et
 from collections import namedtuple, Counter
 from datetime import datetime
 from time import sleep
-
-
 import pandas as pd
 import matplotlib.pyplot
-import lxml
 import xlwt
 import sip
-
-
 from osgeo import ogr,gdal
 from qgis.PyQt.QtCore import *
 from qgis.PyQt.QtGui import *
@@ -58,13 +53,9 @@ from qgis.PyQt.QtWidgets import (
     QAction, 
     QLabel
 )
-
-
 from qgis.core import *
 from qgis.gui import *
 from qgis.utils import *
-
-
 from openpyxl import Workbook
 from openpyxl.styles import(
     Alignment, 
@@ -75,10 +66,8 @@ from openpyxl.styles import(
 )
 from lxml.etree import (
     parse, 
-    XMLSchema, 
-    ElementTree
+    XMLSchema
 )
-
 from .resources import *
 from .utils import *
 from .walidatorPlikowGML_EGIB import *
@@ -267,6 +256,7 @@ class walidatorPlikowGML(WalidatorEGIB):
             self.dlg.pushButton.setEnabled(False)
             self.uzupelnienieWyboruXSD(0)
         self.walidacjaIKontrolaAtrybutow()
+        self.zapisDoGPKG()
         
     def szarzenieNieBDOT(self):
          """Dezaktywacja przycisku gdy jest wybrana opcja inna niż BDOT10k"""
@@ -1036,10 +1026,6 @@ class walidatorPlikowGML(WalidatorEGIB):
             pathXLS = os.path.join(sciezkaGML, f"{base}.xls")
             pathXLSX = os.path.join(sciezkaGML, f"{base}.xlsx")
             pathTXT = os.path.join(sciezkaGML, f"{base}.txt")
-            # pathPDF = sciezkaGML + "/RaportBledow_" + str(nazwa_pliku) + "_" + timestr + ".pdf"
-            # pathXLS = sciezkaGML + "/RaportBledow_" + str(nazwa_pliku) + "_" + timestr + ".xls"
-            # pathXLSX = sciezkaGML + "/RaportBledow_" + str(nazwa_pliku) + "_" + timestr + ".xlsx"
-            # pathTXT = sciezkaGML + "/RaportBledow_" + str(nazwa_pliku) + "_" + timestr + ".txt"
         else:
             return
         
@@ -1067,18 +1053,15 @@ class walidatorPlikowGML(WalidatorEGIB):
             self.gmlid_df_k = gmlid_df_k
             self.grupyKontroli_df = grupyKontroli_df
             self.idkontroli_LiczbaBledow = idkontroli_LiczbaBledow
-        kontrole_doInterpretacji = ['topo_e1_k2_8_1', 'topo_e1_k20', 
-                                    'topo_e1_k23', 'topo_e1_k123_7', 
-                                    'topo_e1_k123_8', 'topo_e1_k123_9', 
-                                    'topo_e1_k123_10', 'topo_e3_k7_1',
-                                     'topo_e3_k5', 'topo_e3_k159', 
-                                     'topo_e3_k175', 'topo_e3_k176', 
-                                     'topo_e3_k177', 'topo_e3_k178', 
-                                     'topo_e3_k179', 'topo_e3_k180', 
-                                      'topo_e3_k181', 'topo_e3_k182', 
-                                      'topo_e3_k183', 'topo_e4_k25', 
-                                      'topo_e4_k27', 'topo_e5_k4'
-                                    ]
+        kontrole_doInterpretacji = [
+            'topo_e1_k2_3_1', 'topo_e1_k2_4_1', 'topo_e1_k2_8_1', 'topo_e1_k4_2', 'topo_e1_k20', 'topo_e1_k23', 'topo_e1_k23_4',
+            'topo_e1_k123_7', 'topo_e1_k123_8', 'topo_e1_k123_9', 'topo_e1_k123_10',
+            'topo_e3_k5', 'topo_e3_k7_1',
+            'topo_e3_k159', 'topo_e3_k175', 'topo_e3_k176', 'topo_e3_k177', 'topo_e3_k178',
+            'topo_e3_k179', 'topo_e3_k180', 'topo_e3_k181', 'topo_e3_k182', 'topo_e3_k183',
+            'topo_e4_k25', 'topo_e4_k27',
+            'topo_e5_k4'
+        ]
         slownik_liczba_bledow = {}
         slownik_grupa = {}
         i = 0
@@ -1094,7 +1077,7 @@ class walidatorPlikowGML(WalidatorEGIB):
             self.iface.messageBar().pushMessage(
                 "Uwaga!",
                 ("Występuje problem z pobraniem schematu ze strony http://schemas.opengis.net."
-                "Proszę sprawdzić czy jest dostępu do internetu."), 
+                "Proszę sprawdzić czy jest dostępu do internetu."),
                 level = Qgis.Critical)
             return
         
@@ -1117,12 +1100,8 @@ class walidatorPlikowGML(WalidatorEGIB):
                     loop = QEventLoop()
                     def on_finished_wrapper(*args, **kwargs):
                         try:
-                            # Przekazujemy wszystko dokładnie tak,
-                            # jak QGIS woła oryginalne on_finished:
                                 self.wynikiWalidacji(*args, **kwargs)
                         finally:
-                            # Niezależnie od tego, czy wynikiWalidacji rzuci wyjątek,
-                            # pętla i tak się zakończy.
                             loop.quit()
                     task = QgsTask.fromFunction(
                         str(i), 
@@ -1140,19 +1119,13 @@ class walidatorPlikowGML(WalidatorEGIB):
                            self._desc = str(desc)
                        def description(self):
                           return self._desc
-
                    fake_task = _FakeTask(i)
                    try:
-                       # jeśli twoja walidacja normalnie przyjmuje (task),
-                       # to tu możesz spokojnie przekazać None:
                            result = self.walidacja(fake_task)
                    except Exception as e:
                        exception = e
-
-                # wywołujemy tę samą funkcję, która normalnie jest on_finished
                    self.wynikiWalidacji(exception, result)
-                i += 1
-        
+                i += 1        
         if not walidacjaZWynikiemPozytywnym:
             msgBox = QMessageBox()
             msgBox.setText(
@@ -1172,7 +1145,7 @@ class walidatorPlikowGML(WalidatorEGIB):
         epsg = 'epsg:2180'
         
         QgsMessageLog.logMessage(
-            f'--------- Kontrole atrybutów dla pliku:{str(pathlib.Path(plik[0]).name)}---------', 
+            f'--------- Kontrole atrybutów dla pliku:{str(pathlib.Path(plik[0]).name)}---------',
             tag="Walidator plików GML", 
             level=Qgis.Info
             )
@@ -2129,7 +2102,12 @@ class walidatorPlikowGML(WalidatorEGIB):
                             "lokalizacje błędów geometrii obiektów pokrycia terenu", 
                             "nakładania w pokryciu terenu",
                             "dziury w pokryciu terenu",
-                            "nakładania buforów poziomic"
+                            "nakładania buforów poziomic",
+                            "niespójność werteksów",
+                            "lokalizacje błędów geometrii",
+                            "lokalizacje kolizji OT_RTLW_L",
+                            "lokalizacje błędów typu spike",
+                            "przewerteksowanie"
                         ] 
                         or "błędy z walidacji" in layer.name()
                     ):
@@ -2170,64 +2148,6 @@ class walidatorPlikowGML(WalidatorEGIB):
                         options.destCRS = QgsCoordinateReferenceSystem(epsg)
                         options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteFile
                         error =  QgsVectorFileWriter.writeAsVectorFormatV3(layer, outSHP, QgsCoordinateTransformContext(), options)
-        
-        if 'gpkg' in self.dlg.mComboBox.checkedItems():
-            created_layers = {
-                QgsWkbTypes.PointGeometry: False,
-                QgsWkbTypes.LineGeometry: False,
-                QgsWkbTypes.PolygonGeometry: False
-                }
-            for layer in QgsProject.instance().mapLayers().values():
-                if layer.isValid() and isinstance(layer, QgsVectorLayer) and layer.featureCount() > 0:
-                    if (
-                            layer.name() in [
-                                "błędy z kontroli atrybutów",
-                                "błędne geometrie obiektów pokrycia terenu",
-                                "lokalizacje błędów geometrii obiektów pokrycia terenu", 
-                                "nakładania w pokryciu terenu",
-                                "dziury w pokryciu terenu",
-                                "nakładania buforów poziomic"
-                                ] 
-                            or "błędy z walidacji" in layer.name()
-                        ):
-                        
-                        if "błędy z kontroli atrybutów" in layer.name():
-                            typ_geometrii = layer.geometryType()
-                            # Jeśli warstwa dla tego typu geometrii została już stworzona, pomiń
-                            if created_layers[typ_geometrii]:
-                                continue
-                            # Ustaw flagę na True, aby oznaczyć, że warstwa tego typu została już przetworzona
-                            created_layers[typ_geometrii] = True
-                            suffix = ''
-                            
-                            if typ_geometrii == QgsWkbTypes.PointGeometry:
-                                suffix = f"_Punkt"
-                            elif typ_geometrii == QgsWkbTypes.LineGeometry:
-                                suffix = f"_Linia"
-                            elif typ_geometrii == QgsWkbTypes.PolygonGeometry:
-                                suffix = f"_Poligon"
-                            else:
-                                suffix = f"_InnyTypGeometrii"
-                            outGPKG = (
-                                f'{sciezkaGML}/RaportBledow_{nazwa_pliku}_'
-                                f'{timestr}_błędy z kontroli atrybutów{suffix}.gpkg'
-                            )
-                        elif "błędy z walidacji" in layer.name():
-                            outGPKG = (
-                                f'{sciezkaGML}/RaportBledow_{layer.name()}.gpkg'
-                            ).replace('__', f'_{timestr}_')
-                        else:
-                            outGPKG = (
-                                f'{sciezkaGML}/RaportBledow_{nazwa_pliku}_'
-                                f'{timestr}_{layer.name()}.gpkg'
-                            )
-                        options = QgsVectorFileWriter.SaveVectorOptions()
-                        options.driverName = 'GPKG'
-                        options.layerName = layer.name()
-                        options.fileEncoding = 'UTF-8'
-                        options.destCRS = QgsCoordinateReferenceSystem(epsg)
-                        options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteFile
-                        error =  QgsVectorFileWriter.writeAsVectorFormatV3(layer, outGPKG, QgsCoordinateTransformContext(), options)
 
 
     # walidacja pliku GML z conajmniej jednym obiektem
@@ -2261,7 +2181,7 @@ class walidatorPlikowGML(WalidatorEGIB):
                  GML_IDS = ('{http://www.opengis.net/gml/3.2}id', '{http://www.opengis.net/gml}id')
                  def wyciagnijGmlId(node):
                      #Szuka GMLID w zależnosci od wersji standardu .gml
-
+                     
                      for el in node.iter():
                          for key in GML_IDS:
                              if key in el.attrib:
@@ -2270,7 +2190,7 @@ class walidatorPlikowGML(WalidatorEGIB):
                  FakeXsdError = namedtuple('FakeXsdError', 'message line type_name')
                  def naBladWalidacji(msg, line=0, type_name='SCHEMAV_ELEMENT_CONTENT'):
                      # Tworzy „sztuczny” wpis błędu XSD, na przypadek gdy walidator nie zwrócił szczegółów.
-
+                     
                      return FakeXsdError(msg, line, type_name)
                  def znajdzGmlId(el):
                      # Szuka GMLID w całym poddrzewie obiektu (featureMember), w wersjach GML 3.2 i 3.1.
@@ -2325,12 +2245,12 @@ class walidatorPlikowGML(WalidatorEGIB):
                              except Exception as e:
                                  ok = False
                                  errs = list(e.error_log) 
-
+                                 
                              if not ok:
                                  walidacjaZWynikiemPozytywnym = False
                                  if errs:
                                      error_gmlid_dic[tuple(errs)] = gml_id
-
+                                     
                                  else:
                                      error_gmlid_dic[
                                          (
@@ -2764,22 +2684,22 @@ class walidatorPlikowGML(WalidatorEGIB):
                 
         if (
                 not item.hasChildren() 
-                and self.dlg.comboBox.currentText() == 'BDOT10k' 
+                and self.dlg.comboBox.currentText() == 'BDOT10k'
                 and item.data(6).__contains__("(gml,gml)")
             ):
             blokady[5] = 0
             for j in range(item.parent().rowCount()):
                 if (
-                        len(self.dlg.mQgsFileWidget_dz.filePath()) == 0 
-                        and item.parent().child(j).checkState() == 2 
+                        len(self.dlg.mQgsFileWidget_dz.filePath()) == 0
+                        and item.parent().child(j).checkState() == 2
                         and item.parent().child(j).data(6).__contains__("(gml,gml)")
                     ):
                     blokady[5] = 1
                     self.dlg.button_box.buttons()[0].setEnabled(False)
             
         if (
-                not item.hasChildren() 
-                and self.dlg.comboBox.currentText() == 'BDOT10k' 
+                not item.hasChildren()
+                and self.dlg.comboBox.currentText() == 'BDOT10k'
                 and item.data(6).__contains__("prng_miejscowosci")
             ):
             blokady[6] = 0
@@ -2793,15 +2713,15 @@ class walidatorPlikowGML(WalidatorEGIB):
                     self.dlg.button_box.buttons()[0].setEnabled(False)
                 
         if (
-                not item.hasChildren() 
-                and self.dlg.comboBox.currentText() == 'BDOT10k' 
+                not item.hasChildren()
+                and self.dlg.comboBox.currentText() == 'BDOT10k'
                 and item.data(6).__contains__("prng_obiektyfizjograficzne")
             ):
             blokady[7] = 0
             for j in range(item.parent().rowCount()):
                 if (
-                        len(self.dlg.mQgsFileWidget_prng_o.filePath()) == 0 
-                        and item.parent().child(j).checkState() == 2 
+                        len(self.dlg.mQgsFileWidget_prng_o.filePath()) == 0
+                        and item.parent().child(j).checkState() == 2
                         and item.parent().child(j).data(6).__contains__("prng_obiektyfizjograficzne")
                     ):
                     blokady[7] = 1
@@ -2809,14 +2729,14 @@ class walidatorPlikowGML(WalidatorEGIB):
                     
         if (
                 not item.hasChildren() 
-                and self.dlg.comboBox.currentText() == 'BDOT10k' 
+                and self.dlg.comboBox.currentText() == 'BDOT10k'
                 and item.data(6).__contains__("tereny_chronione")
             ):
             blokady[9] = 0
             for j in range(item.parent().rowCount()):
                 if (
-                        len(self.dlg.mQgsFileWidget_tc.filePath()) == 0 
-                        and item.parent().child(j).checkState() == 2 
+                        len(self.dlg.mQgsFileWidget_tc.filePath()) == 0
+                        and item.parent().child(j).checkState() == 2
                         and item.parent().child(j).data(6).__contains__("tereny_chronione")
                    ):
                    blokady[9] = 1
@@ -2826,22 +2746,22 @@ class walidatorPlikowGML(WalidatorEGIB):
             blokady[8] = 0
             for j in range(item.parent().rowCount()):
                  if (
-                         len(self.dlg.mQgsFileWidget_ulic.filePath()) == 0 
-                         and item.parent().child(j).checkState() == 2 
+                         len(self.dlg.mQgsFileWidget_ulic.filePath()) == 0
+                         and item.parent().child(j).checkState() == 2
                          and item.parent().child(j).data(6).__contains__("ulic_gus")
                      ):
                      blokady[8] = 1
                      self.dlg.button_box.buttons()[0].setEnabled(False)
         if (
-                not item.hasChildren() 
-                and self.dlg.comboBox.currentText() == 'BDOT10k' 
+                not item.hasChildren()
+                and self.dlg.comboBox.currentText() == 'BDOT10k'
                 and item.data(6).__contains__("simc_gus")
             ):
             blokady[10] = 0
             for j in range(item.parent().rowCount()):
                  if (
-                         len(self.dlg.mQgsFileWidget_simc.filePath()) == 0 
-                         and item.parent().child(j).checkState() == 2 
+                         len(self.dlg.mQgsFileWidget_simc.filePath()) == 0
+                         and item.parent().child(j).checkState() == 2
                          and item.parent().child(j).data(6).__contains__("simc_gus")
                     ):
                      blokady[10] = 1
@@ -3088,7 +3008,10 @@ class walidatorPlikowGML(WalidatorEGIB):
                                                         'MultiPolygon'
                                                     ):
                                                     warstwa = warstwyBledowKontroliAtrybutow['Polygon']
-                                                
+                                                if idKontroli in ['topo_e1_k23_4'] and klasa == 'OT_SKJZ_L':
+                                                    klasaDoRaportowania = 'OT_SK/OT_PTPL'
+                                                    gmlid = feature['gml_id'] if 'gml_id' in feature.fields().names() else 'nie dotyczy'
+                                                    
                                                 if idKontroli in ['topo_e5_k1']:
                                                     klasaDoRaportowania = gmlid
                                                     gmlid = 'nie dotyczy'
@@ -3178,5 +3101,69 @@ class walidatorPlikowGML(WalidatorEGIB):
                         else:
                              # gdy użytkownik podał pojedynczy .gml/.xml
                              plikGMLzrodlowy = sciezkaPlikuZrodlowego
-                        break  
+                        break
         return plikGMLzrodlowy
+
+
+    def zapisDoGPKG(self):
+        if 'gpkg' in self.dlg.mComboBox.checkedItems():
+            created_layers = {
+                QgsWkbTypes.PointGeometry: False,
+                QgsWkbTypes.LineGeometry: False,
+                QgsWkbTypes.PolygonGeometry: False
+                }
+            for layer in QgsProject.instance().mapLayers().values():
+                if layer.isValid() and isinstance(layer, QgsVectorLayer) and layer.featureCount() > 0:
+                    if (
+                        layer.name() in [
+                            "błędy z kontroli atrybutów",
+                            "błędne geometrie obiektów pokrycia terenu",
+                            "lokalizacje błędów geometrii obiektów pokrycia terenu", 
+                            "nakładania w pokryciu terenu",
+                            "dziury w pokryciu terenu",
+                            "nakładania buforów poziomic",
+                            "niespójność werteksów",
+                            "lokalizacje błędów geometrii",
+                            "lokalizacje kolizji OT_RTLW_L",
+                            "lokalizacje błędów typu spike",
+                            "przewerteksowanie"
+                        ] 
+                        or "błędy z walidacji" in layer.name()
+                    ):
+                        if "błędy z kontroli atrybutów" in layer.name():
+                            typ_geometrii = layer.geometryType()
+                            # Jeśli warstwa dla tego typu geometrii została już stworzona, pomiń
+                            if created_layers[typ_geometrii]:
+                                continue
+                            # Ustaw flagę na True, aby oznaczyć, że warstwa tego typu została już przetworzona
+                            created_layers[typ_geometrii] = True
+                            suffix = ''
+                            if typ_geometrii == QgsWkbTypes.PointGeometry:
+                                suffix = f"_Punkt"
+                            elif typ_geometrii == QgsWkbTypes.LineGeometry:
+                                suffix = f"_Linia"
+                            elif typ_geometrii == QgsWkbTypes.PolygonGeometry:
+                                suffix = f"_Poligon"
+                            else:
+                                suffix = f"_InnyTypGeometrii"
+                            outGPKG = (
+                                f'{sciezkaGML}/RaportBledow_{nazwa_pliku}_'
+                                f'{timestr}_błędy z kontroli atrybutów{suffix}.gpkg'
+                            )
+                        elif "błędy z walidacji" in layer.name():
+                            outGPKG = (
+                                f'{sciezkaGML}/RaportBledow_{layer.name()}.gpkg'
+                            ).replace('__', f'_{timestr}_')
+                                 
+                        else:
+                            outGPKG = (
+                                f'{sciezkaGML}/RaportBledow_'
+                                f'{nazwa_pliku}_{timestr}_{layer.name()}.gpkg'
+                            )
+                        options = QgsVectorFileWriter.SaveVectorOptions()
+                        options.driverName = 'GPKG'
+                        options.layerName = layer.name()
+                        options.fileEncoding = 'UTF-8'
+                        options.destCRS = QgsCoordinateReferenceSystem(epsg)
+                        options.actionOnExistingFile = QgsVectorFileWriter.CreateOrOverwriteFile
+                        error =  QgsVectorFileWriter.writeAsVectorFormatV3(layer, outGPKG, QgsCoordinateTransformContext(), options)

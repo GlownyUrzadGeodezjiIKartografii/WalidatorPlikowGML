@@ -24,50 +24,44 @@ Created on Tue Nov  4 08:57:39 2025
  *                                                                         *
  ***************************************************************************/
 """
-import os
-import subprocess
+from qgis.core import *
+from qgis.PyQt.QtCore import *
+from qgis import processing
+from qgis.PyQt.QtWidgets import *
 import pathlib
 import copy
 import re
 import time
 import sys
-import zipfile
-import itertools
-
-
-from collections import defaultdict, Counter
 from datetime import datetime
+from collections import defaultdict
+import lxml
 from lxml import etree
-
+import zipfile
+import os, subprocess
+import itertools
 import sip
-
-from qgis import processing
-from qgis.PyQt.QtCore import *
-from qgis.PyQt.QtGui import *
-from qgis.PyQt.QtWidgets import( 
-    QFileDialog,
-    QProgressBar, 
-    QMessageBox,
-    QAction, 
-    QLabel
-    )
-
-from qgis.core import *
 from .utils import *
+from qgis.core import QgsMessageLog, QgsProject, QgsSpatialIndex
+from collections import defaultdict, Counter
+from lxml.etree import parse, XMLSchema, ElementTree
+from time import sleep
+from datetime import datetime
+from osgeo import ogr,osr, gdal
+from qgis.PyQt.QtGui import *
+from qgis.PyQt.QtWidgets import QFileDialog, QProgressBar, QMessageBox, QAction, QLabel
 
 class WalidatorEGIB:
-
     
     def __init__(self):
         # opcjonalnie: pólka na cache’y (niekonieczne)
         pass
     
-    
     def kontrolaAtrybutow_EGIB(self):
         # wartosci globalne przepisane z głownego pliku
-        # Ta wersja raz na starcie wiąże warstwy błędów, a potem
-        # pracuje na gotowych obiektach – mniej „migania” warstw i mniejsze ryzyko duplikatów.
-        # dzięki czemu QGIS zużywa mniej pamięci i nie dubluje warstw błędów. 
+        """Ta wersja raz na starcie wiąże warstwy błędów, a potem
+          pracuje na gotowych obiektach – mniej „migania” warstw i mniejsze ryzyko duplikatów.
+          dzięki czemu QGIS zużywa mniej pamięci i nie dubluje warstw błędów. """
         # upewnij się, że model istnieje
         modelKontroli = self.dlg.treeView.model()
         if modelKontroli is None:
@@ -92,18 +86,12 @@ class WalidatorEGIB:
         # teraz używaj groupaGlowna_egib
         for i in range(modelKontroli.rowCount()):
             parent = modelKontroli.item(i)
-            if parent.checkState() in (1, 2):
+            if parent.checkState() in (1,2):
                 for j in range(parent.rowCount()):
                     kontrola = self.pobierzDaneKontroli(parent, j)
                     if not kontrola:
                         continue
-                    for k in self.przygotujDaneWarstwy(
-                            kontrola, 
-                            plikiZparsowane_egib, 
-                            groupaGlowna_egib, 
-                            parent, 
-                            j
-                        ):
+                    for k in self.przygotujDaneWarstwy(kontrola, plikiZparsowane_egib, groupaGlowna_egib, parent, j):
                         layers_in_group = k.get('layers_in_group') or []
                         if not layers_in_group:
                             continue
@@ -111,8 +99,10 @@ class WalidatorEGIB:
                         klasa = k.get('klasa') or ''
                         expected = klasa.upper()
                         def _egib_token(name: str) -> str:
-                            # Z nazwy warstwy QGIS EGiB 
-                            # wyciąga 'EGB_BUDYNEK' – czyli to, co przychodzi w <Kontrola class="...">.
+                            """
+                            Z nazwy warstwy QGIS EGiB (np. 'EGiB_0861011_EGB_Budynek')
+                            wyciąga 'EGB_BUDYNEK' – czyli to, co przychodzi w <Kontrola class="...">.
+                            """
                             nm = name.upper()
                             pos = nm.rfind("EGB_")
                             if pos >= 0:
@@ -135,11 +125,10 @@ class WalidatorEGIB:
                             sl['layerObj'] = lyr
                             self.wykonajJednaKontrole(sl)
                             
-                            
     def przygotujWarstwyBledow(self):
-        # Tworzymy 3 warstwy pamięciowe: Point / LineString / Polygon 
-        # Działają przez cały bieg programu 
-        # Dzięki temu unikamy duplikatów i spadków wydajności.
+        """ Tworzymy 3 warstwy pamięciowe: Point / LineString / Polygon 
+        Działają przez cały bieg programu 
+        Dzięki temu unikamy duplikatów i spadków wydajności."""
         crs = None
         crs = crs or "EPSG:2180"
         self.err_layers = {
@@ -157,16 +146,13 @@ class WalidatorEGIB:
         if not lyr:
             return False
         try:
-            return (
-                not sip.isdeleted(lyr) 
-                and lyr.id() in QgsProject.instance().mapLayers()
-            )
+            return (not sip.isdeleted(lyr)) and (lyr.id() in QgsProject.instance().mapLayers())
         except Exception:
             return False
     
     def pobierzDaneKontroli(self, parent, j):
-        # Tutaj czyścimy zapisane w XML-u znaki "&gt;"/"&lt;" → ">" / "<".
-        # Dzięki temu wyrażenia (QgsExpression) działają poprawnie
+        """Tutaj czyścimy zapisane w XML-u znaki "&gt;"/"&lt;" → ">" / "<".
+         Dzięki temu wyrażenia (QgsExpression) działają poprawnie"""
         child = parent.child(j)
         # Sprawdzenie, czy wiersz jest zaznaczony i kompletny
         if child.checkState() != 2:
@@ -176,13 +162,7 @@ class WalidatorEGIB:
         # Odczyt danych
         raw = child.data(6)
         typ = (child.data(5) or "").strip()
-        if typ not in (
-                'QgsExpression',
-                'QgsExpressionWithJoin',
-                'pythonFunction',
-                'PyExpression',
-                'MgrExpression'
-            ):
+        if typ not in ('QgsExpression','QgsExpressionWithJoin','pythonFunction','PyExpression','MgrExpression'):
             return None
         kontrola = {
             'idKontroli': child.data(1),
@@ -197,9 +177,9 @@ class WalidatorEGIB:
     
     
     def przygotujDaneWarstwy(self,  kontrola, plikiZparsowane_egib, groupaGlowna_egib, parent, j):
-        # Szuka warstwy po nazwie klasy i grupie, bez wielokrotnych wyszukiwań w projekcie.
-        # Dodatkowo dopasowujemy plik GML do warstwy po nazwie pliku niezależnie od liczby znaków.
-        # dzięki temu jest szybko i stabilnie, oraz  mniej odwołań do katalogu warstw.
+        """Szuka warstwy po nazwie klasy i grupie, bez wielokrotnych wyszukiwań w projekcie.
+         Dodatkowo dopasowujemy plik GML do warstwy po nazwie pliku niezależnie od liczby znaków.
+         dzięki temu jest szybko i stabilnie, oraz  mniej odwołań do katalogu warstw."""
         klasa = kontrola['klasa']
         sqltxt = kontrola['sqltxt']
         errorPhrase = kontrola['errorPhrase']
@@ -208,11 +188,7 @@ class WalidatorEGIB:
         if not groupaGlowna_egib:
             print("DBG EGiB: groupaGlowna_egib == None")
             return
-        layers_in_group = [
-            node.layer() 
-            for node in groupaGlowna_egib.children() 
-            if isinstance(node, QgsLayerTreeLayer)
-        ]
+        layers_in_group = [node.layer() for node in groupaGlowna_egib.children() if isinstance(node, QgsLayerTreeLayer)]
         if not layers_in_group:
             print("DBG EGiB: pusty groupaGlowna_egib (brak warstw)")
             return
@@ -259,11 +235,7 @@ class WalidatorEGIB:
         if existing:
             return existing[0]
         # utworzenie  warstwy z polami: gml_id, klasa, komunikat i dodanie w przypakdu jej braku
-        wkb = {
-            'Point': QgsWkbTypes.Point, 
-            'LineString': QgsWkbTypes.LineString, 
-            'Polygon': QgsWkbTypes.Polygon
-        }[geom]
+        wkb = {'Point': QgsWkbTypes.Point, 'LineString': QgsWkbTypes.LineString, 'Polygon': QgsWkbTypes.Polygon}[geom]
         vlayer = QgsVectorLayer(QgsWkbTypes.displayString(wkb) + f"?crs={crs_authid}", name, "memory")
         pr = vlayer.dataProvider()
         pr.addAttributes([
@@ -277,37 +249,28 @@ class WalidatorEGIB:
         return vlayer
     
     
+    
     def bezpiecznePrzywolaniePlikuUtilsPy(self, func, *args):
-        # Bezpieczne wołanie funkcji pomocniczych
-        # Nie przerywamy całej kontroli w przypadkach błędnych
-        # tylko zwracamy pusty wynik i logujemy przyczynę.
-        # Dzięki temu pojedyncza pomyłka w danych nie zatrzymuje całego procesu.
-        # Woła funkcję z utils.py w sposób bezpieczny.
-        # Zwraca [] zamiast wyjątku
+        """ Bezpieczne wołanie funkcji pomocniczych
+        Nie przerywamy całej kontroli w przypadkach błędnych
+        tylko zwracamy pusty wynik i logujemy przyczynę.
+        Dzięki temu pojedyncza pomyłka w danych nie zatrzymuje całego procesu.
+        Woła funkcję z utils.py w sposób bezpieczny.
+        Zwraca [] zamiast wyjątku"""
         try:
             return func(*args)
         except StopIteration:
-            QgsMessageLog.logMessage(
-                f"[walidator] utils: StopIteration → traktuję jako brak wyników",
-                "Walidator", 
-                Qgis.Warning
-                )
+            QgsMessageLog.logMessage("[walidator] utils: StopIteration → traktuję jako brak wyników",
+                                 "Walidator", Qgis.Warning)
             return []
         except QgsProcessingException as e:
-            QgsMessageLog.logMessage(
-                f"[walidator] utils: QgsProcessingException: {e}",
-                "Walidator", 
-                Qgis.Critical
-                )
+            QgsMessageLog.logMessage(f"[walidator] utils: QgsProcessingException: {e}",
+                                 "Walidator", Qgis.Critical)
             return []
         except Exception as e:
-            QgsMessageLog.logMessage(
-                f"[walidator] utils: {type(e).__name__}: {e}",
-                "Walidator", 
-                Qgis.Warning
-                )
+            QgsMessageLog.logMessage(f"[walidator] utils: {type(e).__name__}: {e}",
+                                 "Walidator", Qgis.Warning)
             return []
-        
         
     # funkcja pomocnicza do parsowania (unikamy duplikacji)
     def sprawdzParsowanie(self, p):
@@ -317,7 +280,8 @@ class WalidatorEGIB:
             return None
         
     
-    def wykonajJednaKontrole(self, slownikFinalny):
+    
+    def wykonajJednaKontrole(self,slownikFinalny):
               # funkcja wykonuję jedną kontrolę
               global  slownikBledow, warstwyBledowKontroliAtrybutow
               global kontrolowanePliki_df, klasy_df, gmlid_df_k, komunikatyBledowKontroli_df
@@ -340,9 +304,7 @@ class WalidatorEGIB:
               klasa = slownikFinalny.get('klasa')
               wiersz = slownikFinalny.get('wiersz')
               kod = rodzic.child(wiersz).data(1) if rodzic and wiersz is not None else '—'
-              zparsowanyPlik = slownikFinalny.get('zparsowanyPlik') or (
-                  self.plikiZparsowane[0] if self.plikiZparsowane else None
-                  )
+              zparsowanyPlik = slownikFinalny.get('zparsowanyPlik') or (self.plikiZparsowane[0] if self.plikiZparsowane else None)
               idKontroli = slownikFinalny.get('idKontroli')
               errorPhrase = slownikFinalny.get('errorPhrase')
               nazwaKontroli = slownikFinalny.get('nazwaKontroli')
@@ -360,15 +322,16 @@ class WalidatorEGIB:
                   doc_once = self.sprawdzParsowanie(zparsowanyPlik)
                   if doc_once is None:
                       print("DBG: nie udało się sparsować GML/XML (EGiB) → pomijam kontrolę")
+              
               try:
                  
                   start_time = datetime.now()
                   # domyślnie pusty iterator
                   requestFeatures = None
-                  # 1) QgsExpression: budujemy zapytanie i pobieramy wynik prosto z QGIS (layer.getFeatures).
-                  # 2) Funkcje Python (z utils.py): wołamy je bezpiecznie (bezpiecznePrzywolaniePlikuUtilsPy), 
-                  # a pliki GML parsujemy tylko raz i przekazujemy jako gotowe drzewo XML (etree.parse).
-                  # większa odporność na błędy w plikach źródłowych.
+                  """ 1) QgsExpression: budujemy zapytanie i pobieramy wynik prosto z QGIS (layer.getFeatures).
+                  2) Funkcje Python (z utils.py): wołamy je bezpiecznie (bezpiecznePrzywolaniePlikuUtilsPy), 
+                  a pliki GML parsujemy tylko raz i przekazujemy jako gotowe drzewo XML (etree.parse).
+                  większa odporność na błędy w plikach źródłowych."""
                   if typKontroli in ('QgsExpression','QgsExpressionWithJoin'):
                     if not self.zywaWarstwa(layerTMP):
                         requestFeatures = iter(())
@@ -377,11 +340,7 @@ class WalidatorEGIB:
                         #expr_text = (sqltxt or orig or '')
                         expr_text = sqltxt.replace("&gt;", ">").replace("&lt;", "<")
                         if not expr_text:
-                            QgsMessageLog.logMessage(
-                                "[expr] Puste wyrażenie – pomijam.", 
-                                "Walidator", 
-                                Qgis.Warning
-                            )
+                            QgsMessageLog.logMessage("[expr] Puste wyrażenie – pomijam.", "Walidator", Qgis.Warning)
                             requestFeatures = iter(())
                         else:
                             # 2) jesli jest błąd parsera, będzie pusty iterator
@@ -395,7 +354,9 @@ class WalidatorEGIB:
                                 requestFeatures = iter(feats)
                                
                   else: 
+                      #---test--
                       fname = re.sub(r'\s*\(.*\)\s*$', '', sqltxt).strip()  # bezpiecznie usuń „(gml)”
+                    
                       # ---------- (gml) ----------
                       if '(gml)' in sqltxt:
                         fname = sqltxt.replace('(gml)', '').strip()
@@ -410,6 +371,7 @@ class WalidatorEGIB:
                                 requestFeatures = iter([rf])
                         else:
                             requestFeatures = iter(())
+    
                         # ---------- (gml,klasa) ----------
                       elif '(gml,klasa)' in sqltxt:
                           fname = sqltxt.replace('(gml,klasa)', '').strip()
@@ -420,6 +382,8 @@ class WalidatorEGIB:
                               requestFeatures = iter(rf or [])
                           else:
                               requestFeatures = iter(())
+
+
                        # ---------- fallback ----------
                       else: # pozostałe typy
                            fname = sqltxt.strip()
@@ -429,20 +393,17 @@ class WalidatorEGIB:
                                requestFeatures = iter(rf or [])
                            else:
                                requestFeatures = iter(())
-                      # [Strumień zamiast listy]
-                      # requestFeatures to iterator – nie trzymamy całej listy w pamięci.
-                      # Dzięki temu duże pliki (GML 2–5 GB) nie przeciążą QGIS-a
-                      # jeden iterator, jedna pętla, jeden kierunek.
+                          
+                      """[Strumień zamiast listy]
+                      requestFeatures to iterator – nie trzymamy całej listy w pamięci.
+                      Dzięki temu duże pliki (GML 2–5 GB) nie przeciążą QGIS-a
+                      jeden iterator, jedna pętla, jeden kierunek."""
                       if requestFeatures is None:
                           requestFeatures = iter(())   
                   end_time = datetime.now()
                   czas_przetwarzania = end_time - start_time
                   kod = rodzic.child(wiersz).data(1) if rodzic and wiersz is not None else '—'
-                  QgsMessageLog.logMessage(
-                      f'{kod} - {klasa} - {czas_przetwarzania}', 
-                      tag="Walidator plików GML",
-                      level=Qgis.Info
-                      )
+                  QgsMessageLog.logMessage(f'{kod} - {klasa} - {czas_przetwarzania}', tag="Walidator plików GML", level=Qgis.Info)
                   liczbaBledow = 0
                   buf_point, buf_line, buf_poly = [], [], []
                   liczba_sprawdzonych_wejsc = 0
@@ -459,64 +420,27 @@ class WalidatorEGIB:
                               errorPhrase_fin = errorPhrase
                       klasaDoRaportowania = self.klasaDoRaportowania(parsedFileName, klasa)
                           # inicjuj listę (stary kod dodawał tylko w else)
-                      slownikBledow.setdefault(errorPhrase_fin, []).append(
-                          (
-                              gmlid, 
-                              self.klasaDoRaportowania(
-                                  parsedFileName, 
-                                  klasa
-                                  )
-                              )
-                          )
-                      typ_geometrii = QgsWkbTypes.displayString(
-                          feature.geometry().wkbType()
-                          )
-                      # przydziel do odpowiedniego bufora wg geometrii
-                      # podział geometrii - trzy wykluczające się gałęzie na różne rodzaje geometrii
-                      # dzięki temu nie ma ryzyka, że linie wpadną do jednego z powodu złych wcięć.
+                      slownikBledow.setdefault(errorPhrase_fin, []).append((gmlid, self.klasaDoRaportowania(parsedFileName, klasa)))
+                      typ_geometrii = QgsWkbTypes.displayString(feature.geometry().wkbType())
+                      """przydziel do odpowiedniego bufora wg geometrii
+                      podział geometrii - trzy wykluczające się gałęzie na różne rodzaje geometrii
+                      dzięki temu nie ma ryzyka, że linie wpadną do jednego z powodu złych wcięć."""
                       if typ_geometrii in ('Point', 'MultiPoint'):
-                          errf = self.dodawanieBledow(
-                              'Point', 
-                              feature, 
-                              gmlid, 
-                              klasaDoRaportowania, 
-                              errorPhrase_fin
-                             )
+                          errf = self.dodawanieBledow('Point', feature, gmlid, klasaDoRaportowania, errorPhrase_fin)
                           if errf: buf_point.append(errf)
                           if len(buf_point) >= BATCH and self.err_layers['Point']:
                               ok = self.err_layers['Point'].dataProvider().addFeatures(buf_point)
                               if ok:  liczba_zapisanych_bledow += len(buf_point)
                               buf_point.clear()
-                      elif typ_geometrii in (
-                              'LineString', 
-                              'CompoundCurve', 
-                              'CircularString', 
-                              'MultiLineString'
-                              ):
-                              errf = self.dodawanieBledow(
-                                  'LineString', 
-                                  feature, 
-                                  gmlid,
-                                  klasaDoRaportowania, 
-                                  errorPhrase_fin
-                              )
+                      elif typ_geometrii in ('LineString', 'CompoundCurve', 'CircularString', 'MultiLineString'):
+                              errf = self.dodawanieBledow('LineString', feature, gmlid, klasaDoRaportowania, errorPhrase_fin)
                               if errf: buf_line.append(errf)
                               if len(buf_line) >= BATCH and self.err_layers['LineString']:
                                   ok = self.err_layers['LineString'].dataProvider().addFeatures(buf_line)
                                   if ok: liczba_zapisanych_bledow += len(buf_line)
                                   buf_line.clear()
-                      elif typ_geometrii in (
-                              'Polygon', 
-                              'MultiPolygon', 
-                              'CurvePolygon'
-                              ):
-                                errf = self.dodawanieBledow(
-                                    'Polygon', 
-                                    feature, 
-                                    gmlid, 
-                                    klasaDoRaportowania, 
-                                    errorPhrase_fin
-                                )
+                      elif typ_geometrii in ('Polygon', 'MultiPolygon', 'CurvePolygon'):
+                                errf = self.dodawanieBledow('Polygon', feature, gmlid, klasaDoRaportowania, errorPhrase_fin)
                                 if errf: buf_poly.append(errf)
                                 if len(buf_poly) >= BATCH and self.err_layers['Polygon']:
                                       ok = self.err_layers['Polygon'].dataProvider().addFeatures(buf_poly)
