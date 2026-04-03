@@ -8496,6 +8496,148 @@ def blednePolozeniePktWys(layer):
     return obiektyZbledami
 
 
+def kontrolaKodKarto10k213(layer):
+    try:
+        def get_attr(f, attr):
+            return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
+        obiektyZbledami = []
+        if not layer.name().endswith("OT_SKTR_L"):
+            return []
+        layers = {l.name(): l for l in QgsProject.instance().mapLayers().values()}
+        kuko_layer = next((l for n,l in layers.items() if n.endswith("OT_KUKO_A")), None)
+        if not kuko_layer:
+            return []
+        index_kuko, kuko_dict = QgsSpatialIndex(), {}
+        for f in kuko_layer.getFeatures():
+            if get_attr(f, "rodzaj") in ("zajezdnia lub baza transportowa") and f.geometry() and not f.geometry().isEmpty():
+                index_kuko.insertFeature(f)
+                kuko_dict[f.id()] = f
+        for f in layer.getFeatures():
+            rodzaj = get_attr(f, "rodzajPojazduSzynowego")
+            liczba = get_attr(f, "liczbaTorow")
+            polozenie = get_attr(f, "polozenie")
+            funkcja = get_attr(f, "funkcjaToru")
+            kod = get_attr(f, "kodKarto10k")
+            geom = f.geometry()
+            if not geom or geom.isEmpty():
+                continue
+            try:
+                liczba = int(liczba)
+            except:
+                liczba = -1
+            on_kuko = any(
+                kuko_dict[fid].geometry().buffer(0.5, 5).contains(geom)
+                for fid in index_kuko.intersects(geom.boundingBox())
+                if fid in kuko_dict
+            )
+            warunek = (
+                (rodzaj == "kolej" and liczba == 1 and polozenie != "pod powierzchnią gruntu" and funkcja in ("bocznica", "tor zwykły stacyjny", "tor szlakowy stacyjny")) or
+                (rodzaj == "metro" and polozenie == "na powierzchni gruntu") or
+                (rodzaj == "tramwaj" and polozenie != "pod powierzchnią gruntu" and on_kuko)
+            )
+            if warunek and kod != "0010_213":
+                obiektyZbledami.append(f)
+            elif kod == "0010_213" and not warunek:
+                obiektyZbledami.append(f)
+        return obiektyZbledami
+
+    except Exception as e:
+        print(f"Błąd w kontroli kodu 0010_213: {e}")
+        return []
+
+
+def kontrolaKodKarto10k217(layer):
+    try:
+        def get_attr(f, attr):
+            return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
+        obiektyZbledami = []
+        if not layer.name().endswith("OT_SKTR_L"):
+            return []
+        layers = {l.name(): l for l in QgsProject.instance().mapLayers().values()}
+        kuko_layer = next((l for n,l in layers.items() if n.endswith("OT_KUKO_A")), None)
+        if not kuko_layer:
+            return []
+        index_kuko, kuko_dict = QgsSpatialIndex(), {}
+        for f in kuko_layer.getFeatures():
+            if get_attr(f, "rodzaj") == "zajezdnia lub baza transportowa" and f.geometry() and not f.geometry().isEmpty():
+                index_kuko.insertFeature(f)
+                kuko_dict[f.id()] = f
+        for f in layer.getFeatures():
+            rodzaj = get_attr(f, "rodzajPojazduSzynowego")
+            liczba = get_attr(f, "liczbaTorow")
+            polozenie = get_attr(f, "polozenie")
+            kod = get_attr(f, "kodKarto10k")
+            geom = f.geometry()
+            if not geom or geom.isEmpty():
+                continue
+            try:
+                liczba = int(liczba)
+            except:
+                liczba = -1
+            warunek = (rodzaj == "tramwaj" and liczba >= 2 and polozenie != "pod powierzchnią gruntu")
+            on_kuko = any(
+                kuko_dict[fid].geometry().buffer(0.5, 5).contains(geom)
+                for fid in index_kuko.intersects(geom.boundingBox())
+                if fid in kuko_dict
+            )
+            if warunek and not on_kuko:
+                if kod != "0010_217":
+                    obiektyZbledami.append(f)
+            elif kod == "0010_217":
+                obiektyZbledami.append(f)
+        return obiektyZbledami
+
+    except Exception as e:
+        print(f"Błąd w kontroli kodu 0010_217: {e}")
+        return []
+
+
+def kontrolaKodKarto10k218(layer):
+    try:
+        def get_attr(f, attr):
+            return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
+        obiektyZbledami = []
+        if not layer.name().endswith("OT_SKTR_L"):
+            return []
+        layers = {l.name(): l for l in QgsProject.instance().mapLayers().values()}
+        kuko_layer = next((l for n,l in layers.items() if n.endswith("OT_KUKO_A")), None)
+        if not kuko_layer:
+            return []
+        index_kuko, kuko_dict = QgsSpatialIndex(), {}
+        for f in kuko_layer.getFeatures():
+            if get_attr(f, "rodzaj") == "zajezdnia lub baza transportowa" and f.geometry() and not f.geometry().isEmpty():
+                index_kuko.insertFeature(f)
+                kuko_dict[f.id()] = f
+        for f in layer.getFeatures():
+            rodzaj = get_attr(f, "rodzajPojazduSzynowego")
+            liczba = get_attr(f, "liczbaTorow")
+            polozenie = get_attr(f, "polozenie")
+            kod = get_attr(f, "kodKarto10k")
+            geom = f.geometry()
+            if not geom or geom.isEmpty():
+                continue
+            try:
+                liczba = int(liczba)
+            except:
+                liczba = -1
+            warunek = (rodzaj == "tramwaj" and liczba == 1 and polozenie != "pod powierzchnią gruntu")
+            on_kuko = any(
+                kuko_dict[fid].geometry().buffer(0.5, 5).contains(geom)
+                for fid in index_kuko.intersects(geom.boundingBox())
+                if fid in kuko_dict
+            )
+            if warunek and not on_kuko:
+                if kod != "0010_218":
+                    obiektyZbledami.append(f)
+            elif kod == "0010_218":
+                obiektyZbledami.append(f)
+        return obiektyZbledami
+
+    except Exception as e:
+        print(f"Błąd w kontroli kodu 0010_218: {e}")
+        return []
+
+
 def kontrolaKodKarto10k219_1(layer):
     try:
         obiektyZbledami = []
