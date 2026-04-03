@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<SzablonKontroli xmlns="http://www.gugik.gov.pl" id="bdot10k" version="1.2.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<SzablonKontroli xmlns="http://www.gugik.gov.pl" id="bdot10k" version="1.2.4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<GrupaKontroli id="topo_e1" name="Kontrole atrybutowe">
 		<Kontrola id="topo_e1_k1" name="OT_ADJA_A Kontrola jednostki nadrzędnej dla państwa i województwa" class="OT_ADJA_A" errorPhrase="topo_e1_k1 Państwo i województwo nie mogą mieć jednostki nadrzędnej">
 			<Parametr typ="QgsExpression" sql="rodzaj IN ('państwo', 'województwo') AND idTERYTjednostkiNadrzednej IS NOT NULL"/>
 		</Kontrola>
 		<Kontrola id="topo_e1_k1_1" name="OT_ADJA_A OT_ADMS_A Kontrola spójności atrybutowej z PRG" class="OT" errorPhrase="topo_e1_k1_1 Błąd atrybutu:">
 			<Parametr typ="pythonFunction" sql="kontrolaSpojnosci_ADJA_A_z_PRG"/>
-		</Kontrola>			
+		</Kontrola>		
 		<Kontrola id="topo_e1_k2" name="OT_BUBD_A Kontrola liczby kondygnacji dla wybranych budynków niemieszkalnych | transportu i łączności | magazynowych" class="OT_BUBD_A" errorPhrase="topo_e1_k2 Atrybut liczbaKondygnacji musi pozostać niewypełniony">
 			<Parametr typ="QgsExpression" sql="przewazajacaFunkcjaBudynku IN ('kościół', 'silos', 'zbiornik na gaz','zbiornik na ciecz') AND liczbaKondygnacji IS NOT NULL"/>
 		</Kontrola>
@@ -60,7 +60,7 @@
         </Kontrola>
 		<Kontrola id="topo_e1_k4_2" name="OT_BUIN_L Kontrola wypełnienia atrybutu nosnosc - DO INTERPRETACJI" class="OT_BUIN_L" errorPhrase="topo_e1_k4_2 Brak wartości atrybutu nośność (most, estakada, wiadukt) - DO INTERPRETACJI">
             <Parametr typ="QgsExpression" sql="rodzaj IN ('most','wiadukt','estakada') AND kategoriaIstnienia IN ('eksploatowany') AND nosnosc IS NULL AND (COALESCE(LOWER(uwagi),'') LIKE '%nosnosc%brak%' OR COALESCE(LOWER(uwagi),'') LIKE '%nośność%brak%')"/>
-        </Kontrola>		
+        </Kontrola>
 		<Kontrola id="topo_e1_k5" name="OT_BUTR_L Kontrola szerokości dla suwnicy" class="OT_BUTR_L" errorPhrase="topo_e1_k5 Szerokość wypełnia się tylko dla suwnicy">
 			<Parametr typ="QgsExpression" sql="rodzaj != 'suwnica' AND szerokosc IS NOT NULL"/>
 		</Kontrola>
@@ -135,7 +135,7 @@
 		</Kontrola>
 		<Kontrola id="topo_e1_k23_4" name="OT_SKJZ_L kontrola braków obiektów z rejestru TERYT - DO INTERPRETACJI" class="OT_SKJZ_L" errorPhrase="topo_e1_k23_4 Niezgodność z rejestrem TERYT; ">
 			<Parametr typ="pythonFunction" sql="kontrolaZgodnosciIdentyfikatoraUlicyZNazwa_braki(ulic_gus,simc_gus)"/>
-		</Kontrola>			
+		</Kontrola>		
 		<Kontrola id="topo_e1_k24" name="OT_SKJZ_L Kontrola numeracji dróg" class="OT_SKJZ_L" errorPhrase="topo_e1_k24 Brak numeru drogi bez uzasadnienia">
 			<Parametr typ="QgsExpression" sql="kategoriaZarzadzania IN ('krajowa', 'wojewódzka', 'powiatowa', 'gminna') AND uwagi IS NULL AND informacjaDodatkowa IS NULL AND kategoriaIstnienia IN ('eksploatowany') AND (cechaGeometrii IS NULL OR cechaGeometrii != 'linia umowna') AND numerDrogi IS NULL"/>
 		</Kontrola>
@@ -852,7 +852,7 @@
         </Kontrola>
 		<Kontrola id="topo_e1_k131" name="OT_KUKO_P OT_KUPG_P Kontrola reprezentacji geometrycznej kompleksu użytkowania" class="OT" errorPhrase="topo_e1_k131 ">
 			<Parametr typ="pythonFunction" sql="kontrolaReprezentacjaGeometryczna_KU"/>
-		</Kontrola>		
+		</Kontrola>
 	</GrupaKontroli>
 	<!-- ....................................................................................................................................................... -->
 	<GrupaKontroli id="topo_e2" name="Kontrole kodów kartograficznych">
@@ -944,40 +944,40 @@
 			<Parametr typ="QgsExpression" sql="(rodzaj IN ('przejście dla zwierząt')) != (kodKarto10k IS NOT NULL AND kodKarto10k = '0010_151_1')"/>
 		</Kontrola>
 		<Kontrola id="topo_e2_k33" name="Kontrola kodu kartograficznego 0010_202 w klasie OT_SKTR_L" class="OT_SKTR_L" errorPhrase="topo_e2_k33 Brak wartości lub błędny kod kartograficzny">
-			<Parametr typ="QgsExpression" sql="(rodzajPojazduSzynowego IN ('kolej') AND rodzajTrakcji IN ('zelektryfikowana') AND liczbaTorow &gt;= 3 AND rodzajTorow IN ('tor normalny', 'tor szeroki') AND polozenie NOT IN ('pod powierzchnią gruntu') AND funkcjaToru IN ('tor szlakowy', 'tor szlakowy stacyjny', 'tor zwykły') AND kategoriaIstnienia IN ('eksploatowany', 'nieczynny')) != (kodKarto10k IS NOT NULL AND kodKarto10k = '0010_202')"/>
+			<Parametr typ="QgsExpression" sql="(rodzajPojazduSzynowego IN ('kolej') AND rodzajTrakcji IN ('zelektryfikowana') AND liczbaTorow &gt;= 3 AND rodzajTorow IN ('tor normalny', 'tor szeroki') AND polozenie NOT IN ('pod powierzchnią gruntu') AND funkcjaToru IN ('tor szlakowy', 'tor zwykły') AND kategoriaIstnienia IN ('eksploatowany', 'nieczynny')) != (kodKarto10k IS NOT NULL AND kodKarto10k = '0010_202')"/>
 		</Kontrola>
 		<Kontrola id="topo_e2_k34" name="Kontrola kodu kartograficznego 0010_203 w klasie OT_SKTR_L" class="OT_SKTR_L" errorPhrase="topo_e2_k34 Brak wartości lub błędny kod kartograficzny">
-			<Parametr typ="QgsExpression" sql="(rodzajPojazduSzynowego IN ('kolej') AND rodzajTrakcji IN ('zelektryfikowana') AND liczbaTorow = 2 AND rodzajTorow IN ('tor normalny', 'tor szeroki') AND polozenie NOT IN ('pod powierzchnią gruntu') AND funkcjaToru IN ('tor szlakowy', 'tor szlakowy stacyjny', 'tor zwykły') AND kategoriaIstnienia IN ('eksploatowany', 'nieczynny')) != (kodKarto10k IS NOT NULL AND kodKarto10k = '0010_203')"/>
+			<Parametr typ="QgsExpression" sql="(rodzajPojazduSzynowego IN ('kolej') AND rodzajTrakcji IN ('zelektryfikowana') AND liczbaTorow = 2 AND rodzajTorow IN ('tor normalny', 'tor szeroki') AND polozenie NOT IN ('pod powierzchnią gruntu') AND funkcjaToru IN ('tor szlakowy', 'tor zwykły') AND kategoriaIstnienia IN ('eksploatowany', 'nieczynny')) != (kodKarto10k IS NOT NULL AND kodKarto10k = '0010_203')"/>
 		</Kontrola>
 		<Kontrola id="topo_e2_k35" name="Kontrola kodu kartograficznego 0010_204 w klasie OT_SKTR_L" class="OT_SKTR_L" errorPhrase="topo_e2_k35 Brak wartości lub błędny kod kartograficzny">
-			<Parametr typ="QgsExpression" sql="(rodzajPojazduSzynowego IN ('kolej') AND rodzajTrakcji IN ('zelektryfikowana') AND liczbaTorow = 1 AND rodzajTorow IN ('tor normalny', 'tor szeroki') AND polozenie NOT IN ('pod powierzchnią gruntu') AND funkcjaToru IN ('tor szlakowy', 'tor szlakowy stacyjny', 'tor zwykły') AND kategoriaIstnienia IN ('eksploatowany', 'nieczynny')) != (kodKarto10k IS NOT NULL AND kodKarto10k = '0010_204')"/>
+			<Parametr typ="QgsExpression" sql="(rodzajPojazduSzynowego IN ('kolej') AND rodzajTrakcji IN ('zelektryfikowana') AND liczbaTorow = 1 AND rodzajTorow IN ('tor normalny', 'tor szeroki') AND polozenie NOT IN ('pod powierzchnią gruntu') AND funkcjaToru IN ('tor szlakowy', 'tor zwykły') AND kategoriaIstnienia IN ('eksploatowany', 'nieczynny')) != (kodKarto10k IS NOT NULL AND kodKarto10k = '0010_204')"/>
 		</Kontrola>
 		<Kontrola id="topo_e2_k36" name="Kontrola kodu kartograficznego 0010_206 w klasie OT_SKTR_L" class="OT_SKTR_L" errorPhrase="topo_e2_k36 Brak wartości lub błędny kod kartograficzny">
-			<Parametr typ="QgsExpression" sql="(rodzajPojazduSzynowego IN ('kolej') AND rodzajTrakcji IN ('niezelektryfikowana') AND liczbaTorow &gt;= 3 AND rodzajTorow IN ('tor normalny', 'tor szeroki') AND polozenie NOT IN ('pod powierzchnią gruntu') AND funkcjaToru IN ('tor szlakowy', 'tor szlakowy stacyjny', 'tor zwykły') AND kategoriaIstnienia IN ('eksploatowany', 'nieczynny')) != (kodKarto10k IS NOT NULL AND kodKarto10k = '0010_206')"/>
+			<Parametr typ="QgsExpression" sql="(rodzajPojazduSzynowego IN ('kolej') AND rodzajTrakcji IN ('niezelektryfikowana') AND liczbaTorow &gt;= 3 AND rodzajTorow IN ('tor normalny', 'tor szeroki') AND polozenie NOT IN ('pod powierzchnią gruntu') AND funkcjaToru IN ('tor szlakowy', 'tor zwykły') AND kategoriaIstnienia IN ('eksploatowany', 'nieczynny')) != (kodKarto10k IS NOT NULL AND kodKarto10k = '0010_206')"/>
 		</Kontrola>
 		<Kontrola id="topo_e2_k37" name="Kontrola kodu kartograficznego 0010_207 w klasie OT_SKTR_L" class="OT_SKTR_L" errorPhrase="topo_e2_k37 Brak wartości lub błędny kod kartograficzny">
-			<Parametr typ="QgsExpression" sql="(rodzajPojazduSzynowego IN ('kolej') AND rodzajTrakcji IN ('niezelektryfikowana') AND liczbaTorow = 2 AND rodzajTorow IN ('tor normalny', 'tor szeroki') AND polozenie NOT IN ('pod powierzchnią gruntu') AND funkcjaToru IN ('tor szlakowy', 'tor szlakowy stacyjny', 'tor zwykły') AND kategoriaIstnienia IN ('eksploatowany', 'nieczynny')) != (kodKarto10k IS NOT NULL AND kodKarto10k = '0010_207')"/>
+			<Parametr typ="QgsExpression" sql="(rodzajPojazduSzynowego IN ('kolej') AND rodzajTrakcji IN ('niezelektryfikowana') AND liczbaTorow = 2 AND rodzajTorow IN ('tor normalny', 'tor szeroki') AND polozenie NOT IN ('pod powierzchnią gruntu') AND funkcjaToru IN ('tor szlakowy', 'tor zwykły') AND kategoriaIstnienia IN ('eksploatowany', 'nieczynny')) != (kodKarto10k IS NOT NULL AND kodKarto10k = '0010_207')"/>
 		</Kontrola>
 		<Kontrola id="topo_e2_k38" name="Kontrola kodu kartograficznego 0010_208 w klasie OT_SKTR_L" class="OT_SKTR_L" errorPhrase="topo_e2_k38 Brak wartości lub błędny kod kartograficzny">
-			<Parametr typ="QgsExpression" sql="(rodzajPojazduSzynowego IN ('kolej') AND rodzajTrakcji IN ('niezelektryfikowana') AND liczbaTorow = 1 AND rodzajTorow IN ('tor normalny', 'tor szeroki') AND polozenie NOT IN ('pod powierzchnią gruntu') AND funkcjaToru IN ('tor szlakowy', 'tor szlakowy stacyjny', 'tor zwykły') AND kategoriaIstnienia IN ('eksploatowany', 'nieczynny')) != (kodKarto10k IS NOT NULL AND kodKarto10k = '0010_208')"/>
+			<Parametr typ="QgsExpression" sql="(rodzajPojazduSzynowego IN ('kolej') AND rodzajTrakcji IN ('niezelektryfikowana') AND liczbaTorow = 1 AND rodzajTorow IN ('tor normalny', 'tor szeroki') AND polozenie NOT IN ('pod powierzchnią gruntu') AND funkcjaToru IN ('tor szlakowy', 'tor zwykły') AND kategoriaIstnienia IN ('eksploatowany', 'nieczynny')) != (kodKarto10k IS NOT NULL AND kodKarto10k = '0010_208')"/>
 		</Kontrola>
 		<Kontrola id="topo_e2_k39" name="Kontrola kodu kartograficznego 0010_209 w klasie OT_SKTR_L" class="OT_SKTR_L" errorPhrase="topo_e2_k39 Brak wartości lub błędny kod kartograficzny">
 			<Parametr typ="QgsExpression" sql="(rodzajPojazduSzynowego IN ('kolej') AND polozenie NOT IN ('pod powierzchnią gruntu') AND funkcjaToru IN ('tor szlakowy', 'tor szlakowy stacyjny', 'tor zwykły') AND kategoriaIstnienia IN ('w budowie')) != (kodKarto10k IS NOT NULL AND kodKarto10k = '0010_209')"/>
 		</Kontrola>
 		<Kontrola id="topo_e2_k40" name="Kontrola kodu kartograficznego 0010_211 w klasie OT_SKTR_L" class="OT_SKTR_L" errorPhrase="topo_e2_k40 Brak wartości lub błędny kod kartograficzny">
-			<Parametr typ="QgsExpression" sql="(rodzajPojazduSzynowego IN ('kolej') AND rodzajTorow IN ('tor wąski') AND polozenie NOT IN ('pod powierzchnią gruntu') AND funkcjaToru IN ('tor szlakowy', 'tor szlakowy stacyjny', 'tor zwykły') AND kategoriaIstnienia IN ('eksploatowany', 'nieczynny')) != (kodKarto10k IS NOT NULL AND kodKarto10k = '0010_211')"/>
+			<Parametr typ="QgsExpression" sql="(rodzajPojazduSzynowego IN ('kolej') AND rodzajTorow IN ('tor wąski') AND polozenie NOT IN ('pod powierzchnią gruntu') AND funkcjaToru IN ('tor szlakowy', 'tor zwykły') AND kategoriaIstnienia IN ('eksploatowany', 'nieczynny')) != (kodKarto10k IS NOT NULL AND kodKarto10k = '0010_211')"/>
 		</Kontrola>
 		<Kontrola id="topo_e2_k41" name="Kontrola kodu kartograficznego 0010_213 w klasie OT_SKTR_L" class="OT_SKTR_L" errorPhrase="topo_e2_k41 Brak wartości lub błędny kod kartograficzny">
-			<Parametr typ="QgsExpression" sql="((rodzajPojazduSzynowego IN ('kolej', 'tramwaj') AND liczbaTorow = 1 AND polozenie NOT IN ('pod powierzchnią gruntu') AND funkcjaToru IN ('bocznica', 'tor zwykły stacyjny') OR (rodzajPojazduSzynowego IN ('metro') AND polozenie IN ('na powierzchni gruntu'))) != (kodKarto10k IS NOT NULL AND kodKarto10k = '0010_213')"/>
+			<Parametr typ="pythonFunction" sql="kontrolaKodKarto10k213"/>
 		</Kontrola>
 		<Kontrola id="topo_e2_k42" name="Kontrola kodu kartograficznego 0010_215 w klasie OT_BUTR_P" class="OT_BUTR_P" errorPhrase="topo_e2_k42 Brak wartości lub błędny kod kartograficzny">
 			<Parametr typ="QgsExpression" sql="(rodzaj IN ('obrotnica kolejowa')) != (kodKarto10k IS NOT NULL AND kodKarto10k = '0010_215')"/>
 		</Kontrola>
 		<Kontrola id="topo_e2_k43" name="Kontrola kodu kartograficznego 0010_217 w klasie OT_SKTR_L" class="OT_SKTR_L" errorPhrase="topo_e2_k43 Brak wartości lub błędny kod kartograficzny">
-			<Parametr typ="QgsExpression" sql="(rodzajPojazduSzynowego IN ('tramwaj') AND liczbaTorow &gt;= 2) != (kodKarto10k IS NOT NULL AND kodKarto10k = '0010_217')"/>
+			<Parametr typ="pythonFunction" sql="kontrolaKodKarto10k217"/>
 		</Kontrola>
 		<Kontrola id="topo_e2_k44" name="Kontrola kodu kartograficznego 0010_218 w klasie OT_SKTR_L" class="OT_SKTR_L" errorPhrase="topo_e2_k44 Brak wartości lub błędny kod kartograficzny">
-			<Parametr typ="QgsExpression" sql="(rodzajPojazduSzynowego IN ('tramwaj') AND liczbaTorow = 1) != (kodKarto10k IS NOT NULL AND kodKarto10k = '0010_218')"/>
+			<Parametr typ="pythonFunction" sql="kontrolaKodKarto10k218"/>
 		</Kontrola>
 		<Kontrola id="topo_e2_k45" name="Kontrola kodu kartograficznego 0010_219_1 w klasie OT_BUIN_L" class="OT_BUIN_L" errorPhrase="topo_e2_k45 Błędny kod kartograficzny">
 			<Parametr typ="pythonFunction" sql="kontrolaKodKarto10k219_1"/>
@@ -1460,109 +1460,109 @@
 	<!-- ....................................................................................................................................................... -->
 	<GrupaKontroli id="topo_e6" name="Kontrole skrótów kartograficznych">
 		<Kontrola id="topo_e6_k1" name="Kontrola skrótu kartograficznego amb. w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k1 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('rezydencja ambasadora', 'placówka dyplomatyczna lub konsularna') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'amb.')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('rezydencja ambasadora', 'placówka dyplomatyczna lub konsularna') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'amb.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k2" name="Kontrola skrótu kartograficznego B w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k2 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('bank') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'B')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('bank') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'B')"/>
 		</Kontrola>		
 		<Kontrola id="topo_e6_k3" name="Kontrola skrótu kartograficznego b. w klasie OT_SKPP_L" class="OT_SKPP_L" errorPhrase="topo_e6_k3 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(rodzaj IN ('bród') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'b.')"/>
+			<Parametr typ="QgsExpression" sql="(rodzaj IN ('bród') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'b.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k4" name="Kontrola skrótu kartograficznego bas. kąp. w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k4 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('basen kąpielowy') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'bas. kąp.')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('basen kąpielowy') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'bas. kąp.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k5" name="Kontrola skrótu kartograficznego bas. kąp. w klasie OT_BUSP_A" class="OT_BUSP_A" errorPhrase="topo_e6_k5 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(rodzaj IN ('basen') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'bas. kąp.')"/>
+			<Parametr typ="QgsExpression" sql="(rodzaj IN ('basen') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'bas. kąp.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k6" name="Kontrola skrótu kartograficznego biur. w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k6 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="((przewazajacaFunkcjaBudynku IN ('siedziba firmy lub firm') AND liczbaKondygnacji >= 5) OR (przewazajacaFunkcjaBudynku IN ('centrum konferencyjne', 'kuria metropolitalna', 'ministerstwo', 'prokuratura', 'przejście graniczne', 'straż graniczna', 'urząd celny', 'inny urząd administracji publicznej') AND kategoriaIstnienia NOT IN ('zniszczony') AND lower(coalesce(informacjaDodatkowa, '')) NOT LIKE '%nadleśnictw%')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'biur.')"/>
+			<Parametr typ="QgsExpression" sql="((przewazajacaFunkcjaBudynku IN ('siedziba firmy lub firm') AND liczbaKondygnacji >= 5) OR (przewazajacaFunkcjaBudynku IN ('centrum konferencyjne', 'kuria metropolitalna', 'ministerstwo', 'prokuratura', 'przejście graniczne', 'straż graniczna', 'urząd celny', 'inny urząd administracji publicznej') AND kategoriaIstnienia IN ('eksploatowany') AND lower(coalesce(informacjaDodatkowa, '')) NOT LIKE '%nadleśnictw%')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'biur.')"/>
 		</Kontrola>		
 		<Kontrola id="topo_e6_k7" name="Kontrola skrótu kartograficznego b. tran. w klasie OT_KUKO_A" class="OT_KUKO_A" errorPhrase="topo_e6_k7 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="pythonFunction" sql="kontrolaSkrot_bTran"/>
+			<Parametr typ="pythonFunction" sql="kontrolaSkrot_bTran_26"/>
 		</Kontrola>		
 		<Kontrola id="topo_e6_k8" name="Kontrola skrótu kartograficznego bud. w klasie OT_PTPL_A" class="OT_PTPL_A" errorPhrase="topo_e6_k8 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
 			<Parametr typ="QgsExpression" sql="((LOWER(COALESCE(informacjaDodatkowa, '')) LIKE '%budowa%' OR LOWER(COALESCE(informacjaDodatkowa, '')) LIKE '%budowy%' OR LOWER(COALESCE(informacjaDodatkowa, '')) LIKE '%budowie%') != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'bud.'))"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k9" name="Kontrola skrótu kartograficznego c. han. w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k9 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('centrum handlowe') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'c. han.')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('centrum handlowe') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'c. han.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k10" name="Kontrola skrótu kartograficznego d. dz. w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k10 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('dom dziecka') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'd. dz.')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('dom dziecka') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'd. dz.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k11" name="Kontrola skrótu kartograficznego d. h. w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k11 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('dom towarowy lub handlowy', 'hipermarket lub supermarket') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'd. h.')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('dom towarowy lub handlowy', 'hipermarket lub supermarket') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'd. h.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k12" name="Kontrola skrótu kartograficznego d. k. w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k12 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('dom kultury') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'd. k.')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('dom kultury') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'd. k.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k13" name="Kontrola skrótu kartograficznego d. op. w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k13 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('dom opieki społecznej') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'd. op.')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('dom opieki społecznej') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'd. op.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k14" name="Kontrola skrótu kartograficznego d. paraf. w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k14 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('dom parafialny') AND kategoriaIstnienia NOT IN ('zniszczony') AND COALESCE(LOWER(informacjaDodatkowa), '') NOT LIKE '%plebania%') != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'd. paraf.')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('dom parafialny') AND kategoriaIstnienia IN ('eksploatowany') AND COALESCE(LOWER(informacjaDodatkowa), '') NOT LIKE '%plebania%') != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'd. paraf.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k15" name="Kontrola skrótu kartograficznego d. s. w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k15 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('dom studencki') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'd. s.')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('dom studencki') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'd. s.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k16" name="Kontrola skrótu kartograficznego dw. aut. w klasie OT_KUKO_A" class="OT_KUKO_A" errorPhrase="topo_e6_k16 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
 			<Parametr typ="QgsExpression" sql="(rodzaj IN ('dworzec autobusowy')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'dw. aut.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k17" name="Kontrola skrótu kartograficznego d. wes. w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k17 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('dom weselny') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'd. wes.')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('dom weselny') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'd. wes.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k18" name="Kontrola skrótu kartograficznego d. wych. w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k18 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('placówka opiekuńczo-wychowawcza') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'd. wych.')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('placówka opiekuńczo-wychowawcza') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'd. wych.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k19" name="Kontrola skrótu kartograficznego d. wyp. w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k19 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('dom wypoczynkowy') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'd. wyp.')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('dom wypoczynkowy') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'd. wyp.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k21" name="Kontrola skrótu kartograficznego el. w klasie OT_KUPG_A OT_BUBD_A" class="OT" errorPhrase="topo_e6_k21 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="pythonFunction" sql="kontrolaSkrot_el"/>
+			<Parametr typ="pythonFunction" sql="kontrolaSkrot_el_26"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k22" name="Kontrola skrótu kartograficznego elc. w klasie OT_BUBD_A" class="OT" errorPhrase="topo_e6_k22 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="pythonFunction" sql="kontrolaSkrot_elc"/>
+			<Parametr typ="pythonFunction" sql="kontrolaSkrot_elc_26"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k23" name="Kontrola skrótu kartograficznego elw. w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k23 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('elewator') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'elw.')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('elewator') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'elw.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k24" name="Kontrola skrótu kartograficznego fort. w klasie OT_KUZA_A" class="OT_KUZA_A" errorPhrase="topo_e6_k24 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
 			<Parametr typ="QgsExpression" sql="(rodzaj IN ('twierdza lub forteca')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'fort.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k25" name="Kontrola skrótu kartograficznego gar. w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k25 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="pythonFunction" sql="kontrolaSkrot_gar"/>
+			<Parametr typ="pythonFunction" sql="kontrolaSkrot_gar_26"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k26" name="Kontrola skrótu kartograficznego gaz. w klasie OT_KUPG OT_BUBD OT_BUIT" class="OT" errorPhrase="topo_e6_k26 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="pythonFunction" sql="kontrolaSkrot_gaz"/>
+			<Parametr typ="pythonFunction" sql="kontrolaSkrot_gaz_26"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k28" name="Kontrola skrótu kartograficznego gl. w klasie OT_PTWZ_A" class="OT_PTWZ_A" errorPhrase="topo_e6_k28 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
 			<Parametr typ="QgsExpression" sql="(rodzaj IN ('wyrobisko') AND surowiec IN ('glina')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'gl.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k29" name="Kontrola skrótu kartograficznego H w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k29 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('hotel') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'H')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('hotel') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'H')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k30" name="Kontrola skrótu kartograficznego hłd. w klasie OT_PTWZ_A" class="OT_PTWZ_A" errorPhrase="topo_e6_k30 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
 			<Parametr typ="QgsExpression" sql="(rodzaj IN ('zwałowisko')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'hłd.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k31" name="Kontrola skrótu kartograficznego hod. w klasie OT_KUPG_A OT_BUBD_A" class="OT" errorPhrase="topo_e6_k31 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="pythonFunction" sql="kontrolaSkrot_hod"/>
+			<Parametr typ="pythonFunction" sql="kontrolaSkrot_hod_26"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k32" name="Kontrola skrótu kartograficznego h. sport. w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k32 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('hala sportowa') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'h. sport.')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('hala sportowa') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'h. sport.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k33" name="Kontrola skrótu kartograficznego h. targ. w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k33 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('hala targowa') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'h. targ.')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('hala targowa') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'h. targ.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k34" name="Kontrola skrótu kartograficznego int. w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k34 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('internat lub bursa szkolna') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'int.')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('internat lub bursa szkolna') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'int.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k35" name="Kontrola skrótu kartograficznego K w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k35 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('kino') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'K')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('kino') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'K')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k37" name="Kontrola skrótu kartograficznego kemp. w klasie OT_KUHO_A OT_BUBD_A" class="OT" errorPhrase="topo_e6_k37 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="pythonFunction" sql="kontrolaSkrot_kemp"/>
+			<Parametr typ="pythonFunction" sql="kontrolaSkrot_kemp_26"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k38" name="Kontrola skrótu kartograficznego kl. w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k38 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('klasztor', 'dom zakonny') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'kl.')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('klasztor', 'dom zakonny') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'kl.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k39" name="Kontrola skrótu kartograficznego kłm w klasie OT_PTWZ_A" class="OT_PTWZ_A" errorPhrase="topo_e6_k39 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
 			<Parametr typ="QgsExpression" sql="(rodzaj IN ('wyrobisko') AND surowiec IN ('kamień')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'kłm')"/>
@@ -1571,31 +1571,31 @@
 			<Parametr typ="QgsExpression" sql="(rodzaj IN ('kopalnia')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'kop.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k41" name="Kontrola skrótu kartograficznego kort w klasie OT_BUSP_A" class="OT_BUSP_A" errorPhrase="topo_e6_k41 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(rodzaj IN ('kort tenisowy') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'kort')"/>
+			<Parametr typ="QgsExpression" sql="(rodzaj IN ('kort tenisowy') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'kort')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k42" name="Kontrola skrótu kartograficznego kort w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k42 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('korty tenisowe') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'kort')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('korty tenisowe') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'kort')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k43" name="Kontrola skrótu kartograficznego ląd. w klasie OT_KUKO_A OT_OIKM_P" class="OT" errorPhrase="topo_e6_k43 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="pythonFunction" sql="kontrolaSkrot_lad"/>
+			<Parametr typ="pythonFunction" sql="kontrolaSkrot_lad_26"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k44" name="Kontrola skrótu kartograficznego letn. w klasie OT_KUSK_A OT_BUBD_A" class="OT" errorPhrase="topo_e6_k44 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="pythonFunction" sql="kontrolaSkrot_letn"/>
+			<Parametr typ="pythonFunction" sql="kontrolaSkrot_letn_26"/>
 		</Kontrola>		
 		<Kontrola id="topo_e6_k45" name="Kontrola skrótu kartograficznego lotn. w klasie OT_KUKO_A" class="OT_KUKO_A" errorPhrase="topo_e6_k45 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
 			<Parametr typ="QgsExpression" sql="(rodzaj IN ('lotnisko lub lądowisko') AND COALESCE(LOWER(informacjaDodatkowa), '') LIKE '%lotnisk%') != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'lotn.')"/>
 		</Kontrola>		
 		<Kontrola id="topo_e6_k47" name="Kontrola skrótu kartograficznego M w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k47 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('muzeum') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'M')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('muzeum') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'M')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k48" name="Kontrola skrótu kartograficznego mag. w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k48 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('magazyn') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'mag.')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('magazyn') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'mag.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k49" name="Kontrola skrótu kartograficznego metalurg. w klasie OT_KUPG_A" class="OT_KUPG_A" errorPhrase="topo_e6_k49 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
 			<Parametr typ="QgsExpression" sql="(rodzaj IN ('zakład metalurgiczny')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'metalurg.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k50" name="Kontrola skrótu kartograficznego nadl. w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k50 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="((array_contains(funkcjaSzczegolowaBudynku, 'inny urząd administracji publicznej') OR funkcjaSzczegolowaBudynku = 'inny urząd administracji publicznej') AND kategoriaIstnienia NOT IN ('zniszczony') AND lower(coalesce(informacjaDodatkowa, '')) LIKE '%nadleśnictw%') != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'nadl.')"/>
+			<Parametr typ="QgsExpression" sql="((array_contains(funkcjaSzczegolowaBudynku, 'inny urząd administracji publicznej') OR funkcjaSzczegolowaBudynku = 'inny urząd administracji publicznej') AND kategoriaIstnienia IN ('eksploatowany') AND lower(coalesce(informacjaDodatkowa, '')) LIKE '%nadleśnictw%') != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'nadl.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k51" name="Kontrola skrótu kartograficznego nft. w klasie OT_BUIT_P" class="OT_BUIT_P" errorPhrase="topo_e6_k51 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
 			<Parametr typ="QgsExpression" sql="(rodzaj IN ('szyb naftowy lub gazowy') AND kategoriaIstnienia IN ('eksploatowany') AND COALESCE(LOWER(informacjaDodatkowa), '') LIKE '%naft%') != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'nft.')"/>
@@ -1610,157 +1610,157 @@
 			<Parametr typ="QgsExpression" sql="(rodzaj IN ('wieża szybu kopalnianego') AND kategoriaIstnienia IN ('nieczynny')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'niecz.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k55" name="Kontrola skrótu kartograficznego obs. astr. w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k55 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('obserwatorium lub planetarium') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'obs. astr.')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('obserwatorium lub planetarium') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'obs. astr.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k56" name="Kontrola skrótu kartograficznego oczyszcz. w klasie OT_KUPG_A" class="OT_KUPG_A" errorPhrase="topo_e6_k56 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
 			<Parametr typ="QgsExpression" sql="(rodzaj IN ('oczyszczalnia ścieków')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'oczyszcz.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k57" name="Kontrola skrótu kartograficznego osad. w klasie OT_BUZT_A" class="OT_BUZT_A" errorPhrase="topo_e6_k57 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(rodzaj IN ('osadnik') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'osad.')"/>
+			<Parametr typ="QgsExpression" sql="(rodzaj IN ('osadnik') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'osad.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k58" name="Kontrola skrótu kartograficznego ośr. wyp. w klasie OT_KUHO_A OT_BUBD_A" class="OT" errorPhrase="topo_e6_k58 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="pythonFunction" sql="kontrolaSkrot_osrWyp"/>
+			<Parametr typ="pythonFunction" sql="kontrolaSkrot_osrWyp_26"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k59" name="Kontrola skrótu kartograficznego P w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k59 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('policja') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'P')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('policja') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'P')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k60" name="Kontrola skrótu kartograficznego p. w klasie OT_KUKO_A OT_BUBD_A" class="OT" errorPhrase="topo_e6_k60 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="pythonFunction" sql="kontrolaSkrot_parking"/>
+			<Parametr typ="pythonFunction" sql="kontrolaSkrot_parking_26"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k61" name="Kontrola skrótu kartograficznego p. golf. w klasie OT_BUSP_A" class="OT_BUSP_A" errorPhrase="topo_e6_k61 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(rodzaj IN ('pole golfowe') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'p. golf.')"/>
+			<Parametr typ="QgsExpression" sql="(rodzaj IN ('pole golfowe') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'p. golf.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k62" name="Kontrola skrótu kartograficznego piask. w klasie OT_PTWZ_A" class="OT_PTWZ_A" errorPhrase="topo_e6_k62 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
 			<Parametr typ="QgsExpression" sql="(rodzaj IN ('wyrobisko') AND surowiec IN ('piasek')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'piask.')"/>
 		</Kontrola>		
 		<Kontrola id="topo_e6_k63" name="Kontrola skrótu kartograficznego p kol. w klasie OT_OIKM_P" class="OT_OIKM_P" errorPhrase="topo_e6_k63 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="pythonFunction" sql="kontrolaSkrot_pKol"/>
+			<Parametr typ="pythonFunction" sql="kontrolaSkrot_pKol_26"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k64" name="Kontrola skrótu kartograficznego pleb. w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k64 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(funkcjaOgolnaBudynku IN ('budynki mieszkalne') AND kategoriaIstnienia NOT IN ('zniszczony') AND COALESCE(LOWER(informacjaDodatkowa), '') LIKE '%plebania%') != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'pleb.')"/>
+			<Parametr typ="QgsExpression" sql="(funkcjaOgolnaBudynku IN ('budynki mieszkalne') AND kategoriaIstnienia IN ('eksploatowany') AND COALESCE(LOWER(informacjaDodatkowa), '') LIKE '%plebania%') != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'pleb.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k65" name="Kontrola skrótu kartograficznego pl. sport. w klasie OT_BUSP_A" class="OT_BUSP_A" errorPhrase="topo_e6_k65 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(rodzaj IN ('plac sportowy') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'pl. sport.')"/>
+			<Parametr typ="QgsExpression" sql="(rodzaj IN ('plac sportowy') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'pl. sport.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k66" name="Kontrola skrótu kartograficznego pocz. w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k66 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('placówka operatora pocztowego') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'pocz.')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('placówka operatora pocztowego') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'pocz.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k67" name="Kontrola skrótu kartograficznego pog. rat. w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k67 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('jednostka ratownictwa medycznego') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'pog. rat.')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('jednostka ratownictwa medycznego') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'pog. rat.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k68" name="Kontrola skrótu kartograficznego pomp. w klasie OT_KUPG_A OT_BUBD_A" class="OT" errorPhrase="topo_e6_k68 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="pythonFunction" sql="kontrolaSkrot_pomp"/>
+			<Parametr typ="pythonFunction" sql="kontrolaSkrot_pomp_26"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k69" name="Kontrola skrótu kartograficznego port w klasie OT_KUKO_A OT_BUBD_A" class="OT" errorPhrase="topo_e6_k69 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="pythonFunction" sql="kontrolaSkrot_port"/>
+			<Parametr typ="pythonFunction" sql="kontrolaSkrot_port_26"/>
 		</Kontrola>		
 		<Kontrola id="topo_e6_k70" name="Kontrola skrótu kartograficznego port lot. w klasie OT_BUBD_A OT_KUKO_A" class="OT_BUBD_A" errorPhrase="topo_e6_k70 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="((przewazajacaFunkcjaBudynku IN ('dworzec lotniczy') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'port lot.')) OR (skrotKartograficzny = 'port lot.' AND @layer_name != 'OT_BUBD_A')"/>
+			<Parametr typ="QgsExpression" sql="((przewazajacaFunkcjaBudynku IN ('dworzec lotniczy') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'port lot.')) OR (skrotKartograficzny = 'port lot.' AND @layer_name != 'OT_BUBD_A')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k71" name="Kontrola skrótu kartograficznego pr. w klasie OT_SKPP_L" class="OT_SKPP_L" errorPhrase="topo_e6_k71 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(rodzaj IN ('prom') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'pr.')"/>
+			<Parametr typ="QgsExpression" sql="(rodzaj IN ('prom') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'pr.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k72" name="Kontrola skrótu kartograficznego przedszk. w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k72 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('przedszkole') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'przedszk.')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('przedszkole') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'przedszk.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k73" name="Kontrola skrótu kartograficznego pw. w klasie OT_SKPP_L" class="OT_SKPP_L" errorPhrase="topo_e6_k73 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
 			<Parametr typ="QgsExpression" sql="(rodzaj IN ('łódź')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'pw.')"/>
 		</Kontrola>		
 		<Kontrola id="topo_e6_k74" name="Kontrola skrótu kartograficznego rafin. w klasie OT_KUPG_A OT_BUBD_A" class="OT" errorPhrase="topo_e6_k74 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="pythonFunction" sql="kontrolaSkrot_rafin"/>
+			<Parametr typ="pythonFunction" sql="kontrolaSkrot_rafin_26"/>
 		</Kontrola>		
 		<Kontrola id="topo_e6_k75" name="Kontrola skrótu kartograficznego rem. w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k75 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('straż pożarna') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'rem.')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('straż pożarna') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'rem.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k76" name="Kontrola skrótu kartograficznego rest. w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k76 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('restauracja') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'rest.')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('restauracja') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'rest.')"/>
 		</Kontrola>	
 		<Kontrola id="topo_e6_k77" name="Kontrola skrótu kartograficznego rdst. w klasie OT_BUBD_A OT_BUWT_P" class="OT" errorPhrase="topo_e6_k77 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="pythonFunction" sql="kontrolaSkrot_rdst"/>
+			<Parametr typ="pythonFunction" sql="kontrolaSkrot_rdst_26"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k78" name="Kontrola skrótu kartograficznego rmp. w klasie OT_BUIB_A" class="OT_BUIB_A" errorPhrase="topo_e6_k78 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(rodzaj IN ('rampa kolejowa') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'rmp.')"/>
+			<Parametr typ="QgsExpression" sql="(rodzaj IN ('rampa kolejowa') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'rmp.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k79" name="Kontrola skrótu kartograficznego rmp. w klasie OT_BUIB_L" class="OT_BUIB_L" errorPhrase="topo_e6_k79 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(rodzaj IN ('rampa kolejowa') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'rmp.')"/>
+			<Parametr typ="QgsExpression" sql="(rodzaj IN ('rampa kolejowa') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'rmp.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k80" name="Kontrola skrótu kartograficznego r. zab. w klasie OT_OIOR_A" class="OT_OIOR_A" errorPhrase="topo_e6_k80 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
 			<Parametr typ="QgsExpression" sql="(rodzaj IN ('ruina zabytkowa')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'r. zab.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k81" name="Kontrola skrótu kartograficznego S w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k81 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('sąd') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'S')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('sąd') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'S')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k82" name="Kontrola skrótu kartograficznego san. w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k82 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('sanatorium') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'san.')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('sanatorium') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'san.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k83" name="Kontrola skrótu kartograficznego schr. w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k83 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('schronisko turystyczne') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'schr.')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('schronisko turystyczne') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'schr.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k84" name="Kontrola skrótu kartograficznego sil. w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k84 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('silos') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'sil.')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('silos') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'sil.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k85" name="Kontrola skrótu kartograficznego SP w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k85 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('starostwo powiatowe') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'SP')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('starostwo powiatowe') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'SP')"/>
 		</Kontrola>		
 		<Kontrola id="topo_e6_k86" name="Kontrola skrótu kartograficznego st. w klasie OT_KUKO_A OT_BUBD_A" class="OT" errorPhrase="topo_e6_k86 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="pythonFunction" sql="kontrolaSkrot_st"/>
+			<Parametr typ="pythonFunction" sql="kontrolaSkrot_st_26"/>
 		</Kontrola>	
 		<Kontrola id="topo_e6_k87" name="Kontrola skrótu kartograficznego stadn. w klasie OT_KUSK_A" class="OT_KUSK_A" errorPhrase="topo_e6_k87 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
 			<Parametr typ="QgsExpression" sql="(rodzaj IN ('kompleks sportowo-rekreacyjny') AND (COALESCE(LOWER(informacjaDodatkowa), '') LIKE '%stadnina%' OR COALESCE(LOWER(nazwa), '') LIKE '%stadnina%')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'stadn.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k88" name="Kontrola skrótu kartograficznego szk. w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k88 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('szkoła podstawowa', 'szkoła ponadpodstawowa', 'szkoła wyższa') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'szk.')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('szkoła podstawowa', 'szkoła ponadpodstawowa', 'szkoła wyższa') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'szk.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k89" name="Kontrola skrótu kartograficznego szpit. w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k89 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('szpital') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'szpit.')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('szpital') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'szpit.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k90" name="Kontrola skrótu kartograficznego T w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k90 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('teatr') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'T')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('teatr') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'T')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k91" name="Kontrola skrótu kartograficznego targ. w klasie OT_KUHU_A" class="OT_KUHU_A" errorPhrase="topo_e6_k91 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
 			<Parametr typ="QgsExpression" sql="skrotKartograficzny IS NULL OR skrotKartograficzny != 'targ.'"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k92" name="Kontrola skrótu kartograficznego UG w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k92 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('urząd gminy') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'UG')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('urząd gminy') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'UG')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k93" name="Kontrola skrótu kartograficznego UM w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k93 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('urząd miasta') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'UM')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('urząd miasta') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'UM')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k94" name="Kontrola skrótu kartograficznego UMG w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k94 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('urząd miasta i gminy') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'UMG')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('urząd miasta i gminy') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'UMG')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k95" name="Kontrola skrótu kartograficznego UMr w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k95 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('urząd marszałkowski') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'UMr')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('urząd marszałkowski') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'UMr')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k96" name="Kontrola skrótu kartograficznego utyliz. w klasie OT_KUPG_A" class="OT_KUPG_A" errorPhrase="topo_e6_k96 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
 			<Parametr typ="QgsExpression" sql="(rodzaj IN ('zakład utylizacji')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'utyliz.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k97" name="Kontrola skrótu kartograficznego UW w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k97 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('urząd wojewódzki') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'UW')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('urząd wojewódzki') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'UW')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k98" name="Kontrola skrótu kartograficznego w. ciśn. w klasie OT_BUWT_P" class="OT_BUWT_P" errorPhrase="topo_e6_k98 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(rodzaj IN ('wieża ciśnień') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'w. ciśn.')"/>
+			<Parametr typ="QgsExpression" sql="(rodzaj IN ('wieża ciśnień') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'w. ciśn.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k99" name="Kontrola skrótu kartograficznego wdc. w klasie OT_KUPG_A" class="OT_KUPG_A" errorPhrase="topo_e6_k99 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
 			<Parametr typ="QgsExpression" sql="(rodzaj IN ('zakład wodociągowy')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'wdc.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k100" name="Kontrola skrótu kartograficznego w. obs. w klasie OT_BUWT_P" class="OT_BUWT_P" errorPhrase="topo_e6_k100 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(rodzaj IN ('wieża obserwacyjna', 'wieża przeciwpożarowa', 'wieża widokowa') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'w. obs.')"/>
+			<Parametr typ="QgsExpression" sql="(rodzaj IN ('wieża obserwacyjna', 'wieża przeciwpożarowa', 'wieża widokowa') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'w. obs.')"/>
 		</Kontrola>				
 		<Kontrola id="topo_e6_k101" name="Kontrola skrótu kartograficznego zaj. w klasie OT_KUKO_A OT_BUBD_A" class="OT" errorPhrase="topo_e6_k101 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="pythonFunction" sql="kontrolaSkrot_zaj"/>
+			<Parametr typ="pythonFunction" sql="kontrolaSkrot_zaj_26"/>
 		</Kontrola>		
 		<Kontrola id="topo_e6_k102" name="Kontrola skrótu kartograficznego zdr. w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k102 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('placówka ochrony zdrowia') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'zdr.')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('placówka ochrony zdrowia') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'zdr.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k103" name="Kontrola skrótu kartograficznego z. kar. w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k103 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('zakład karny') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'z. kar.')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('zakład karny') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'z. kar.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k104" name="Kontrola skrótu kartograficznego źr. min. w klasie OT_OIPR_P" class="OT_OIPR_P" errorPhrase="topo_e6_k104 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
 			<Parametr typ="QgsExpression" sql="(rodzaj IN ('źródło') AND COALESCE(LOWER(informacjaDodatkowa), '') LIKE '%mineralne%') != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'źr. min.')"/>
 		</Kontrola>		
 		<Kontrola id="topo_e6_k105" name="Kontrola skrótu kartograficznego żłb. w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k105 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('żłobek') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'żłb.')"/>
+			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('żłobek') AND kategoriaIstnienia IN ('eksploatowany')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'żłb.')"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k106" name="Kontrola skrótu kartograficznego żw. w klasie OT_PTWZ_A" class="OT_PTWZ_A" errorPhrase="topo_e6_k106 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
 			<Parametr typ="QgsExpression" sql="(rodzaj IN ('wyrobisko') AND surowiec IN ('żwir')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'żw.')"/>
@@ -2375,7 +2375,7 @@
 			<Parametr typ="QgsExpression" sql="if(is_closed($geometry) AND rodzaj IN ('skarpa') AND area(make_polygon($geometry))&lt;400,1,0)"/>
 		</Kontrola>
 		<Kontrola id="topo_e4_k18" name="OT_RTLW_L Kontrola przecinania się poziomicy z wodą powierzchniową stojącą | morską" class="OT_RTLW_L" errorPhrase="topo_e4_k18 Błąd przecinania się poziomic z wodą powierzchniową">
-			<Parametr typ="pythonFunction" sql="boundaryPTWP_poziomica"/>
+			<Parametr typ="pythonFunction" sql="boundaryPTWP_poziomica_26"/>
 		</Kontrola>
 		<Kontrola id="topo_e4_k19" name="OT_RTLW_L Kontrola przecinania się skarpy | wąwozu z wodą powierzchniową" class="OT_RTLW_L" errorPhrase="topo_e4_k19 Błąd przecinania się skarpy | wąwozu z wodą powierzchniową">
 			<Parametr typ="pythonFunction" sql="boundaryPTWP"/>
@@ -2384,7 +2384,7 @@
 			<Parametr typ="pythonFunction" sql="przecinanieRTLW_SK_BUZM"/>
 		</Kontrola>
 		<Kontrola id="topo_e4_k22" name="OT_RTLW_L Kontrola przecinania ze zbiornikami i osadnikami OT_BUZT_A" class="OT_RTLW_L" errorPhrase="topo_e4_k22 Błąd przecinania się obiektów klasy OT_RTLW_L z obszarem zbiorników osadników OT_BUZT_A">
-			<Parametr typ="pythonFunction" sql="przecinanieRTLW_BUZT"/>
+			<Parametr typ="pythonFunction" sql="przecinanieRTLW_BUZT_26"/>
 		</Kontrola>
 		<Kontrola id="topo_e4_k24" name="OT_RTLW_L Kontrola minimalnej długości obiektów liniowych (25 m)" class="OT_RTLW_L" errorPhrase="topo_e4_k24 Błąd minimalnej długości obiektów liniowych OT_RTLW (25 m)">
 			<Parametr typ="pythonFunction" sql="czyPrzecinaGranicePowiatuDlugoscPonizej25m"/>
@@ -2404,10 +2404,10 @@
 		<Kontrola id="topo_e4_k28_1" name="OT_RTPW_P Kontrola zasięgu przestrzennego obiektów punktowych w granicy powiatu" class="OT_RTPW_P" errorPhrase="topo_e4_k28_1 Błąd zasięgu przestrzennego w granicy powiatu">
 			<Parametr typ="pythonFunction" sql="czyPunktyWewnatrzPowiatu_RTPW"/>
 		</Kontrola>		
-		<Kontrola id="topo_e4_k29" name="OT_RTPW_P Kontrola wypełnienia atrybutu PrzestrzenNazw" class="OT_RTPW_P" errorPhrase="topo_e4_k29 Brak wartości lub błąd formatu atrybutu przestrzenNazw">
+		<Kontrola id="topo_e4_k29" name="OT_RTPW_P Kontrola wypełnienia atrybutu PrzestrzenNazw" class="OT_RTPW_P" errorPhrase="topo_e4_k29 Błąd formatu atrybutu PrzestrzenNazw">
 			<Parametr typ="pythonFunction" sql="przestrzenNazw"/>
 		</Kontrola>
-		<Kontrola id="topo_e4_k30" name="OT_RTLW_L Kontrola wypełnienia atrybutu PrzestrzenNazw" class="OT_RTLW_L" errorPhrase="topo_e4_k30 Brak wartości lub błąd formatu atrybutu przestrzenNazw">
+		<Kontrola id="topo_e4_k30" name="OT_RTLW_L Kontrola wypełnienia atrybutu PrzestrzenNazw" class="OT_RTLW_L" errorPhrase="topo_e4_k30 Błąd formatu atrybutu PrzestrzenNazw">
 			<Parametr typ="pythonFunction" sql="przestrzenNazw"/>
 		</Kontrola>
 		<Kontrola id="topo_e4_k31" name="OT_RTLW_L Kontrola wypełnienia kodu karto poziomicy" class="OT_RTLW_L" errorPhrase="topo_e4_k31 Nadmiarowe wypełnienie kodu karto poziomicy na obszarach OT_OIMK_A, OT_PTGN_A, OT_PTSO_A, OT_PTWZ_A">
@@ -2443,6 +2443,15 @@
 	</GrupaKontroli>	
 </SzablonKontroli>
 <!-- ChangeLog
+1.2.4 2026-04-03 - WT2026
+        zmodyfikowano kontrole:
+			topo_e2_k33 - topo_e2_k44
+1.2.3 2026-01-05 - WT2026
+        zmodyfikowano kontrole:
+			topo_e1_k123_1 - topo_e1_k123_10
+			topo_e4_k18
+			topo_e4_k22			
+			topo_e6_k1 - topo_e6_k107
 1.2.2 2025-12-23
         zmodyfikowano kontrole:
 		    topo_e1_k2_1
