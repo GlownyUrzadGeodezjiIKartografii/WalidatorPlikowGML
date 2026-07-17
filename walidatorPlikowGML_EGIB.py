@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Nov  4 08:57:39 2025
-
-@author: kspila
 /***************************************************************************
  walidatorPlikowGML
                                  A QGIS plugin
@@ -11,7 +8,7 @@ Created on Tue Nov  4 08:57:39 2025
                               -------------------
         begin                : 2022-12-23
         git sha              : $Format:%H$
-        copyright            : (C) 2024 by Marcin Lebiecki - Główny Urząd Geodezji i Kartografii
+        copyright            : (C) 2026 by Główny Urząd Geodezji i Kartografii (GUGiK) - Marcin Lebiecki
         email                : marcin.lebiecki@gugik.gov.pl
  ***************************************************************************/
 

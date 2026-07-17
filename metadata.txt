@@ -5,12 +5,13 @@
 [general]
 name=Walidator plików GML
 qgisMinimumVersion=3.34
-description=Walidacja i kontrola plików GML baz: BDOO, BDOT10k, PRNG, RCN, GESUT, EGiB, BDOT500, MGR, KARTO10k
-version=1.2.8
-author=Marcin Lebiecki - Główny Urząd Geodezji i Kartografii
+qgisMaximumVersion=3.99
+description=Walidacja ze schematem aplikacyjnym GML - XSD i kontrola plików GML baz: BDOO, BDOT10k, PRNG, GESUT, EGiB, BDOT500, RCN, MGR, KARTO10k.
+version=1.2.9
+author=Główny Urząd Geodezji i Kartografii (GUGiK) - Marcin Lebiecki
 email=marcin.lebiecki@gugik.gov.pl
 
-about=Walidacja ze schematem aplikacyjnym GML - XSD i kontrola plików GML baz: BDOO, BDOT10k, PRNG, GESUT, EGiB, BDOT500, RCN, MGR, KARTO10k.
+about=Oficjalna wtyczka Głównego Urzędu Geodezji i Kartografii
 
 tracker=https://github.com/GlownyUrzadGeodezjiIKartografii/WalidatorPlikowGML/issues
 repository=https://github.com/GlownyUrzadGeodezjiIKartografii/WalidatorPlikowGML
@@ -21,96 +22,127 @@ repository=https://github.com/GlownyUrzadGeodezjiIKartografii/WalidatorPlikowGML
 hasProcessingProvider=no
 # Uncomment the following line and add your changelog:
 changelog=
-    1.2.8 Poprawiono kontrole BDOT10k.
-	1.2.7 Dodano lub poprawiono kontrole BDOT10k.
-	      Poprawiono kontrolę GESUT.
-    1.2.6 Dodano możliwość walidacji i kontroli dużych plików EGiB.
-          Usunięto kontrolę EGiB.
-          Dodano lub poprawiono kontrole BDOT10k.
-    1.2.5 Poprawa szablonu kontroli dla danych BDOT10k.
-          Dodano lub poprawiono kontrole BDOT10k.
-          Poprawa drobnych błędów.
-    1.2.4 Zmieniono kontrolę EGiB.
-	      Dodano wykrywanie XSD dla bazy EGiB.
-	      Dodano lub poprawiono kontrole BDOT10k.
-    1.2.3 Dodano lub poprawiono kontrole BDOT10k.
-    1.2.2 Dodano lub poprawiono kontrole BDOT10k.
-          Wprowadzono kontrole do interpretacji dla BDOT10k.
-    1.2.1 Dodano lub poprawiono kontrole BDOT10k.
-          Dodano lub poprawiono kontrole BDOT500.
-          Poprawa drobnych błędów.
-    1.2.0 Poprawa drobnych błędów.
-          Dodano lub poprawiono kontrole BDOT10k.
-    1.1.9 Poprawa drobnych błędów.
-          Dodano nową wersję XSD dla EGiB.
-          Dodano lub poprawiono kontrole BDOT10k.
-    1.1.8 Poprawiono kontrole BDOT10k.
-          Poprawa drobnych błędów.
-    1.1.7 Dodano lub poprawiono kontrole GESUT.
-          Dodano lub poprawiono kontrole BDOT500.
-          Dodano lub poprawiono kontrole EGiB.
-          Dodano lub poprawiono kontrole BDOT10k.
-    1.1.6 Dodano lub poprawiono kontrole BDOT10k.
-          Dodano lub poprawiono kontrole EGiB.
-          Dodano generowanie raportu w formacie xlsx.
-          Zaktualizowano dokumentację użytkownika.
-    1.1.5 Poprawiono kontrole BDOT10k.
-    1.1.4 Dodano możliwość wyboru schematu aplikacyjnego GML dla walidowanej bazy.
-          Przywrócono format raportu txt.
-          Dodano możliwość walidacji i kontroli danych KARTO10k.
-          Dodano lub poprawiono kontrole BDOT10k.
-          Dodano lub poprawiono kontrole MGR.
-          Dodano lub poprawiono kontrole BDOT500.
-          Dodano lub poprawiono kontrole GESUT.
-          Zaktualizowano dokumentację użytkownika.
-    1.1.3 Dodano lub poprawiono kontrole BDOT10k.
-          Dodano lub poprawiono kontrole MGR.
-          Dodano lub poprawiono kontrole EGiB.
-          Zaktualizowano dokumentację użytkownika.
-    1.1.2 Poprawa błędu zapisu ścieżki do pliku TERYT.
-    1.1.1 Dodano zakładkę ze źródłami danych (PRG, PRNG, TERYT, GDOŚ) wykorzystywanymi do kontroli.
-          Dodano lub poprawiono kontrole BDOT10k.
-          Dodano lub poprawiono kontrole MGR.
-          Poprawiono rozpoznawanie bazy po zawartości wskazanego pliku.
-          Zaktualizowano dokumentację użytkownika.
-    1.1.0 Dodano lub poprawiono kontrole MGR.
-          Dodano lub poprawiono kontrole BDOT10k.
-          Dodano lub poprawiono kontrole BDOT500.
-          Dodano dokumentację użytkownika.
-          Dodano możliwość wskazania pliku źródłowego.
-          Dodano możliwość wskazania plików z granicami PRG.
-          Dodano statystykę błędów w raporcie xls.
-          Dodano generowanie raportów w formatach shp i gpkg.
-    1.0.9 Dodano lub poprawiono kontrole BDOT10k.
-          Przyspieszono działanie niektórych kontroli BDOT10k.
-          Dodano zakładkę z ustawieniami wtyczki.
-          Dodano możliwość wskazania plików granic PRG.
-          Dodano możliwość wskazania lub zmiany pliku do walidacji i kontroli.
-          Dodano kontrole map glebowo-rolniczych.
-          Dodano możliwość logowania czasów wykonania kontroli w Konsoli Python.
-          Wprowadzono zmiany redakcyjne do raportów w formacie pdf i xls.
-          Zaktualizowano schemat aplikacyjny GML dla EGiB w wersji 1.9.
-    1.0.8 Dodano lub poprawiono kontrole BDOT10k.
-    1.0.7 Dodano lub poprawiono kontrole BDOT10k, BDOT500 i GESUT.
-          Dodano możliwość wyboru wielu formatów raportów.
-          Dodano tworzenie tymczasowych warstw z obiektami błędów walidacji lub kontroli atrybutów.
-          Dodano możliwość wyboru szablonu kontroli.
-          Dodano walidację i kontrolę atrybutów bazy map glebowo-rolniczych (MGR).
-          Dodano możliwość wyłączenia kontroli dla obiektów z wypełnionym atrybutem koniecWersjiObiektu.
-          Przyspieszono działanie niektórych kontroli BDOT10k.
-    1.0.6 Dodanie lub poprawa kontroli BDOT10k, BDOT500 i EGiB. 
-          Dodano generowanie raportu w formacie pdf.
-    1.0.5 Dodanie lub poprawa kontroli BDOT10k i BDOT500.
-    1.0.4 Poprawa drobnych błędów w zakresie kontroli BDOT10k.
-    1.0.3 Poprawa drobnych błędów. Rozbudowa kontroli BDOT10k.
-    1.0.2 Dodano możliwość kontroli atrybutowych baz BDOT500, GESUT, EGiB.
+    1.2.9 
+			⠀ • Wprowadzono możliwość grupowego zaznaczenia wielu kolejnych kontroli klawiszem Shift.
+			⠀ • Wprowadzono możliwość zapisu i odczytu wyboru kontroli dla danego szablonu kontroli.
+			⠀ • Wprowadzono możliwość zmiany wysokości czcionek listy kontroli.
+    1.2.8 
+			⠀ • Poprawiono kontrole BDOT10k.
+    1.2.7 
+			⠀ • Dodano lub poprawiono kontrole BDOT10k.
+			⠀ • Poprawiono kontrolę GESUT.
+    1.2.6 
+			⠀ • Dodano możliwość walidacji i kontroli dużych plików EGiB.
+			⠀ • Usunięto kontrolę EGiB.
+			⠀ • Dodano lub poprawiono kontrole BDOT10k.
+    1.2.5 
+			⠀ • Poprawa szablonu kontroli dla danych BDOT10k.
+			⠀ • Dodano lub poprawiono kontrole BDOT10k.
+			⠀ • Poprawa drobnych błędów.
+    1.2.4 
+			⠀ • Zmieniono kontrolę EGiB.
+			⠀ • Dodano wykrywanie XSD dla bazy EGiB.
+			⠀ • Dodano lub poprawiono kontrole BDOT10k.
+    1.2.3 
+			⠀ • Dodano lub poprawiono kontrole BDOT10k.
+    1.2.2 
+			⠀ • Dodano lub poprawiono kontrole BDOT10k.
+			⠀ • Wprowadzono kontrole do interpretacji dla BDOT10k.
+    1.2.1 
+			⠀ • Dodano lub poprawiono kontrole BDOT10k.
+			⠀ • Dodano lub poprawiono kontrole BDOT500.
+			⠀ • Poprawa drobnych błędów.
+    1.2.0 
+			⠀ • Poprawa drobnych błędów.
+			⠀ • Dodano lub poprawiono kontrole BDOT10k.
+    1.1.9 
+			⠀ • Poprawa drobnych błędów.
+			⠀ • Dodano nową wersję XSD dla EGiB.
+			⠀ • Dodano lub poprawiono kontrole BDOT10k.
+    1.1.8 
+			⠀ • Poprawiono kontrole BDOT10k.
+			⠀ • Poprawa drobnych błędów.
+    1.1.7 
+			⠀ • Dodano lub poprawiono kontrole GESUT.
+			⠀ • Dodano lub poprawiono kontrole BDOT500.
+			⠀ • Dodano lub poprawiono kontrole EGiB.
+			⠀ • Dodano lub poprawiono kontrole BDOT10k.
+    1.1.6 
+			⠀ • Dodano lub poprawiono kontrole BDOT10k.
+			⠀ • Dodano lub poprawiono kontrole EGiB.
+			⠀ • Dodano generowanie raportu w formacie xlsx.
+			⠀ • Zaktualizowano dokumentację użytkownika.
+    1.1.5 
+			⠀ • Poprawiono kontrole BDOT10k.
+    1.1.4 
+			⠀ • Dodano możliwość wyboru schematu aplikacyjnego GML dla walidowanej bazy.
+			⠀ • Przywrócono format raportu txt.
+			⠀ • Dodano możliwość walidacji i kontroli danych KARTO10k.
+			⠀ • Dodano lub poprawiono kontrole BDOT10k.
+			⠀ • Dodano lub poprawiono kontrole MGR.
+			⠀ • Dodano lub poprawiono kontrole BDOT500.
+			⠀ • Dodano lub poprawiono kontrole GESUT.
+			⠀ • Zaktualizowano dokumentację użytkownika.
+    1.1.3 
+			⠀ • Dodano lub poprawiono kontrole BDOT10k.
+			⠀ • Dodano lub poprawiono kontrole MGR.
+			⠀ • Dodano lub poprawiono kontrole EGiB.
+			⠀ • Zaktualizowano dokumentację użytkownika.
+    1.1.2 
+			⠀ • Poprawa błędu zapisu ścieżki do pliku TERYT.
+    1.1.1 
+			⠀ • Dodano zakładkę ze źródłami danych (PRG, PRNG, TERYT, GDOŚ) wykorzystywanymi do kontroli.
+			⠀ • Dodano lub poprawiono kontrole BDOT10k.
+			⠀ • Dodano lub poprawiono kontrole MGR.
+			⠀ • Poprawiono rozpoznawanie bazy po zawartości wskazanego pliku.
+			⠀ • Zaktualizowano dokumentację użytkownika.
+    1.1.0 
+			⠀ • Dodano lub poprawiono kontrole MGR.
+			⠀ • Dodano lub poprawiono kontrole BDOT10k.
+			⠀ • Dodano lub poprawiono kontrole BDOT500.
+			⠀ • Dodano dokumentację użytkownika.
+			⠀ • Dodano możliwość wskazania pliku źródłowego.
+			⠀ • Dodano możliwość wskazania plików z granicami PRG.
+			⠀ • Dodano statystykę błędów w raporcie xls.
+			⠀ • Dodano generowanie raportów w formatach shp i gpkg.
+    1.0.9 
+			⠀ • Dodano lub poprawiono kontrole BDOT10k.
+			⠀ • Przyspieszono działanie niektórych kontroli BDOT10k.
+			⠀ • Dodano zakładkę z ustawieniami wtyczki.
+			⠀ • Dodano możliwość wskazania plików granic PRG.
+			⠀ • Dodano możliwość wskazania lub zmiany pliku do walidacji i kontroli.
+			⠀ • Dodano kontrole map glebowo-rolniczych.
+			⠀ • Dodano możliwość logowania czasów wykonania kontroli w Konsoli Python.
+			⠀ • Wprowadzono zmiany redakcyjne do raportów w formacie pdf i xls.
+			⠀ • Zaktualizowano schemat aplikacyjny GML dla EGiB w wersji 1.9.
+    1.0.8 
+			⠀ • Dodano lub poprawiono kontrole BDOT10k.
+    1.0.7 
+			⠀ • Dodano lub poprawiono kontrole BDOT10k, BDOT500 i GESUT.
+			⠀ • Dodano możliwość wyboru wielu formatów raportów.
+			⠀ • Dodano tworzenie tymczasowych warstw z obiektami błędów walidacji lub kontroli atrybutów.
+			⠀ • Dodano możliwość wyboru szablonu kontroli.
+			⠀ • Dodano walidację i kontrolę atrybutów bazy map glebowo-rolniczych (MGR).
+			⠀ • Dodano możliwość wyłączenia kontroli dla obiektów z wypełnionym atrybutem koniecWersjiObiektu.
+			⠀ • Przyspieszono działanie niektórych kontroli BDOT10k.
+    1.0.6 
+			⠀ • Dodanie lub poprawa kontroli BDOT10k, BDOT500 i EGiB.
+			⠀ • Dodano generowanie raportu w formacie pdf.
+    1.0.5 
+			⠀ • Dodanie lub poprawa kontroli BDOT10k i BDOT500.
+    1.0.4 
+			⠀ • Poprawa drobnych błędów w zakresie kontroli BDOT10k.
+    1.0.3 
+			⠀ • Poprawa drobnych błędów. Rozbudowa kontroli BDOT10k.
+    1.0.2 
+			⠀ • Dodano możliwość kontroli atrybutowych baz BDOT500, GESUT, EGiB.
 
 # Tags are comma separated with spaces allowed
 tags=python, GML, XSD, walidacja, BDOO, BDOT10k, PRNG, RCN, GESUT, EGiB, BDOT500, MGR
 
 homepage=https://www.gov.pl/web/gugik
 category=Plugins
-icon=icon.png
+icon=icon400.jpg
 # experimental flag
 experimental=False
 
