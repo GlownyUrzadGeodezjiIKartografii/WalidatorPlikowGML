@@ -658,7 +658,10 @@ class BidiParagraph:
                     stack.pop()
                     current_status = replace(stack[-1])
                     valid_isolate_count -= 1
-                assert isinstance(current_status, DirectionalStatus)
+                if not isinstance(current_status, DirectionalStatus):
+                    raise TypeError(
+                        "current_status musi być obiektem klasy DirectionalStatus."
+                    )
                 bidi_char.embedding_level = current_status.embedding_level
                 if current_status.directional_override_status != "N":
                     new_bidi_class = current_status.directional_override_status

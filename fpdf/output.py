@@ -432,12 +432,16 @@ class OutputProducer:
         xref.encryption_obj = encryption_obj
 
         # 3. Serializing - Append all PDF objects to the buffer:
-        assert (
-            not self.buffer
-        ), f"Nothing should have been appended to the .buffer at this stage: {self.buffer}"
-        assert (
-            not self.offsets
-        ), f"No offset should have been set at this stage: {len(self.offsets)}"
+        if self.buffer:
+            raise FPDFException(
+                "Nothing should have been appended to the .buffer at this stage: "
+                f"{self.buffer}"
+            )
+        if self.offsets:
+            raise FPDFException(
+                "No offset should have been set at this stage: "
+                f"{len(self.offsets)}"
+            )
 
         for pdf_obj in self.pdf_objs:
             if isinstance(pdf_obj, ContentWithoutID):
@@ -521,9 +525,10 @@ class OutputProducer:
                 if isinstance(annot_obj, PDFAnnotation):  # distinct from AnnotationDict
                     self._add_pdf_obj(annot_obj)
                     if isinstance(annot_obj.v, Signature):
-                        assert (
-                            sig_annotation_obj is None
-                        ), "A /Sig annotation is present on more than 1 page"
+                        if sig_annotation_obj is not None:
+                            raise FPDFException(
+                                "A /Sig annotation is present on more than 1 page"
+                            )
                         sig_annotation_obj = annot_obj
         return sig_annotation_obj
 
@@ -717,7 +722,10 @@ class OutputProducer:
             if iccp_i == i:
                 iccp_content = iccp_c
                 break
-        assert iccp_content is not None
+        if iccp_content is None:
+            raise FPDFException(
+                f"ICC profile with index {iccp_i} was not found in the image cache"
+            )
         # Note: n should be 4 if the profile ColorSpace is CMYK
         iccp_obj = PDFICCPObject(
             contents=iccp_content, n=img_info["dpn"], alternate=img_info["cs"]

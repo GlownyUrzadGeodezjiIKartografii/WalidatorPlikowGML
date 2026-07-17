@@ -2109,9 +2109,11 @@ class FPDF(GraphicsStateMixin, TextRegionMixin):
             if isinstance(link, str):
                 action = URIAction(link)
             else:  # Dest type ending of annotation entry
-                assert (
-                    link in self.links
-                ), f"Link with an invalid index: {link} (doc #links={len(self.links)})"
+                if link not in self.links:
+                    raise ValueError(
+                        f"Link with an invalid index: {link} "
+                        f"(doc #links={len(self.links)})"
+                    )
                 dest = self.links[link]
                 if not dest.page_number:
                     raise ValueError(

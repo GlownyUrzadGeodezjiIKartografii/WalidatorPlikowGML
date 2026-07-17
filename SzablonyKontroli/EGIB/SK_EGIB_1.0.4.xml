@@ -49,7 +49,7 @@
 		<Kontrola id="egib_e1_k16" name="Kontrola atrybutu klasouzytek(OFU, OZU i OZK) dla OZU=Lz i błędów w OZK" class="EGB_DzialkaEwidencyjna" errorPhrase="OZK przyjmuje błędną wartość dla OFU równego Lz/W i OZU równego Lz">
 			<Parametr typ="QgsExpression" sql="(try(array_contains(OFU,'Lz'),OFU='Lz') or try(array_contains(OFU,'W'),OFU='W')) and try(array_contains(OZU,'Lz'),OZU='Lz') and (try(array_contains(OZK,'IIIa'),OZK='IIIa') or try(array_contains(OZK,'IIIb'),OZK='IIIb') or try(array_contains(OZK,'IVa'),OZK='IVa') or try(array_contains(OZK,'IVb'),OZK='IVb'))"/>
 		</Kontrola>
-		<Kontrola id="egib_e1_k17" name="Kontrola relacji EGB_DzialkaEwidencyjna do EGB_PunktGraniczny" class="EGB_DzialkaEwidencyjna" errorPhrase="Błędy:">
+		<Kontrola id="egib_e1_k17" name="Kontrola relacji EGB_DzialkaEwidencyjna do EGB_PunktGraniczny" class="EGB_DzialkaEwidencyjna" errorPhrase="Uwaga, w relacji działka ewidencyjna - punkt graniczny:">
 			<Parametr typ="pythonFunction" sql="kontrolaRelacjiDzialkaEwidencyjnaDoPunktGraniczny"/>
 		</Kontrola>
 		<Kontrola id="egib_e1_k18" name="Kontrola atrybutu idBudynku z paternem" class="EGB_Budynek" errorPhrase="Atrybut idBudynku jest niepoprawny">

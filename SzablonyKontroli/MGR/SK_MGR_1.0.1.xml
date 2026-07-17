@@ -71,3 +71,28 @@
 		</Kontrola>
 	</GrupaKontroli>
 </SzablonKontroli>
+
+<!-- ChangeLog
+1.0.1	wprowadzono kontrole:
+			mgr_m1_k5
+			mgr_m1_k6
+			mgr_m1_k7
+			mgr_m1_k8
+			mgr_m1_k9
+			mgr_m1_k10
+			mgr_m1_k11
+			mgr_m1_k12
+			mgr_m1_k13
+			mgr_m1_k14
+			mgr_m1_k15
+			mgr_m1_k16
+			mgr_m1_k17
+			mgr_m2_k1
+			mgr_m2_k2
+			mgr_m2_k3
+			mgr_m2_k4
+		zmodyfikowano kontrole:
+			mgr_m1_k2
+			mgr_m1_k3
+			mgr_m1_k4
+-->

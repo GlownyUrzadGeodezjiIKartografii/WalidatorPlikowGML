@@ -26,13 +26,10 @@
 			<Parametr typ="QgsExpression" sql="(funkcjaOgolnaBudynku = 'budynki mieszkalne' AND kodKst !=110) OR (funkcjaOgolnaBudynku = 'pozostałe budynki niemieszkalne' AND kodKst !=109) OR (funkcjaOgolnaBudynku = 'budynki produkcyjne, usługowe i gospodarcze dla rolnictwa' AND kodKst !=108) OR (funkcjaOgolnaBudynku = 'budynki oświaty, nauki i kultury oraz budynki sportowe' AND kodKst !=107) OR (funkcjaOgolnaBudynku = 'budynki szpitali i inne budynki opieki zdrowotnej' AND kodKst !=106) OR (funkcjaOgolnaBudynku = 'budynki biurowe' AND kodKst !=105) OR (funkcjaOgolnaBudynku = 'zbiorniki, silosy i budynki magazynowe' AND kodKst !=104) OR (funkcjaOgolnaBudynku = 'budynki handlowo-usługowe' AND kodKst !=103) OR (funkcjaOgolnaBudynku = 'budynki transportu i łączności' AND kodKst !=102) OR (funkcjaOgolnaBudynku = 'budynki przemysłowe' AND kodKst !=101)"/>
 		</Kontrola>
 		<Kontrola id="topo_e1_k2_7" name="OT_BUBD_A Kontrola braku identyfikatora EGiB" class="OT_BUBD_A" errorPhrase="topo_e1_k2_7 Brak identyfikatora EGiB bez uzasadnienia lub błędne źródło danych geometrycznych">
-			<Parametr typ="QgsExpression" sql="zrodloDanychGeometrycznych IN ('EGiB') AND identyfikatorEGiB IS NULL AND (COALESCE(LOWER(uwagi), '') NOT LIKE '%brak identyfikatora%' AND COALESCE(LOWER(uwagi), '') NOT LIKE '%brak wartości w bazie egib%' AND COALESCE(LOWER(informacjaDodatkowa), '') NOT LIKE '%brak identyfikatora%' AND COALESCE(LOWER(informacjaDodatkowa), '') NOT LIKE '%brak wartości w bazie egib%')"/>
+			<Parametr typ="QgsExpression" sql="zrodloDanychGeometrycznych IN ('EGiB') AND identyfikatorEGiB IS NULL AND (COALESCE(LOWER(uwagi), '') NOT LIKE '%brak identyfikatora egib%' AND COALESCE(LOWER(uwagi), '') NOT LIKE '%brak wartości w bazie egib%' AND COALESCE(LOWER(informacjaDodatkowa), '') NOT LIKE '%brak identyfikatora egib%' AND COALESCE(LOWER(informacjaDodatkowa), '') NOT LIKE '%brak wartości w bazie egib%')"/>
 		</Kontrola>
-		<Kontrola id="topo_e1_k2_8" name="OT_BUBD_A Kontrola nadmiarowych wartości atrybutu identyfikatorEGiB" class="OT_BUBD_A" errorPhrase="topo_e1_k2_8 Błąd: Obiekt posiada więcej niż jeden identyfikator lub wartość nadmiarowa lub błędne źrodło danych geometrycznych">
-			<Parametr typ="pythonFunction" sql="kontrolaIdentyfikatoraEGiB_len(gml)"/>
-		</Kontrola>
-		<Kontrola id="topo_e1_k2_8_1" name="OT_BUBD_A Kontrola zgodności atrybutu identyfikatorEGiB z wzorcem WWPPGG_R.XXXX.Nr_BUD - DO INTERPRETACJI" class="OT_BUBD_A" errorPhrase="topo_e1_k2_8_1 Błąd: wartość identyfikatora niezgodna z wzorcem WWPPGG_R.XXXX.Nr_BUD - DO INTERPRETACJI">
-			<Parametr typ="pythonFunction" sql="kontrolaIdentyfikatoraEGiB_pattern(gml)"/>
+		<Kontrola id="topo_e1_k2_8" name="OT_BUBD_A Kontrola poprawności wypełnienia atrybutu identyfikatorEGiB" class="OT_BUBD_A" errorPhrase="topo_e1_k2_8 Błąd: wartość identyfikatora niezgodna z wzorcem WWPPGG_R.XXXX.Nr_BUD lub obiekt posiada więcej niż jeden identyfikator">
+			<Parametr typ="pythonFunction" sql="kontrolaIdentyfikatoraEGiB(gml)"/>
 		</Kontrola>			
 		<Kontrola id="topo_e1_k2_9" name="OT_BUBD_A Kontrola poprawności wypełnienia atrybutu liczbaKondygnacji" class="OT_BUBD_A" errorPhrase="topo_e1_k2_9 Błędna wartość atrybutu liczbaKondygnacji">
             <Parametr typ="pythonFunction" sql="kontrolaAtrybutuLiczbaKondygnacji"/>
@@ -137,7 +134,7 @@
 			<Parametr typ="QgsExpression" sql="szerokoscNawierzchni IS NULL AND kategoriaIstnienia IN ('eksploatowany') AND (cechaGeometrii IS NULL OR cechaGeometrii != 'linia umowna') AND materialNawierzchni != 'grunt naturalny'"/>
 		</Kontrola>
 		<Kontrola id="topo_e1_k24_6" name="OT_SKDR_L Kontrola wypełnienia obligatoryjnego atrybutu szerokoscNawierzchni" class="OT_SKDR_L" errorPhrase="topo_e1_k24_6 Brak atrybutu szerokoscNawierzchni">
-			<Parametr typ="QgsExpression" sql="szerokoscNawierzchni IS NULL AND kategoriaIstnienia IN ('eksploatowany') AND liczbaJezdniDrogi = 1 AND materialNawierzchni != 'grunt naturalny' AND (COALESCE(LOWER(informacjaDodatkowa), '') NOT LIKE '%linia umowna%' AND COALESCE(LOWER(uwagi), '') NOT LIKE '%linia umowna%')"/>
+			<Parametr typ="QgsExpression" sql="szerokoscNawierzchni IS NULL AND liczbaJezdniDrogi = 1 AND materialNawierzchni != 'grunt naturalny' AND (COALESCE(LOWER(informacjaDodatkowa), '') NOT LIKE '%linia umowna%' AND COALESCE(LOWER(uwagi), '') NOT LIKE '%linia umowna%')"/>
 		</Kontrola>
 		<Kontrola id="topo_e1_k24_7" name="OT_SKDR_L Kontrola nadmiarowego wypełnienia atrybutu szerokoscNawierzchni" class="OT_SKDR_L" errorPhrase="topo_e1_k24_7 Atrybut szerokoscNawierzchni wypełnia się tylko dla dróg jednojezniowych">
 			<Parametr typ="QgsExpression" sql="szerokoscNawierzchni IS NOT NULL AND (liczbaJezdniDrogi IS NULL OR liczbaJezdniDrogi = 0 OR liczbaJezdniDrogi &gt;1)"/>
@@ -553,40 +550,28 @@
 		<Kontrola id="topo_e1_k122_2" name="OT_TC Kontrola wypełnienia obligatoryjnego atrybutu numerCRFOP" class="OT_TC" errorPhrase="topo_e1_k122_2 Atrybut numerCRFOP nie jest wypełniony">
 			<Parametr typ="QgsExpression" sql="numerCRFOP IS NULL"/>
 		</Kontrola>		
-		<Kontrola id="topo_e1_k123_1" name="OT_ADMS_A kontrola zgodności atrybutów z danymi PRNG" class="OT_ADMS_A" errorPhrase="topo_e1_k123_1 Niezgodność atrybutów z danymi PRNG:">
+		<Kontrola id="topo_e1_k123_1" name="OT_ADMS_A kontrola zgodności atrybutów z danymi PRNG" class="OT_ADMS_A" errorPhrase="topo_e1_k123_1 Niezgodność atrybutów z danymi PRNG">
 			<Parametr typ="pythonFunction" sql="kontrolaZgodnosciZDanymiPRNG(prng_miejscowosci)"/>
 		</Kontrola>
-		<Kontrola id="topo_e1_k123_2" name="OT_ADMS_P kontrola zgodności atrybutów z danymi PRNG" class="OT_ADMS_P" errorPhrase="topo_e1_k123_2 Niezgodność atrybutów z danymi PRNG:">
+		<Kontrola id="topo_e1_k123_2" name="OT_ADMS_P kontrola zgodności atrybutów z danymi PRNG" class="OT_ADMS_P" errorPhrase="topo_e1_k123_2 Niezgodność atrybutów z danymi PRNG">
 			<Parametr typ="pythonFunction" sql="kontrolaZgodnosciZDanymiPRNG(prng_miejscowosci)"/>
 		</Kontrola>
-		<Kontrola id="topo_e1_k123_3" name="OT_SWRS_L kontrola zgodności atrybutów z danymi PRNG" class="OT_SWRS_L" errorPhrase="topo_e1_k123_3 Niezgodność atrybutów z danymi PRNG:">
+		<Kontrola id="topo_e1_k123_3" name="OT_SWRS_L kontrola zgodności atrybutów z danymi PRNG" class="OT_SWRS_L" errorPhrase="topo_e1_k123_3 Niezgodność atrybutów z danymi PRNG">
 			<Parametr typ="pythonFunction" sql="kontrolaZgodnosciZDanymiPRNG(prng_obiektyfizjograficzne)"/>
 		</Kontrola>
-		<Kontrola id="topo_e1_k123_4" name="OT_SWRM_L kontrola zgodności atrybutów z danymi PRNG" class="OT_SWRM_L" errorPhrase="topo_e1_k123_4 Niezgodność atrybutów z danymi PRNG:">
+		<Kontrola id="topo_e1_k123_4" name="OT_SWRM_L kontrola zgodności atrybutów z danymi PRNG" class="OT_SWRM_L" errorPhrase="topo_e1_k123_4 Niezgodność atrybutów z danymi PRNG">
 			<Parametr typ="pythonFunction" sql="kontrolaZgodnosciZDanymiPRNG(prng_obiektyfizjograficzne)"/>
 		</Kontrola>
-		<Kontrola id="topo_e1_k123_5" name="OT_SWKN_L kontrola zgodności atrybutów z danymi PRNG" class="OT_SWKN_L" errorPhrase="topo_e1_k123_5 Niezgodność atrybutów z danymi PRNG:">
+		<Kontrola id="topo_e1_k123_5" name="OT_SWKN_L kontrola zgodności atrybutów z danymi PRNG" class="OT_SWKN_L" errorPhrase="topo_e1_k123_5 Niezgodność atrybutów z danymi PRNG">
 			<Parametr typ="pythonFunction" sql="kontrolaZgodnosciZDanymiPRNG(prng_obiektyfizjograficzne)"/>
 		</Kontrola>
-		<Kontrola id="topo_e1_k123_6" name="OT_PTWP_A kontrola zgodności atrybutów z danymi PRNG" class="OT_PTWP_A" errorPhrase="topo_e1_k123_6 Niezgodność atrybutów z danymi PRNG:">
+		<Kontrola id="topo_e1_k123_6" name="OT_PTWP_A kontrola zgodności atrybutów z danymi PRNG" class="OT_PTWP_A" errorPhrase="topo_e1_k123_6 Niezgodność atrybutów z danymi PRNG">
 			<Parametr typ="pythonFunction" sql="kontrolaZgodnosciZDanymiPRNG(prng_obiektyfizjograficzne)"/>
 		</Kontrola>
-		<Kontrola id="topo_e1_k123_7" name="OT_ADMS_A kontrola braków obiektów z PRNG - DO INTERPRETACJI" class="OT_ADMS_A" errorPhrase="topo_e1_k123_7 Niezgodność z danymi PRNG:">
-			<Parametr typ="pythonFunction" sql="kontrolaZgodnosciZDanymiPRNG_braki(prng_miejscowosci)"/>
-		</Kontrola>
-		<Kontrola id="topo_e1_k123_8" name="OT_ADMS_P kontrola braków obiektów z PRNG - DO INTERPRETACJI" class="OT_ADMS_P" errorPhrase="topo_e1_k123_8 Niezgodność z danymi PRNG:">
-			<Parametr typ="pythonFunction" sql="kontrolaZgodnosciZDanymiPRNG_braki(prng_miejscowosci)"/>
-		</Kontrola>
-		<Kontrola id="topo_e1_k123_9" name="OT_SW kontrola braków obiektów z PRNG - DO INTERPRETACJI" class="OT_SW" errorPhrase="topo_e1_k123_9 Niezgodność z danymi PRNG:">
-			<Parametr typ="pythonFunction" sql="kontrolaZgodnosciZDanymiPRNG_braki(prng_obiektyfizjograficzne)"/>
-		</Kontrola>
-		<Kontrola id="topo_e1_k123_10" name="OT_PTWP_A kontrola braków obiektów z PRNG - DO INTERPRETACJI" class="OT_PTWP_A" errorPhrase="topo_e1_k123_10 Niezgodność z danymi PRNG:">
-			<Parametr typ="pythonFunction" sql="kontrolaZgodnosciZDanymiPRNG_braki(prng_obiektyfizjograficzne)"/>
-		</Kontrola>		
 		<Kontrola id="topo_e1_k124" name="OT_BUBD_A Kontrola duplikacji atrybutu funkcjaSzczegolowaBudynku" class="OT_BUBD_A" errorPhrase="topo_e1_k124 Powielenie tej samej funkcji szczegółowej budynku">
 			<Parametr typ="pythonFunction" sql="kontrolaZdublowaniaAtrybutuFunkcjaSzczegolowaBudynku"/>
 		</Kontrola>
-		<Kontrola id="topo_e1_k125" name="OT_BUBD_A Kontrola zgodności atrybutów: przewazajacaFunkcjaBudynku i funkcjaSzczegolowaBudynku" class="OT_BUBD_A" errorPhrase="topo_e1_k125 Niezgodność przeważającej funkcji budynku ze szczegółową funkcją budynku">
+		<Kontrola id="topo_e1_k125" name="OT_BUBD_A Kontrola zgodności atrybutuów: przewazajacaFunkcjaBudynku i funkcjaSzczegolowaBudynku" class="OT_BUBD_A" errorPhrase="topo_e1_k125 Niezgodność przeważającej funkcji budynku ze szczegółową funkcją budynku">
 			<Parametr typ="pythonFunction" sql="kontrolaZgodnosciFunkcjaSzczegolowaBudynkuZprzewazajacaFunkcjaBudynku"/>
 		</Kontrola>
 		<Kontrola id="topo_e1_k126_1" name="OT_SWRS_L Kontrola wypełnienia atrybutu oznaczenieZmiany" class="OT_SWRS_L" errorPhrase="topo_e1_k126_1 Brak wypełnienia atrybutu oznaczenieZmiany">
@@ -1454,7 +1439,7 @@
 			<Parametr typ="pythonFunction" sql="kontrolaSkrot_bTran"/>
 		</Kontrola>		
 		<Kontrola id="topo_e6_k8" name="Kontrola skrótu kartograficznego bud. w klasie OT_PTPL_A" class="OT_PTPL_A" errorPhrase="topo_e6_k8 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
-			<Parametr typ="QgsExpression" sql="((LOWER(COALESCE(informacjaDodatkowa, '')) LIKE '%budowa%' OR LOWER(COALESCE(informacjaDodatkowa, '')) LIKE '%budowy%' OR LOWER(COALESCE(informacjaDodatkowa, '')) LIKE '%budowie%') != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'bud.'))"/>
+			<Parametr typ="QgsExpression" sql="((LOWER(COALESCE(informacjaDodatkowa, '')) LIKE '%budowa%' OR LOWER(COALESCE(informacjaDodatkowa, '')) LIKE '%budowy%') != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'bud.'))"/>
 		</Kontrola>
 		<Kontrola id="topo_e6_k9" name="Kontrola skrótu kartograficznego c. han. w klasie OT_BUBD_A" class="OT_BUBD_A" errorPhrase="topo_e6_k9 Brak wartości lub błędny | nadmiarowy skrót kartograficzny">
 			<Parametr typ="QgsExpression" sql="(przewazajacaFunkcjaBudynku IN ('centrum handlowe') AND kategoriaIstnienia NOT IN ('zniszczony')) != (skrotKartograficzny IS NOT NULL AND skrotKartograficzny = 'c. han.')"/>
@@ -2284,12 +2269,6 @@
 		<Kontrola id="topo_e3_k202" name="OT_BU Kontrola przecinania się obiektów powierzchniowych klasy BU" class="OT_BU" errorPhrase="topo_e3_k202 Błąd przecinania się obiektów powierzchniowych">
         <Parametr typ="pythonFunction" sql="przecinanieOT"/>
         </Kontrola>
-		<Kontrola id="topo_e3_k203" name="OT_SW Kontrola nakładania się cieków" class="OT_SW" errorPhrase="topo_e3_k203 OT_SW Błąd nakładania się cieków.">
-        <Parametr typ="pythonFunction" sql="kolizjeSW"/>
-        </Kontrola>
-		<Kontrola id="topo_e3_k204" name="OT Kontrola nakładania się obiektów liniowych" class="OT" errorPhrase="topo_e3_k204 OT Błąd nakładania się obiektów liniowych">
-        <Parametr typ="pythonFunction" sql="kolizjeLiniiOT"/>
-        </Kontrola>		
 	</GrupaKontroli>
 	<!-- ....................................................................................................................................................... -->
 	<GrupaKontroli id="topo_e4" name="Kontrole atrybutowo - przestrzenne rzeźby RT">
@@ -2330,7 +2309,7 @@
 			<Parametr typ="pythonFunction" sql="kontrolaFormatuAtrybutuWysokoscRT(gml)"/>
 		</Kontrola>
 		<Kontrola id="topo_e4_k14" name="OT_RTLW_L Kontrola występowania błędnych geometrii" class="OT_RTLW_L" errorPhrase="topo_e4_k14 Błędna geometria (np. zdublowane werteksy lub samoprzecięcia) w klasie OT_RTLW_L">
-			<Parametr typ="pythonFunction" sql="validateGeometryRTLW"/>
+			<Parametr typ="pythonFunction" sql="validateGeometry"/>
 		</Kontrola>
 		<Kontrola id="topo_e4_k15" name="OT_RTPW_P Kontrola występowania zduplikowanych obiektów" class="OT_RTPW_P" errorPhrase="topo_e4_k15 Błąd zduplikowanych obiektów OT_RTPW_P">
 			<Parametr typ="pythonFunction" sql="findDuplicates"/>
@@ -2407,7 +2386,7 @@
 	    <Kontrola id="topo_e5_k5" name="Kontrola dat wersji nowych i zmienionych obiektów" class="OT" errorPhrase="topo_e5_k5 Kontrola dat: ">
 			<Parametr typ="pythonFunction" sql="kontrolaDatyWersji(gml,gml)"/>
 		</Kontrola>			
-	    <Kontrola id="topo_e5_k6" name="Kontrola cyklu życia" class="OT" errorPhrase="topo_e5_k6 Kontrola cyklu życia: niespójność dat - ">
+	    <Kontrola id="topo_e5_k6" name="Kontrola cyklu życia" class="OT" errorPhrase="topo_e5_k6 Kontrola cyklu życia: warstwa zawiera obiekty, gdzie koniec następuje wcześniej niż początek wersji obiektu - patrz tabela cykl_zycia_BDOT10k">
 			<Parametr typ="pythonFunction" sql="kontrolaCykluZycia(gml)"/>
 		</Kontrola>
 	
@@ -2418,24 +2397,17 @@
         usunięto kontrole:
 		    topo_e1_k19
             topo_e2_k213_1 - topo_e2_k213_51
-        zmodyfikowano kontrole:
+        zmodyfikowano kontrole:\
 		    topo_e1_k2_8
 		    topo_e1_k2_9
 			topo_e1_k20
-			topo_e1_k24_6
-			topo_e1_k24_8
 		    topo_e1_k121_1
 		    topo_e1_k121_2
 		    topo_e1_k121_8
-			topo_e1_k123_1
-			topo_e1_k123_2
-			topo_e1_k123_3
-			topo_e1_k123_4
-			topo_e1_k123_5
-			topo_e1_k123_6			
+			topo_e1_k24_8			
+			topo_e1_k128_1
 			topo_e3_k7
 			topo_e3_k18
-			topo_e3_k28 - topo_e3_k129
 			topo_e3_k152
 			topo_e3_k157
 			topo_e3_k188_1
@@ -2445,27 +2417,24 @@
 			topo_e3_k198			
 			topo_e3_k200
 			topo_e3_k201
-			topo_e4_k14
+			topo_e3_k195
+			topo_e3_k196
+			topo_e3_k198
 			topo_e4_k18
 			topo_e4_k19
 			topo_e4_k20
 			topo_e4_k22
 			topo_e5_k3
 			topo_e5_k4
-			topo_e6_k8
 			topo_e6_k43
 			topo_e6_k45
 		dodano kontrole:
-		    topo_e1_k2_8_1
 		    topo_e1_k122_2
-			topo_e1_k123_7 - topo_e1_k123_10
 		    topo_e1_k54_1
-			topo_e2_k213
 			topo_e3_k7_1
 		    topo_e3_k202
-			topo_e3_k203
-            topo_e3_k204			
 			topo_e4_k33
+            topo_e2_k213
 			topo_e5_k5
 			topo_e5_k6			
 1.2.0 2025-10-02

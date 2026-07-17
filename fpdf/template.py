@@ -220,9 +220,10 @@ class FlexTemplate:
         self.keys = [val["name"].lower() for val in self.elements]
 
     def __setitem__(self, name, value):
-        assert isinstance(
-            name, str
-        ), f"name must be of type 'str', not '{type(name).__name__}'."
+        if not isinstance(name, str):
+            raise TypeError(
+                f"name must be of type 'str', not '{type(name).__name__}'."
+            )
         # value has too many valid types to reasonably check here
         if name.lower() not in self.keys:
             raise FPDFException(f"Element not loaded, cannot set item: {name}")
@@ -232,15 +233,17 @@ class FlexTemplate:
     set = __setitem__
 
     def __contains__(self, name):
-        assert isinstance(
-            name, str
-        ), f"name must be of type 'str', not '{type(name).__name__}'."
+        if not isinstance(name, str):
+            raise TypeError(
+                f"name must be of type 'str', not '{type(name).__name__}'."
+            )
         return name.lower() in self.keys
 
     def __getitem__(self, name):
-        assert isinstance(
-            name, str
-        ), f"name must be of type 'str', not '{type(name).__name__}'."
+        if not isinstance(name, str):
+            raise TypeError(
+                f"name must be of type 'str', not '{type(name).__name__}'."
+            )
         if name not in self.keys:
             raise KeyError(name)
         key = name.lower()

@@ -101,5 +101,9 @@
 		<Kontrola id="gesut_g2_k1" name="Kontrola atrybutów ksztaltUrzadzenia i geometria" class="GES_UrzadzenieZwiazaneZPrzewodami" errorPhrase="Atrybut ksztaltUrzadzenia przyjmuje wartość pustą dla obiektu o geometrii punkt">
 		<Parametr typ="QgsExpression" sql="geometry_type($geometry)='Point' and ksztaltUrzadzenia= 'NULL'"/>
 		</Kontrola>
+		<Kontrola id="gesut_g2_k2" name="Kontrola geometrii obiektów w zakresie łuków" class="GES_UrzadzenieZwiazaneZPrzewodami" errorPhrase="Obiekt ma niepoprawny typ geometrii w pliku gml">
+		<Parametr typ="pythonFunction" sql="kontrolaGeometriiGML_luki(gml)"/>
+		</Kontrola>
 	</GrupaKontroli>
+	
 </SzablonKontroli>

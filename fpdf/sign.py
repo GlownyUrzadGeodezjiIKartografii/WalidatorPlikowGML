@@ -10,6 +10,7 @@ import hashlib
 from datetime import timezone
 from unittest.mock import patch
 
+from .errors import FPDFException
 from .syntax import build_obj_dict, Name
 from .syntax import create_dictionary_string as pdf_dict
 from .util import buffer_subst
@@ -84,7 +85,11 @@ def sign_content(signer, buffer, key, cert, extra_certs, hashalgo, sign_time):
     )
     contents = _pkcs11_aligned(contents).encode("latin1")
     # Sanity check, otherwise we will break the xref table:
-    assert len(sig_placeholder) == len(contents)
+    if len(sig_placeholder) != len(contents):
+        raise FPDFException(
+            "Generated signature has an invalid size and would corrupt the PDF "
+            "cross-reference table."
+        )
     return buffer.replace(sig_placeholder, contents, 1)
 
 

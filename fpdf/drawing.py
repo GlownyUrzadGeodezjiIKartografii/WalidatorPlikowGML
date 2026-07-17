@@ -1485,7 +1485,11 @@ class GraphicsStyle:
                 want.add("fill")
                 # we need to guarantee that this will not be None. The default will
                 # be "nonzero".
-                assert self.intersection_rule is not None
+                if self.intersection_rule is None:
+                    raise RuntimeError(
+                        "intersection_rule nie może być None podczas wyznaczania PathPaintRule."
+                    )
+                
                 want.add(self.intersection_rule)
 
             try:

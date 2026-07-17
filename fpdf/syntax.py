@@ -219,7 +219,10 @@ class PDFContentStream(PDFObject):
     # method override
     def serialize(self, obj_dict=None, _security_handler=None):
         if _security_handler:
-            assert not obj_dict
+            if obj_dict:
+                raise ValueError(
+                    "obj_dict must not be provided when a security handler is used."
+                )
             if not isinstance(self._contents, (bytearray, bytes)):
                 self._contents = self._contents.encode("latin-1")
             self._contents = _security_handler.encrypt(self._contents, self.id)
@@ -281,7 +284,10 @@ class PDFString(str):
 
     def serialize(self, _security_handler=None, _obj_id=None):
         if _security_handler and self.encrypt:
-            assert _obj_id
+            if _obj_id is None:
+                raise ValueError(
+                    "An object ID is required to encrypt a PDF string."
+                )
             return _security_handler.encrypt_string(self, _obj_id)
         try:
             self.encode("ascii")
@@ -313,7 +319,10 @@ class PDFDate:
 
     def serialize(self, _security_handler=None, _obj_id=None):
         if self.with_tz:
-            assert self.date.tzinfo
+            if self.date.tzinfo is None:
+                raise ValueError(
+                    "A timezone-aware datetime is required when with_tz is True."
+                )
             if self.date.tzinfo == timezone.utc:
                 out_str = f"D:{self.date:%Y%m%d%H%M%SZ%H'%M'}"
             else:
@@ -322,7 +331,10 @@ class PDFDate:
         else:
             out_str = f"D:{self.date:%Y%m%d%H%M%S}"
         if _security_handler and self.encrypt:
-            assert _obj_id
+            if _obj_id is None:
+                raise ValueError(
+                    "An object ID is required to encrypt a PDF date."
+                )
             return _security_handler.encrypt_string(out_str, _obj_id)
         return f"({out_str})"
 
@@ -378,5 +390,8 @@ class DestinationXYZ(Destination):
     def serialize(self, _security_handler=None, _obj_id=None):
         left = round(self.left, 2) if isinstance(self.left, float) else self.left
         top = round(self.top, 2) if isinstance(self.top, float) else self.top
-        assert self.page_ref
+        if not self.page_ref:
+            raise ValueError(
+                "Destination page reference must be assigned before serialization."
+            )
         return f"[{self.page_ref} /XYZ {left} {top} {self.zoom}]"

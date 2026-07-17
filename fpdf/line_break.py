@@ -434,7 +434,10 @@ class CurrentLine:
         height: float,
         url: str = None,
     ):
-        assert character != NEWLINE
+        if character == NEWLINE:
+            raise ValueError(
+                "Argument 'character' nie może być znakiem NEWLINE."
+            )
         self.height = height
         if not self.fragments:
             self.fragments.append(Fragment("", graphics_state, k, url))
@@ -523,7 +526,10 @@ class CurrentLine:
         return self.hyphen_break_hint is not None or self.space_break_hint is not None
 
     def automatic_break(self, align: Align):
-        assert self.automatic_break_possible()
+        if not self.automatic_break_possible():
+            raise FPDFException(
+                "Automatic line break requested without an available break hint"
+            )
         if self.hyphen_break_hint is not None and (
             self.space_break_hint is None
             or self.hyphen_break_hint.line_width > self.space_break_hint.line_width

@@ -31,8 +31,8 @@
 		<Kontrola id="egib_e1_k10" name="Kontrola atrybutu status EGB_WspolnotaGruntowa" class="EGB_WspolnotaGruntowa" errorPhrase="Atrybut status przyjmuje wartość różną od 41">
 			<Parametr typ="QgsExpression" sql="status&lt;&gt;41"/>
 		</Kontrola>
-		<Kontrola id="egib_e1_k11" name="Kontrola atrybutów licznikUlamkaOkreslajacegoWartoscUdzialu i mianownikUlamkaOkreslajacegoWartoscUdzialu wymagane oba parametry" class="EGB_UdzialWeWlasnosci" errorPhrase="Jeśli podano jedną z wartości: licznikUlamkaOkreslajacegoWartoscUdzialu lub mianownikUlamkaOkreslajacegoWartoscUdzialu, to wymagana jest również druga.">
-			<Parametr typ="QgsExpression" sql="(licznikUlamkaOkreslajacegoWartoscUdzialu IS NOT NULL AND mianownikUlamkaOkreslajacegoWartoscUdzialu IS NULL) OR (licznikUlamkaOkreslajacegoWartoscUdzialu IS NULL AND mianownikUlamkaOkreslajacegoWartoscUdzialu IS NOT NULL)"/>
+		<Kontrola id="egib_e1_k11" name="Kontrola atrybutów licznikUlamkaOkreslajacegoWartoscUdzialu i mianownikUlamkaOkreslajacegoWartoscUdzialu dla rodzaju prawa=1" class="EGB_UdzialWeWlasnosci" errorPhrase="Atrybut rodzajPrawa nie przyjmuje wartości 1, więc licznikUlamkaOkreslajacegoWartoscUdzialu oraz mianownikUlamkaOkreslajacegoWartoscUdzialu nie są wymagane">
+			<Parametr typ="QgsExpression" sql="rodzajPrawa&lt;&gt;1"/>
 		</Kontrola>
 		<Kontrola id="egib_e1_k12" name="Kontrola atrybutu klasouzytek (OFU, OZU i OZK) dla OZU=R i błędów w OZK" class="EGB_DzialkaEwidencyjna" errorPhrase="OZK przyjmuje błędną wartość dla OFU równego R,S,Br,Wsr,W lub Lzr i OZU równego R">
 			<Parametr typ="pythonFunction" sql="KontrolaAtrybutuKlasouzytek2(gml)"/>
@@ -95,8 +95,8 @@
 </SzablonKontroli>
 
 <!-- ChangeLog
-1.0.7   zmodyfikowano kontrole:
-			egib_e1_k11 
+1.0.7	usunięto kontrole:
+			egib_e1_k11
 1.0.6   zmodyfikowano kontrole:
 			egib_e1_k6
 			egib_e1_k11 

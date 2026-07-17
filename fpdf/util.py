@@ -40,9 +40,16 @@ class Padding(NamedTuple):
 
 def buffer_subst(buffer, placeholder, value):
     buffer_size = len(buffer)
-    assert len(placeholder) == len(value), f"placeholder={placeholder} value={value}"
+    if len(placeholder) != len(value):
+        raise ValueError(
+            f"placeholder and value must have the same length: "
+            f"placeholder={placeholder} value={value}"
+        )
     buffer = buffer.replace(placeholder.encode(), value.encode(), 1)
-    assert len(buffer) == buffer_size
+    if len(buffer) != buffer_size:
+        raise RuntimeError(
+            "Buffer size changed during placeholder substitution."
+        )
     return buffer
 
 

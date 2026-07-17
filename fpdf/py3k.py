@@ -8,11 +8,6 @@ import sys
 PY3K = sys.version_info >= (3, 0)
 
 try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
-
-try:
 	from urllib import urlopen
 except ImportError:
 	from urllib.request import urlopen

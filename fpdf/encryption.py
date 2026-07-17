@@ -522,8 +522,11 @@ class StandardSecurityHandler:
             + b"adb"
             + self.get_random_bytes(4)
         )
+        
+        # Tryb ECB jest wymagany przez ISO 32000-2, algorytm 10.
+        # Dane mają dokładnie 16 bajtów, czyli jeden blok AES.
         # nosemgrep: python.cryptography.security.insecure-cipher-mode-ecb.insecure-cipher-mode-ecb
-        cipher = Cipher(AES256(self.k), modes.ECB())
+        cipher = Cipher(AES256(self.k), modes.ECB())  # nosec
         encryptor = cipher.encryptor()
         perms = encryptor.update(perms_input) + encryptor.finalize()
         self.perms = perms.hex()

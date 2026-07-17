@@ -5,6 +5,7 @@ Hint tables / hint streams have not been implemented yet,
 and there are a few "TODO" comment remaining.
 cf. https://github.com/py-pdf/fpdf2/issues/62
 """
+from .errors import FPDFException
 from .output import ContentWithoutID, OutputProducer, PDFHeader
 from .sign import sign_content
 from .syntax import PDFArray, PDFContentStream, PDFObject
@@ -73,9 +74,10 @@ class PDFXrefAndTrailer(ContentWithoutID):
         out.append(f"{0 if self.start_obj_id == 1 else self.start_obj_id} {self.count}")
         if not self.is_first_xref:
             out.append("0000000000 65535 f ")
-        assert (
-            len(builder.offsets) > 1
-        ), "TODO: how to know the offsets in the 1st xref at this stage?"
+        if len(builder.offsets) <= 1:
+            raise FPDFException(
+                "Insufficient object offsets to build the cross-reference table"
+            )
         for obj_id in range(self.start_obj_id, self.start_obj_id + self.count):
             out.append(f"{builder.offsets[obj_id]:010} 00000 n ")
         out.append("trailer")
@@ -231,12 +233,16 @@ class LinearizedOutputProducer(OutputProducer):
             xref.info_obj = info_obj
 
         # 3. Serializing - Append all PDF objects to the buffer:
-        assert (
-            not self.buffer
-        ), f"Nothing should have been appended to the .buffer at this stage: {self.buffer}"
-        assert (
-            not self.offsets
-        ), f"No offset should have been set at this stage: {len(self.offsets)}"
+        if self.buffer:
+            raise FPDFException(
+                "Nothing should have been appended to the .buffer at this stage: "
+                f"{self.buffer}"
+            )
+        if self.offsets:
+            raise FPDFException(
+                "No offset should have been set at this stage: "
+                f"{len(self.offsets)}"
+            )
         for pdf_obj in self.pdf_objs:
             if isinstance(pdf_obj, ContentWithoutID):
                 # top header, xref table & trailer:
