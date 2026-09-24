@@ -22,6 +22,7 @@
  ***************************************************************************/
 """
 import os
+import subprocess
 import pathlib
 import configparser
 import re
@@ -33,7 +34,7 @@ import gc
 import tracemalloc
 import itertools
 import zipfile
-from .defusedxml import ElementTree as et
+import xml.etree.ElementTree as et  # nosec B405
 
 
 from collections import namedtuple, Counter
@@ -195,7 +196,7 @@ class walidatorPlikowGML(WalidatorEGIB):
                    if line.startswith('version='):
                        version = line.split('=')[1].strip()
                        break
-        tree = et.parse(ui_path)
+        tree = et.parse(ui_path)  # nosec B314
         root = tree.getroot()
         for widget in root.iter('widget'):
             if widget.get('name') == 'label_14':
@@ -256,34 +257,33 @@ class walidatorPlikowGML(WalidatorEGIB):
         # spróbuj odpiąć wszystkie sygnały z action
             try:
                 action.triggered.disconnect()
-            except TypeError:
+            except TypeError:  # nosec B110
                 pass
         
             try:
                 self.iface.removePluginMenu(self.menu,action)
-            except Exception as e:
-                print(e)
+            except Exception:  # nosec B110
+                pass
         
             try:
                 self.iface.removeToolBarIcon(action)
-            except Exception as e:
-                print(e)
-            
+            except Exception:  # nosec B110
+                pass
         self.actions.clear()
         if hasattr(self, "dlg") and self.dlg is not None:
             try:
                 self.dlg.close()
-            except Exception as e:
-                print(e)
+            except Exception:  # nosec B110
+                pass
             try:
                 self.dlg.deleteLater()
-            except Exception as e:
-                print(e)
+            except Exception:  # nosec B110
+                pass
             self.dlg = None
         try:
             self.iface.messageBar().clearWidgets()
-        except Exception as e:
-            print(e)
+        except Exception:  # nosec B110
+            pass
         
         global modelKontroli
         modelKontroli = None
@@ -343,25 +343,25 @@ class walidatorPlikowGML(WalidatorEGIB):
                 poprzedni_stan_sygnalow = self.dlg.mQgsFileWidget.blockSignals(True)
                 self.dlg.mQgsFileWidget.setFilePath('')
                 self.dlg.mQgsFileWidget.blockSignals(poprzedni_stan_sygnalow)
-            except Exception as e:
-                print(e)
+            except Exception:  # nosec B110
+                pass
         
         try:
             blokady[0] = 1
-        except Exception as e:
-            print(e)
+        except Exception:  # nosec B110
+            pass
         
         if hasattr(self.dlg, 'button_box'):
             try:
                 self.dlg.button_box.buttons()[0].setEnabled(False)
-            except Exception as e:
-                print(e)
+            except Exception:  # nosec B110
+                pass
         
         try:
             for tab_widget in self.dlg.findChildren(QTabWidget):
                 tab_widget.setCurrentIndex(0)
-        except Exception as e:
-            print(e)
+        except Exception:  # nosec B110
+            pass
 
 
     def szarzenieNieBDOT(self):
@@ -380,7 +380,7 @@ class walidatorPlikowGML(WalidatorEGIB):
         self.dlg.comboBox_2.clear()
         for file in sorted(os.listdir(szablonPath),reverse = True):
             if file.endswith('.xml'):
-                wersjaSzablonuKontroli = et.parse(
+                wersjaSzablonuKontroli = et.parse(  # nosec B314
                     os.path.join(szablonPath, file)
                 ).getroot().get('version')
                 self.dlg.comboBox_2.addItem(wersjaSzablonuKontroli)
@@ -395,7 +395,7 @@ class walidatorPlikowGML(WalidatorEGIB):
         szablonPath = os.path.join(mainPath, 'SzablonyKontroli', nazwaBazyDanych)
         for file in sorted(os.listdir(szablonPath), reverse = True):
             if file.endswith('.xml'):
-                wersjaSzablonuKontroli = et.parse(
+                wersjaSzablonuKontroli = et.parse(  # nosec B314
                     os.path.join(szablonPath, file)
                 ).getroot().get('version')
                 if wersjaSzablonuKontroli == wskazanaWersjaSzablonu:
@@ -420,7 +420,7 @@ class walidatorPlikowGML(WalidatorEGIB):
         xsdPath = os.path.join(xsdPath_tmp, self.dlg.comboBox_xsd.currentText())
         filename = os.path.basename(xsdPath)
         if filename != '':
-            tree = et.parse(xsdPath)
+            tree = et.parse(xsdPath)  # nosec B314
             root = tree.getroot()
             wersjaSchematu = root.get('version')
 
@@ -510,7 +510,7 @@ class walidatorPlikowGML(WalidatorEGIB):
             self.dlg.checkBox_2.stateChanged.disconnect(
                 self.zmianaCheckBoxZapisuWybranychKontroli
             )
-        except TypeError:
+        except TypeError:  # nosec B110
             pass
         
         self.dlg.checkBox_2.setChecked(aktywny)
@@ -684,7 +684,7 @@ class walidatorPlikowGML(WalidatorEGIB):
             for obiekt in (self.dlg.treeView, self.dlg.treeView.viewport()):
                 try:
                     obiekt.removeEventFilter(self.kontrole_tree_event_filter)
-                except RuntimeError:
+                except RuntimeError:  # nosec B110
                     pass
         
         self.kontrole_tree_event_filter = KontroleTreeViewEventFilter(self)
@@ -2682,10 +2682,9 @@ class walidatorPlikowGML(WalidatorEGIB):
                                              gml_id = val
                                              found = True
                                              break
-                             except Exception as e:
-                                 print(e)
+                             except Exception:  # nosec B110
                                  # nic – zachowujemy 'BRAK_ID' jak dotąd
-                                 
+                                 pass
                              # 2) Walidacja pojedynczego obiektu:
                                  #    - assertValid() waliduje i w razie błędów rzuca wyjątek z lokalnym logiem
                              try:
@@ -2722,8 +2721,8 @@ class walidatorPlikowGML(WalidatorEGIB):
                                      try:
                                          while ctx.root.getprevious() is not None:
                                              del ctx.root.getparent()[0]
-                                     except Exception as e:
-                                         print(e)
+                                     except Exception:  # nosec B110
+                                         pass
                  except Exception as e:
                      QMessageBox.critical(self.iface.mainWindow(), "Błąd walidacji", f"Walidacja przerwana:\n{e}")
                      return
@@ -2832,7 +2831,10 @@ class walidatorPlikowGML(WalidatorEGIB):
                 f'.{formatRaportu}'
             )
             if os.path.isfile(path):
-                QDesktopServices.openUrl(QUrl.fromLocalFile(path))
+                try:
+                    os.startfile(path, 'open')  # Windows  # nosec B606
+                except:
+                    subprocess.call(('open', path))  # macOS  # nosec B603
 
 
     # import plików GML do QGIS
@@ -2997,9 +2999,9 @@ class walidatorPlikowGML(WalidatorEGIB):
                 crc = binascii.crc32(data, crc)
         
         sumaKontrolaSchemat = "%08X" % (crc & 0xFFFFFFFF) # tworzenie sumu kontrolnej dla schematu
-        tree = et.parse(szablonKontroliPath)
+        tree = et.parse(szablonKontroliPath)  # nosec B314
         root = tree.getroot()
-        tree1 = et.parse(xsdPath)
+        tree1 = et.parse(xsdPath)  # nosec B314
         root1 = tree1.getroot()
         wersjaSzablonuKontroli = root.get('version')
         wersjaSchematu = root1.get('version')

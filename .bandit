@@ -1,0 +1,4 @@
+[bandit]
+# Biblioteka zewnętrzna dołączona do wtyczki (fpdf2).
+# Kod własny wtyczki pozostaje objęty analizą Bandit.
+exclude: Walidator_plikow_gml/fpdf

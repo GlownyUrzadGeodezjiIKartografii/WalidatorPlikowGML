@@ -21,6 +21,7 @@
  *                                                                         *
  ***************************************************************************/
 """
+
 from qgis.core import *
 from qgis.PyQt.QtCore import *
 from qgis import processing
@@ -53,6 +54,11 @@ loaded_shp = {'OT_TCPN_A':[],'OT_TCPK_A':[],'OT_TCRZ_A':[],'OT_TCON_A':[]}
 
 
 def findDuplicates(layer):
+    r"""
+    Baza: BDOT10k i MGR. Funkcja wybiera punkty różne od ‘punkt
+    wysokościowy w terenie’, w celu wykrycia zduplikowanych obiektów.
+    """
+    
     obiektyZbledami = []
     
     extractbyexpression = processing.run("native:extractbyexpression", {
@@ -86,16 +92,17 @@ def findDuplicates(layer):
                     if not czyObiektIstnieje:
                         obiektyZbledami.append(obj1)
         localFun(obiektyZbledami, extractbyexpression['OUTPUT'])
-
+        
     return obiektyZbledami
 
 
 def findDuplicatesOT(layer):
     """
-    Wykrywa duplikaty obiektów OT. 
-    Dla OT_ADJA/ADMS/ADMS_P i OT_TCON_A ignoruje obiekty z identyczną geometrią, 
-    jeśli różnią się wartościami wybranych atrybutów ('rodzaj' dla AD*, 'numerCRFOP' dla TCON).
+    Wykrywa duplikaty obiektów OT. Dla OT_ADJA/ADMS/ADMS_P i OT_TCON_A
+    ignoruje obiekty z identyczną geometrią, jeśli różnią się wartościami
+    wybranych atrybutów ('rodzaj' dla AD*, 'numerCRFOP' dla TCON).
     """
+    
     obiektyZbledami = []
     try:
         if not layer or not layer.isValid():
@@ -141,12 +148,13 @@ def findDuplicatesOT(layer):
     except Exception as e:
         print(f"Błąd w kontroli findDuplicatesOT: {e}")
         obiektyZbledami = []
-
+        
     return obiektyZbledami
 
 
 def validateGeometryRTLW(layer):
     """Kontrola geometrii OT_RTLW_L: zdublowane wierzchołki, samoprzecięcia linii."""
+    
     obiektyZbledami = []
     lokalizator_bledow = QgsVectorLayer(
         "Point?crs=EPSG:2180",
@@ -161,10 +169,8 @@ def validateGeometryRTLW(layer):
     ])
     lokalizator_bledow.updateFields()
     def get_attr(f, name, default=""):
-        try:
-            return f[name]
-        except:
-            return default
+        try: return f[name]
+        except: return default
     def has_duplicate_vertices(pts, closed):
         seen = set()
         limit = len(pts)-1 if closed else len(pts)
@@ -241,19 +247,19 @@ def validateGeometryRTLW(layer):
     if lokalizator_bledow.featureCount() > 0:
         lokalizator_bledow.updateExtents()
         QgsProject.instance().addMapLayer(lokalizator_bledow)
-
+        
     return obiektyZbledami
 
 
 lokalizator_bledow = None
 def validateGeometry(layer):
     """Kontrola geometrii: checkValidity, zdublowane wierzchołki, samoprzecięcia linii."""
+    
     global lokalizator_bledow
     obiektyZbledami = []
     def get_attr(f, name, default=""):
         try: return f[name]
-        except:
-            return default
+        except: return default
     def extract_coords(geom):
         if geom.isEmpty(): return []
         t = geom.type()
@@ -358,7 +364,7 @@ def validateGeometry(layer):
             geom = f.geometry()
             if not geom or geom.isEmpty(): continue
             coords_list = extract_coords(geom)
-
+            
             for ring in coords_list:
                 for i in range(len(ring)-1):
                     for j in range(i+2, len(ring)-1):
@@ -370,15 +376,17 @@ def validateGeometry(layer):
                             feat.setGeometry(QgsGeometry.fromPointXY(QgsPointXY(round(pt[0],2), round(pt[1],2))))
                             feat.setAttributes([None, None, layer.name(), "samoprzecięcie pierścienia"])
                             dp.addFeature(feat)
-
+                            
     if lokalizator_bledow and dp.featureCount()>0 and lokalizator_bledow not in QgsProject.instance().mapLayers().values():
         lokalizator_bledow.updateExtents()
         QgsProject.instance().addMapLayer(lokalizator_bledow)
-
+        
     return obiektyZbledami
 
 
 def adjaMinus2cmBufor(layer):
+    """Funkcja tworzy bufor ujemny dla adja_a tj. -2cm."""
+    
     config = configparser.ConfigParser()
     mainPath = pathlib.Path(QgsApplication.qgisSettingsDirPath()) / pathlib.Path(r"python/plugins/Walidator_plikow_gml/")
     config.read(str(mainPath) + '/Walidator_plikow_gml.ini')
@@ -420,6 +428,13 @@ def adjaMinus2cmBufor(layer):
 
 
 def minimalnaPowierzchnia(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza czy obiekty klas powierzchniowych zawierają
+    obiekty o mniejszej powierzchni niż podana w parametrze po za obszarem
+    bufora 2 cm od granicy powiatu (z PRG). W przypadku klasy OT_BUZT_A jest
+    dodatkowy warunek, wykluczający z kontroli obiekty o rodzaju ‘osadnik’.
+    """
+    
     minPowWarstwy = {"OT_PTWP_A":80,"OT_PTLZ_A":500, "OT_PTRK_A":1000,"OT_PTUT_A":1000,"OT_PTGN_A":1000,
                      "OT_PTSO_A":1000,"OT_PTWZ_A":1000,"OT_PTNZ_A":1000,"OT_BUWT_A":100,"OT_BUZT_A":175,"OT_KUSK_A":3000,
                      "OT_KUHO_A":3000,"OT_KUHU_A":3000,"OT_KUOS_A":3000,"OT_KUOZ_A":3000,"OT_KUZA_A":3000}
@@ -440,6 +455,12 @@ def minimalnaPowierzchnia(layer):
 
 
 def minimalnaPTRKwzgledemPTLZ(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza czy obiekty klasy OT_PTRK_A (roślinność
+    krzewiasta) zawierają obiekty o mniejszej powierzchni niż 2000 m² w przypadku
+    gdy rodzaj ‘krzewy’ znajdują się na terenie lasów (klasa OT_PTLZ_A).
+    """
+    
     obiektyZbledami = []
     if layer.name()[-6:] == 'PTRK_A':
         PTLZ_A_layer = QgsProject().instance().mapLayersByName(layer.name().replace("OT_PTRK_A","OT_PTLZ_A"))[0]
@@ -462,11 +483,24 @@ def minimalnaPTRKwzgledemPTLZ(layer):
 
 
 def minimalnaPTTRronda(layer):
+    r"""
+    Baza: BDOT10k. Funkcja działa sprawdza czu obiekty z klasy OT_PTTR_A (roślinność
+    trawiasta) powierzchniowych zawierają obiekty o mniejszej powierzchni niż
+    1000 m²), lub jest sąsiadem dla obiektu z tej samej warstwy za wyjątekiem
+    obiektów przecinające się z obiektami o rodzaju ‘rondo’ z klasy OT_SKRW_P.
+    """
+    
     minimalnaPowierzchniaBezWod(layer)
     return obiektyZbledami
 
 
 def minimalnaPowierzchniaBezWod(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza czy obiekty klas powierzchniowych zawierają obiekty
+    o mniejszej powierzchni niż podana w parametrze, za wyjątkiem przypadku, gdy otacza
+    je jeden obiekt z klasy OT_PTWP_A (gdy obiekt jest wyspą na zbiorniku wodnym)
+    """
+    
     obiektyZbledami = []
     minPow = {"OT_PTGN_A":1000,"OT_PTLZ_A":500,"OT_PTRK_A":1000,"OT_PTTR_A":500,"OT_PTZB_A":1000}
     klasa = layer.name()[-9:]
@@ -517,6 +551,12 @@ def minimalnaPowierzchniaBezWod(layer):
 
 
 def minimalnaPTPL(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza czy obiekty klasy OT_PTPL_A zawierają obszary o
+    mniejszej powierzchni niż 1000 m², po za obszarem bufora 2 cm od granicy powiatu (z
+    PRG), w przypadku, gdy atrybut 'placNazwa1' nie jest pusty (placma określoną nazwę).
+    """
+    
     global obiektyZbledami
     obiektyZbledami = []
     
@@ -549,6 +589,12 @@ def minimalnaPTPL(layer):
 
 
 def minimalnaBUIT(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza czy obiekty klasy OT_BUIT_A (inne urządzenia techniczne)
+    zawierają obszary o mniejszej powierzchni niż 1000 m², po za obszarem bufora 2 cm od granicy
+    powiatu (z PRG). dla rodzajów 'zespół dystrybutorów paliwa' lub 'zespół transformatorów'.
+    """
+    
     obiektyZbledami = []
     if layer.name()[-6:] == 'BUIT_A':
         BUIT_A_layer = QgsProject().instance().mapLayersByName(layer.name())[0]
@@ -566,6 +612,13 @@ def minimalnaBUIT(layer):
 
 
 def minimalnaKUPG(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza czy obiekty klasy OT_KUPG_A (kompleks
+    przemysłowo-gospodarczy) zawierają obszary o mniejszej powierzchni niż 3000 m²,
+    po za obszarem bufora 2 cm od granicy powiatu (z PRG), dla rodzajów innych niż
+    'oczyszczalnia ścieków' lub 'podstacja elektroenergetyczna', teren ujęcia wody' .
+    """
+    
     obiektyZbledami = []
     if layer.name()[-6:] == 'KUPG_A':
         KUPG_A_layer = QgsProject().instance().mapLayersByName(layer.name())[0]
@@ -583,6 +636,12 @@ def minimalnaKUPG(layer):
 
 
 def minimalnaKUKO(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza czy obiekty klasy OT_KUKO_A (kompleks komunikacyjny)
+    zawierają obszary o mniejszej powierzchni niż 3000 m², po za obszarem bufora
+    2 cm od granicy powiatu (z PRG), dla rodzaju innego niż 'stacja paliw’.
+    """
+    
     obiektyZbledami = []
     if layer.name()[-6:] == 'KUKO_A':
         KUKO_A_layer = QgsProject().instance().mapLayersByName(layer.name())[0]
@@ -600,6 +659,12 @@ def minimalnaKUKO(layer):
 
 
 def minimalnaKUSC(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza czy obiekty klasy OT_KUSC_A (kompleks sakralny i
+    cmentarz) zawierają obszary o mniejszej powierzchni niż 5000 m², po za obszarem
+    bufora 2 cm od granicy powiatu (z PRG), dla rodzaju ‘zespół sakralny lub klasztorny’.
+    """
+    
     obiektyZbledami = []
     if layer.name()[-6:] == 'KUSC_A':
         KUSC_A_layer = QgsProject().instance().mapLayersByName(layer.name())[0]
@@ -617,6 +682,11 @@ def minimalnaKUSC(layer):
 
 
 def minimalnaOIKM(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza czy obiekty klasy OT_OIKM_A (obiekt związany z
+    komunikacją) zawierają obszary o mniejszej powierzchni niż 500 m², dla rodzaju ‘schody’.
+    """
+    
     obiektyZbledami = []
     if layer.name()[-6:] == 'OIKM_A':
         OIKM_A_layer = QgsProject().instance().mapLayersByName(layer.name())[0]
@@ -634,6 +704,12 @@ def minimalnaOIKM(layer):
 
 
 def minimalnaOIORschron(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza czy obiekty klasy OT_OIOR_A (obiekt o znaczeniu
+    orientacyjnym) zawierają obszary o mniejszej powierzchni niż 100 m² po za
+    obszarem bufora 2 cm od granicy powiatu (z PRG), dla rodzaju ‘bunkier lub schron’.
+    """
+    
     obiektyZbledami = []
     if layer.name()[-6:] == 'OIOR_A':
         OIOR_A_layer = QgsProject().instance().mapLayersByName(layer.name())[0]
@@ -651,6 +727,12 @@ def minimalnaOIORschron(layer):
 
 
 def minimalnaOIORszklarnia(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza czy obiekty klasy OT_OIOR_A (obiekt o znaczeniu
+    orientacyjnym) zawierają obszary o mniejszej powierzchni niż 100 m² po za obszarem
+    bufora 2 cm od granicy powiatu (z PRG), dla rodzaju ‘szklarnia niebędąca budynkiem’.
+    """
+    
     obiektyZbledami = []
     if layer.name()[-6:] == 'OIOR_A':
         OIOR_A_layer = QgsProject().instance().mapLayersByName(layer.name())[0]
@@ -668,6 +750,12 @@ def minimalnaOIORszklarnia(layer):
 
 
 def minimalnaOIORwiataAltana(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza czy obiekty klasy OT_OIOR_A (obiekt o znaczeniu
+    orientacyjnym) zawierają obszary o mniejszej powierzchni niż 200 m² po za
+    obszarem bufora 2 cm od granicy powiatu (z PRG), dla rodzaju ‘wiata lub altana’.
+    """
+    
     obiektyZbledami = []
     if layer.name()[-6:] == 'OIOR_A':
         KUKO_A_layer = QgsProject().instance().mapLayersByName(layer.name().replace("OT_OIOR_A","OT_KUKO_A"))[0]
@@ -690,6 +778,8 @@ def minimalnaOIORwiataAltana(layer):
 
 
 def minimalnaBUBD(layer):
+    """ TODO """
+    
     try:
         if not layer.name().endswith("OT_BUBD_A"):
             return []
@@ -872,6 +962,8 @@ MAX_KOND = {
     "zakład karny": 5,"zakład karny lub poprawczy": 7,"zakład poprawczy": 6,
     "zbiornik na ciecz": 4,"zbiornik na gaz": 3,"żłobek": 5
 }
+
+
 def kontrolaAtrybutuLiczbaKondygnacji(layer):
     """
     Kontrola atrybutu 'liczbaKondygnacji' w OT_BUBD_A:
@@ -879,6 +971,7 @@ def kontrolaAtrybutuLiczbaKondygnacji(layer):
     - brak funkcji → limit 21 w miastach na prawach powiatu, 12 poza;
     - limit MAX_KOND dla znanych funkcji.
     """
+    
     try:
         if not layer.name().endswith("OT_BUBD_A"):
             return []
@@ -942,14 +1035,13 @@ def kontrolaAtrybutuLiczbaKondygnacji(layer):
         print("Błąd w kontrolaAtrybutuLiczbaKondygnacji:", e)
         return []
 
-       
 
 def kontrolaIdentyfikatoraEGiB_len(layer, plikGML):
     """
-    Kontrola nadliczbowych i nadmiarowych identyfikatorów EGiB.
-    Budynki EGiB: więcej niż jeden identyfikator - BŁĄD
-    Budynki inne źródło niż EGiB: posiada identyfikator - BŁĄD
+    Kontrola nadliczbowych i nadmiarowych identyfikatorów EGiB. Budynki EGiB: więcej niż
+    jeden identyfikator - BŁĄD Budynki inne źródło niż EGiB: posiada identyfikator - BŁĄD
     """
+    
     obiektyZbledami=[]
     if not layer or not layer.name().endswith("OT_BUBD_A"): return []
     try:
@@ -975,19 +1067,20 @@ def kontrolaIdentyfikatoraEGiB_len(layer, plikGML):
             zrodlo = (m.findtext('ot:zrodloDanychGeometrycznych','',ns) or '').strip().upper()
             if (zrodlo == 'EGIB' and len(idents) > 1) or (zrodlo != 'EGIB' and len(idents) > 0):
                 obiektyZbledami.append(feature)
-        except Exception as e:
+        except Exception as e:  # nosec B112
             print(f"Błąd w elemencie {lid}: {e}")
             continue
-
+            
     return obiektyZbledami
 
 
 
 def kontrolaIdentyfikatoraEGiB_pattern(layer, plikGML):
     """
-    Kontrola identyfikatora EGiB: dokładnie 1 wartość,
-    prefiks zgodny z TERYT powiatu, dopasowanie do wzorca ^\d{6}_.+_BUD
+    Kontrola identyfikatora EGiB: dokładnie 1 wartość, prefiks
+    zgodny z TERYT powiatu, dopasowanie do wzorca ^\d{6}_.+_BUD
     """
+    
     obiektyZbledami=[]
     if not layer or not layer.name().endswith("OT_BUBD_A"): return []
     nazwa = layer.name()
@@ -1020,15 +1113,16 @@ def kontrolaIdentyfikatoraEGiB_pattern(layer, plikGML):
             srodkowa = ident[7:-4] if len(ident)>10 else ''
             if not regex.match(ident) or len(srodkowa)>25 or not ident.startswith(teryt_powiat):
                 obiektyZbledami.append(lokalnyId_to_feature[lid])
-        except Exception as e:
+        except Exception as e:  # nosec B112
             print(f"Błąd w elemencie {lid}: {e}")
             continue
-
+            
     return obiektyZbledami
-    
 
 
 def granicePowiatow():
+    """ TODO """
+    
     config = configparser.ConfigParser()
     mainPath = pathlib.Path(QgsApplication.qgisSettingsDirPath())/pathlib.Path(r"python/plugins/Walidator_plikow_gml/")
     config.read(str(mainPath)+'/Walidator_plikow_gml.ini')
@@ -1050,14 +1144,24 @@ def granicePowiatow():
 
 
 def czyPrzecinaGranicePowiatuDlugoscPonizej50m(layer): # kompatabilnosć w szablonie kontroli
+    """ TODO """
+
     czyPrzecinaGranicePowiatuDlugoscPonizej25m(layer)
+
+
 def czyPrzecinaGranicePowiatuDlugoscPonizej25m(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza czy obiekty z klasy OT_RTLW_L (Rzeźba terenu-
+    linia wysokościowa), mające wypełnione atrybut „kodKarto10k” mają co najmniej 25
+    metrów i jest odległa od bufora, o szerokości 7,5 m z granicą powiatu (z PRG).
+    """
+    
     from qgis.core import QgsSpatialIndex
     obiektyZbledami = []
     try:
         if not layer or not layer.isValid() or not layer.name().endswith("OT_RTLW_L"):
             return obiektyZbledami
-
+            
         granica_layer = adjaMinus2cmBufor(layer)
         granica_buf_geom = None
         for g in granica_layer.getFeatures():
@@ -1096,15 +1200,23 @@ def czyPrzecinaGranicePowiatuDlugoscPonizej25m(layer):
             if granica_buf_geom.intersects(geom):
                 continue
             obiektyZbledami.append(f)
-
+            
         return obiektyZbledami
-
+        
     except Exception as e:
         print("Błąd w funkcji czyPrzecinaGranicePowiatuDlugoscPonizej25m:", e)
         return []
 
 
 def czyObiektyWewnatrzPowiatu(layer, teryt):
+    r"""
+    Baza: BDOT10k i MGR. Funkcja wymaga podania warstwy referencyjnej z granicami powiatów (z
+    pliku dodawanego z zakładce „Dane źródłowe”), na podstawie której tworzy bufor (2 cm) dla
+    granicy powiatu, a następnie różnicę między testowaną warstwą, a buforem. Wyodrębniana
+    jest różnica danej warstwy i bufora. Obiekty tej różnicy są raportowane. Warstwa
+    referencyjna jest dodawana do głównej listy warstw pod nazwą: „granica powiatu z PRG”
+    """
+    
     obiektyZbledami = []
     config = configparser.ConfigParser()
     mainPath = pathlib.Path(QgsApplication.qgisSettingsDirPath()) / "python/plugins/Walidator_plikow_gml/"
@@ -1191,12 +1303,14 @@ def czyObiektyWewnatrzPowiatu(layer, teryt):
                 obiektyZbledami.append(nowy_feat)
         if obiektyZbledami and all(lyr.name() != "granica powiatu z PRG" for lyr in QgsProject.instance().mapLayers().values()):
             QgsProject.instance().addMapLayer(granica_powiatu)
-
+            
     return obiektyZbledami
 
 
 
 def czyPunktyWewnatrzPowiatu(layer):
+    """ TODO """
+    
     punktowe_warstwy = {
         "OT_SKRW_P", "OT_OIPR_P", "OT_OIOR_P",
         "OT_OIKM_P", "OT_KUPG_P", "OT_KUKO_P", "OT_BUZT_P",
@@ -1248,6 +1362,8 @@ def czyPunktyWewnatrzPowiatu(layer):
 
 
 def czyPunktyWewnatrzPowiatu_RTPW(layer):
+    """ TODO """
+    
     if not layer.isValid():
         return []
         
@@ -1297,6 +1413,14 @@ def czyPunktyWewnatrzPowiatu_RTPW(layer):
 
 
 def czyOdleglosciMiedzyPoziomicami2m(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza dla obiektów klasy OT_RTLW_L o rodzaju
+    ‘poziomica’ oraz z wypełnionym atrybutem ‘kodKarto10k’ czy odległości pomiędzy
+    obiektami nie są mniejsze niż 2 m. Kontrola tworzy warstwę ‘nakładania
+    poziomic’ w przypadku pojawienia się błędów, która gromadzi dane w przypadku
+    gdy pojawią się obiekty przecinające 2 cm bufor sąsiedniego obiektu.
+    """
+    
     obiekty_z_bledami = []
     
     poziomice = processing.run("native:extractbyexpression", {
@@ -1304,8 +1428,8 @@ def czyOdleglosciMiedzyPoziomicami2m(layer):
         'EXPRESSION': '"rodzaj" = \'poziomica\' and "kodKarto10k" != \'\'',
         'FAIL_OUTPUT': 'memory:',
         'OUTPUT': 'memory:'
-    })    
-    # bufor
+    })
+    
     bufor = processing.run("native:buffer", {
         'INPUT': poziomice['OUTPUT'],
         'DISTANCE': 0.999,
@@ -1362,6 +1486,13 @@ def czyOdleglosciMiedzyPoziomicami2m(layer):
 
 
 def nadmiernaSegmentacja(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza czy w warstwie występują obiekty o takich samych atrybutach,
+    odległych od siebie o mniej niż 0,01 m i takiej samej, równej geometrii. W celu szybszego
+    działania funkcja wykorzystuje algorytm najbliższego sąsiedztwa w indeksie przestrzennym.
+    Wyłącza przypadki, gdy obiekt ma tylko dwa wierzchołki o takich samych współrzędnych.
+    """
+    
     try:
         id_to_feature = {f.id(): f for f in layer.getFeatures()}
         obiekty_z_bledami = []
@@ -1390,6 +1521,13 @@ def nadmiernaSegmentacja(layer):
 
 
 def nadmiernaSegmentacja_rtwl(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza dla obiektów z klasy OT_RTLW_L o rodzaju
+    ‘poziomica’ z wypełnionym atrybutem ‘kodKarto10k’ czy są obiekty w tej samej
+    grupiej haszującej (tworzonego wcześniej na podstawie atrybutów warstwy bez
+    pierwszych dwóch) o segmentach linii mniejszych niż 0.01 m oraz równej geometrii.
+    """
+    
     poziomice = processing.run("native:extractbyexpression", {
         'INPUT': layer,
         'EXPRESSION': '"rodzaj" = \'poziomica\' and "kodKarto10k" != \'\'',
@@ -1429,6 +1567,12 @@ def nadmiernaSegmentacja_rtwl(layer):
 
 
 def przewerteksowanie(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza dla obiektów z klasy OT_RTLW_L czy nie występuje
+    nadmierna ilość werteksów w obiektach o rodzaju ‘poziomica’ poprzez uproszczenie
+    geometrii i obliczenie różnicy, między obiektem uproszczonym, a podstawowym linii.
+    """
+    
     obiekty_z_bledami = []
     
     poziomice = processing.run("native:extractbyexpression", {
@@ -1464,6 +1608,15 @@ def przewerteksowanie(layer):
 
 
 def przecieciaLiniiNapieciaPodziemna(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza czy linie elektroenergetyczne (OT_SULN_L) rodzaju:
+    'linia elektroenergetyczna średniego napięcia’, 'linia elektroenergetyczna
+    wysokiego napięcia' oraz 'linia elektroenergetyczna najwyższego napięcia' mają
+    poprawnie przypisany kod kartograficzny 0010_444 (kod ten powinna posiadać każda
+    linia średniego napięcia, a w przypadku wysokiego i najwyższego napięcia tylko
+    te oiekty, które nie przecinają się ze słupami energetycznymi z klasy BUWT_P.)
+    """
+    
     try:
         obiekty_z_bledami, sprawdzone_gml = [], set()
         if not layer.name().endswith("SULN_L"):
@@ -1530,15 +1683,23 @@ def przecieciaLiniiNapieciaPodziemna(layer):
                 if (not przecina and kod == '') or (przecina and kod == '0010_444'):
                     obiekty_z_bledami.append(feature)
                     sprawdzone_gml.add(gml_id)
-
+                    
         return obiekty_z_bledami
-
+        
     except Exception as e:
         print(f"Błąd w przecieciaLiniiNapieciaPodziemna: {e}")
         return []
 
 
 def przecieciaLiniiNapieciaNadziemna(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza czy linie elektroenergetyczne (OT_SULN_L) rodzaju:
+    'linia elektroenergetyczna wysokiego napięcia' oraz 'linia elektroenergetyczna
+    najwyższego napięcia' mają poprawnie przypisany kod kartograficzny 0010_446
+    (kod ten powinny posiadać linie wysokiego i najwyższego napięcia, w
+    sytuacji gdy przecinają się ze słupami energetycznymi z klasy BUWT_P.)
+    """
+    
     try:
         obiekty_z_bledami, sprawdzone_gml = [], set()
         if not layer.name().endswith("SULN_L"):
@@ -1603,9 +1764,9 @@ def przecieciaLiniiNapieciaNadziemna(layer):
                 if (przecina and kod != '0010_446') or (not przecina and kod == '0010_446'):
                     obiekty_z_bledami.append(f)
                     sprawdzone_gml.add(gml_id)
-
+                    
         return obiekty_z_bledami
-
+        
     except Exception as e:
         print(f"Błąd w przecieciaLiniiNapieciaNadziemna: {e}")
         return []
@@ -1613,9 +1774,10 @@ def przecieciaLiniiNapieciaNadziemna(layer):
 
 def kontrolaZgodnosciAtrybutowADMS(layer):
     """
-    Kontrola zgodności atrybutów ADMS_A vs ADMS_P
-    oraz globalnej unikalności punktów głównych miejscowości (tylko dla ADMS_P).
+    Kontrola zgodności atrybutów ADMS_A vs ADMS_P oraz globalnej
+    unikalności punktów głównych miejscowości (tylko dla ADMS_P).
     """
+    
     try:
         if not layer.name().endswith(('ADMS_A','ADMS_P')):
             return []
@@ -1658,13 +1820,20 @@ def kontrolaZgodnosciAtrybutowADMS(layer):
                             obiektyZbledami.append(f)
                             zgloszone.add(f.id())
         return obiektyZbledami
-
+        
     except Exception as e:
         print(f"Błąd w kontroli ADMS: {e}")
         return []
 
 
 def kontrola_OT_ADMS_P_z_OT_ADMS_A(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza czy klasy OT_ADMS_A lub OT_ADMS_P
+    (miejscowści) nie przecinająsię między obiektami lub zawierają się wewnątrz
+    siebie, mając o taką samą nazwą (na podstawie atrybutu ‘nazwa’) oraz czy
+    warstwyposiadają te same nazwy między sobą oraz czy są spójne między sobą.
+    """
+    
     obiekty_z_bledami = []
     OT_ADMS_A_layer = None
     OT_ADMS_P_layer = None
@@ -1700,9 +1869,18 @@ def kontrola_OT_ADMS_P_z_OT_ADMS_A(layer):
     return obiekty_z_bledami
 
 
-
-
 def fullCoverage(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza czy obiekty z kategorii ‘pokrycie terenu‘, leżą w granicy
+    danego powiatu (dane z PRG), a następnie sprawdza czy nie ma obiektów nakładających
+    się (na podstawie algorytmu ‘union’) i dziur (na podstawie różnicy, z pomienięciem
+    obiektów będących w odległości 0,02 m od granicy obiektu- wewnątrz bufora granicy
+    powiatu o szerokości 0,02 m) w pokryciu, do których liczą się także te posiadające błędy
+    geometrii w pokryciu. W wyniku wykonania kontroli przy negatywnym wyniku wyświetlane są
+    warstwy: „dziury w pokryciu terenu”, „"nakładania w pokryciu terenu”, „błędne geometrie
+    obiektów pokrycia terenu”, „lokalizacje błędów geometrii obiektów pokrycia terenu”.
+    """
+    
     obiektyZbledami = []
     pokrycie = []
     wszystkieObiektyZPokrycia = QgsVectorLayer("Polygon?crs=epsg:2180", "Wszystkie obiekty z pokrycia", "memory")
@@ -1711,7 +1889,7 @@ def fullCoverage(layer):
     config.read(str(mainPath / "Walidator_plikow_gml.ini"))
     granicePowiatowPath = config['DEFAULT']['granicepowiatow']
     granicePowiatow = QgsVectorLayer(granicePowiatowPath, 'GranicePowiatow', 'ogr')
-
+    
     granicePowiatow = processing.run("native:multiparttosingleparts", {
         'INPUT': granicePowiatow,
         'OUTPUT': 'memory:'
@@ -1733,7 +1911,7 @@ def fullCoverage(layer):
     for l in pokrycie:
         for feature in l.getFeatures():
             wszystkieObiektyZPokrycia.dataProvider().addFeatures([feature])
-
+            
     # WALIDACJA GEOMETRII
     isvalid = processing.run("qgis:checkvalidity", {
         'INPUT_LAYER': wszystkieObiektyZPokrycia,
@@ -1750,9 +1928,9 @@ def fullCoverage(layer):
         isvalid['ERROR_OUTPUT'].setName("lokalizacje błędów geometrii obiektów pokrycia terenu")
         QgsProject.instance().addMapLayer(isvalid['ERROR_OUTPUT'])
     valid = isvalid['VALID_OUTPUT']
-
+    
     # NAKŁADANIA
-    nakladanie = QgsVectorLayer("Polygon?crs=epsg:2180&field=gml_id:string(254)", 
+    nakladanie = QgsVectorLayer("Polygon?crs=epsg:2180&field=gml_id:string(254)",
                                 "nakładania w pokryciu terenu", "memory")
     pr = nakladanie.dataProvider()
     index_layer = QgsSpatialIndex(layer.getFeatures())
@@ -1791,7 +1969,7 @@ def fullCoverage(layer):
     if nakladanie.featureCount() > 0:
         nakladanie.setName("nakładania w pokryciu terenu")
         QgsProject.instance().addMapLayer(nakladanie)
-
+        
     # DZIURY
     dziury = QgsVectorLayer("Polygon?crs=epsg:2180&field=gml_id:string(254)", "dziury w pokryciu terenu", "memory")
     buforMinus1cm = processing.run("native:buffer", {
@@ -1810,18 +1988,18 @@ def fullCoverage(layer):
         'INPUT': roznica,
         'OUTPUT': 'memory:'
     })['OUTPUT']
-
+    
     dziury.startEditing()
     spatial_index_layer = QgsSpatialIndex(layer.getFeatures())
     for n in pojedynczeDziury.getFeatures():
         if n.geometry().area() > 0.009:
-
+            
             nowy = QgsFeature(dziury.fields())
             nowy.setGeometry(n.geometry())
             nowy.setAttribute(0, 'nie dotyczy')
             dziury.addFeature(nowy)
             obiektyZbledami.append(nowy)
-
+            
             rect = n.geometry().boundingBox()
             ids = spatial_index_layer.intersects(rect)
             for fid in ids:
@@ -1833,7 +2011,7 @@ def fullCoverage(layer):
     dziury.commitChanges()
     if dziury.featureCount() > 0:
         QgsProject.instance().addMapLayer(dziury)
-
+        
     # NIESPÓJNOŚCI WERTEKSÓW
     niespojnosci = QgsVectorLayer("Point?crs=epsg:2180&field=gml_id:string(254)", "niespójność werteksów", "memory")
     pr = niespojnosci.dataProvider()
@@ -1848,7 +2026,7 @@ def fullCoverage(layer):
         for v in geom.vertices():
             xy = (round(v.x(), 2), round(v.y(), 2))
             licznik_wierzcholkow[xy].add(fid)
-
+            
     tolerancja = 0.01
     for xy, ids in licznik_wierzcholkow.items():
         if len(ids) != 1:
@@ -1879,11 +2057,17 @@ def fullCoverage(layer):
     for niesp in niespojnosci.getFeatures():
         if niesp.id() not in [o.id() for o in obiektyZbledami]:
             obiektyZbledami.append(niesp)
-
+            
     return obiektyZbledami
 
 
 def jednostkaEwidencyjnaFullCoverage(layer):
+    r"""
+    Baza: EGIB. Funkcja sprawdza czy w warstwie EGB_JednostkaEwidencyjna, po
+    przetworzeniu do układu odniesienia WGS-84 i wykonaniu sprawdzenia geometrii,
+    nie występują dziury lub nakładania pomiędzy obiektami w tej warstwie
+    """
+    
     obiektyZbledami = []
     wszystkieJednostkiEwidencyjne = QgsVectorLayer("Polygon?crs=epsg:" + str(4326), "Wszystkie jednostki ewidencyjne", "memory")
     warstwy = []
@@ -1894,10 +2078,10 @@ def jednostkaEwidencyjnaFullCoverage(layer):
                 'TARGET_CRS':QgsCoordinateReferenceSystem('EPSG:4326'),
                 'OUTPUT': 'memory:'
             })
-            warstwy.append(reprojectlayer['OUTPUT'])   
+            warstwy.append(reprojectlayer['OUTPUT'])
     for l in warstwy:
         for feature in l.getFeatures():
-            wszystkieJednostkiEwidencyjne.dataProvider().addFeatures([feature])    
+            wszystkieJednostkiEwidencyjne.dataProvider().addFeatures([feature])
     if not QgsProject.instance().mapLayersByName("nakładania w pokryciu jednostek ewidencyjnych") and not QgsProject.instance().mapLayersByName("dziury w pokryciu jednostek ewidencyjnych"):
         nakladanie = QgsVectorLayer("Polygon?crs=epsg:4326&field=gml_id:string(254)", "nakładania w pokryciu jednostek ewidencyjnych", "memory")
         dziury = QgsVectorLayer("Polygon?crs=epsg:4326&field=gml_id:string(254)", "dziury pomiędzy jednostkami ewidencyjnymi", "memory")
@@ -1909,21 +2093,22 @@ def jednostkaEwidencyjnaFullCoverage(layer):
             'VALID_OUTPUT': 'memory:',
             'INVALID_OUTPUT': 'memory:',
             'ERROR_OUTPUT': 'memory:'
-        })       
+        })
+        
         if isvalid_wszystkieObiektyZPokrycia['INVALID_OUTPUT'].featureCount() > 0:
             isvalid_wszystkieObiektyZPokrycia['INVALID_OUTPUT'].setName("błędne geometrie obiektów jednostek ewidencyjnych")
-            QgsProject.instance().addMapLayer(isvalid_wszystkieObiektyZPokrycia['INVALID_OUTPUT'])       
+            QgsProject.instance().addMapLayer(isvalid_wszystkieObiektyZPokrycia['INVALID_OUTPUT'])
         if isvalid_wszystkieObiektyZPokrycia['ERROR_OUTPUT'].featureCount() > 0:
             isvalid_wszystkieObiektyZPokrycia['ERROR_OUTPUT'].setName("lokalizacje błędów geometrii obiektów jednostek ewidencyjnych")
-            QgsProject.instance().addMapLayer(isvalid_wszystkieObiektyZPokrycia['ERROR_OUTPUT'])       
+            QgsProject.instance().addMapLayer(isvalid_wszystkieObiektyZPokrycia['ERROR_OUTPUT'])
         union = processing.run("native:union", {
             'INPUT': isvalid_wszystkieObiektyZPokrycia['VALID_OUTPUT'],
             'OUTPUT': 'memory:'
-        })       
+        })
         pojedynczeNakladania = processing.run("native:multiparttosingleparts", {
             'INPUT': union['OUTPUT'],
             'OUTPUT': 'memory:'
-        })        
+        })
         geom_union = []
         for f in pojedynczeNakladania['OUTPUT'].getFeatures():
             g = f.geometry()
@@ -1946,20 +2131,20 @@ def jednostkaEwidencyjnaFullCoverage(layer):
             'INPUT': isvalid_wszystkieObiektyZPokrycia['VALID_OUTPUT'],
             'FIELD': [],
             'OUTPUT': 'memory:'
-        })        
+        })
         deleteholes = processing.run("native:deleteholes", {
             'INPUT': dissolve['OUTPUT'],
             'OUTPUT': 'memory:'
-        })        
+        })
         roznica = processing.run("native:difference", {
             'INPUT': deleteholes['OUTPUT'],
             'OVERLAY': dissolve['OUTPUT'],
             'OUTPUT': 'memory:'
-        })        
+        })
         multiparttosingleparts = processing.run("native:multiparttosingleparts", {
             'INPUT': roznica['OUTPUT'],
             'OUTPUT': 'memory:'
-        })        
+        })
         if not QgsProject.instance().mapLayersByName("dziury pomiędzy jednostkami ewidencyjnymi"):
             dziury.startEditing()
             for n in multiparttosingleparts['OUTPUT'].getFeatures():
@@ -1978,6 +2163,12 @@ def jednostkaEwidencyjnaFullCoverage(layer):
 
 
 def boundaryPTWP(layer):
+    r"""
+    Baza: BDOT10k. Funckja sprawdza czy obiekty o rodzaju ‘wąwóz’ lub ‘skarpa’ z klasy
+    OT_RTLW_L nie przecinają się z obiektami wody powierzchniowej z klasy OT_PTWP_A (pokrycie
+    terenu wody powierzchniowe) w buforze 2 cm oraz uproszczonej do pojedynczych części.
+    """
+    
     try:
         obiektyZbledami = []
         if not layer or not layer.isValid() or not layer.name().endswith("OT_RTLW_L"):
@@ -1986,7 +2177,7 @@ def boundaryPTWP(layer):
                            if l.name().endswith("OT_PTWP_A")), None)
         if not ptwp_layer or not ptwp_layer.isValid():
             return []
-
+        
         ptwp_index = QgsSpatialIndex()
         ptwp_geometrie = {}
         for feat in ptwp_layer.getFeatures():
@@ -1996,7 +2187,7 @@ def boundaryPTWP(layer):
                 if buf_geom and not buf_geom.isEmpty():
                     ptwp_index.insertFeature(feat)
                     ptwp_geometrie[feat.id()] = buf_geom
-
+                    
         for feat in layer.getFeatures():
             rodzaj = str(feat["rodzaj"]).strip().lower() if "rodzaj" in feat.fields().names() else ""
             if rodzaj not in ("skarpa", "wąwóz"):
@@ -2027,7 +2218,13 @@ def boundaryPTWP(layer):
         print("Błąd w funkcji boundaryPTWP_skarpa_wawoz:", e)
         return []
 
+
 def przecinanieRTLW_BUZT(layer):
+    r"""
+    Baza: BDOT10k. Funkcja wykrywa błędy przecinania się obiektów klasy
+    OT_RTLW_L z obszarem zbiorników, osadników w klasie OT_BUZT_A.
+    """
+    
     try:
         obiektyZbledami = []
         if not layer or not layer.isValid() or not layer.name().endswith("OT_RTLW_L"):
@@ -2056,7 +2253,7 @@ def przecinanieRTLW_BUZT(layer):
                 if val not in (None, "", " ", "null", "NULL"):
                     kod_karto = str(val).strip()
             if not kod_karto:
-                continue           
+                continue
             candidate_ids = buzt_index.intersects(geom.boundingBox())
             for pid in candidate_ids:
                 buf_geom = buzt_geometrie.get(pid)
@@ -2082,6 +2279,8 @@ def przecinanieRTLW_BUZT(layer):
 
 
 def przecinanieRTLW_BUZT_26(layer):
+    """ TODO """
+    
     try:
         obiektyZbledami = []
         if not layer or not layer.isValid() or not layer.name().endswith("OT_RTLW_L"):
@@ -2090,7 +2289,7 @@ def przecinanieRTLW_BUZT_26(layer):
                            if l.name().endswith("OT_BUZT_A")), None)
         if not buzt_layer or not buzt_layer.isValid():
             return []
-
+            
         buzt_index = QgsSpatialIndex()
         buzt_geometrie = {}
         for feat in buzt_layer.getFeatures():
@@ -2130,9 +2329,10 @@ def przecinanieRTLW_BUZT_26(layer):
 
 def boundaryPTWP_poziomica_26(layer):
     """
-    Kontrola przecięcia poziomic (RTLW_L) z wodami powierzchniowymi (PTWP_A).
-    Poziomice mogą przecinać wodę płynącą, ale nie mogą przecinać wody stojącej i morskiej.
-    """ 
+    Kontrola przecięcia poziomic (RTLW_L) z wodami powierzchniowymi (PTWP_A). Poziomice
+    mogą przecinać wodę płynącą, ale nie mogą przecinać wody stojącej i morskiej.
+    """
+    
     try:
         TOL = 0.02
         SEGMENTS = 8
@@ -2204,7 +2404,7 @@ def boundaryPTWP_poziomica_26(layer):
                 obiektyZbledami.append(nowy_feat)
                 break
         return obiektyZbledami
-
+        
     except Exception as e:
         print("Błąd w funkcji boundaryPTWP_poziomica:", e)
         return []
@@ -2213,9 +2413,10 @@ def boundaryPTWP_poziomica_26(layer):
 def boundaryPTWP_poziomica(layer):
     """
     Kontrola przecięcia poziomic (RTLW_L) z wodami powierzchniowymi (PTWP_A).
-    Poziomice mogą przecinać wodę płynącą, ale nie mogą przecinać wody stojącej.
-    Sprawdzane są tylko poziomice z wypełnionym kodem Karto10k
-    """    
+    Poziomice mogą przecinać wodę płynącą, ale nie mogą przecinać wody
+    stojącej. Sprawdzane są tylko poziomice z wypełnionym kodem Karto10k
+    """
+    
     try:
         obiektyZbledami = []
         if not layer or not layer.isValid() or not layer.name().endswith("OT_RTLW_L"):
@@ -2278,14 +2479,18 @@ def boundaryPTWP_poziomica(layer):
                     obiektyZbledami.append(nowy_feat)
                     break
         return obiektyZbledami
-
+        
     except Exception as e:
         print("Błąd w funkcji boundaryPTWP_poziomica:", e)
         return []
-        
-        
+
 
 def kontrolaZdublowaniaAtrybutuFunkcjaSzczegolowaBudynku(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza czy w atrybucie 'funkcjaSzczegolowaBudynku'
+    nie występują powtórzenia wśród wartości w liście.
+    """
+    
     obiektyZbledami = []
     idenBledow = set()
     for feature in layer.getFeatures():
@@ -2306,6 +2511,11 @@ def kontrolaZdublowaniaAtrybutuFunkcjaSzczegolowaBudynku(layer):
 
 
 def kontrolaZgodnosciFunkcjaSzczegolowaBudynkuZprzewazajacaFunkcjaBudynku(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza czy wartość atrybutu: 'przewazajacaFunkcjaBudynku'
+    występuje wśród wartości listy w atrybucie 'funkcjaSzczegolowaBudynku'.
+    """
+    
     obiektyZbledami = []
     idenBledow = set()
     
@@ -2333,6 +2543,15 @@ def kontrolaZgodnosciFunkcjaSzczegolowaBudynkuZprzewazajacaFunkcjaBudynku(layer)
 
 
 def KontrolaAtrybutuGeometriaBudynek(layer, plikGML):
+    r"""
+    Baza: EGIB. Funkcja sprawadza obiekty klasy EGB_ObiektTrwaleZwiazanyZBudynkiem
+    czy atrybut ‘egb:rodzajObiektuZwiazanegoZBudynkiem’ jest wśród dopuszczalnych
+    atrybutów: 't', 'w', 'i','s','r','j','d', oraz jego geometria w atrybutach
+    'gml:Polygon' lub 'gml:Surface' wewnątrz atrybutu ‘egb:geometria’, jest nie pusta
+    (typu None). Do tablicy błędów trafia wcześniej pobrany lokalnyId danego obiektu.
+    Plik badany jest w przestrzenie nazw: 'egb': 'ewidencjaGruntowIBudynkow:1.0’.
+    """
+    
     obiektyZbledami = []
     plikGML = plikGML.getroot()
     ns = {'gml': 'http://www.opengis.net/gml/3.2', 'egb': 'ewidencjaGruntowIBudynkow:1.0'}
@@ -2348,7 +2567,7 @@ def KontrolaAtrybutuGeometriaBudynek(layer, plikGML):
                 for g in geometria:
                     polygon = g.find('.//gml:Polygon', namespaces=ns)
                     surface = g.find('.//gml:Surface', namespaces=ns)
-                    if polygon is None or surface is None:
+                    if polygon is None and surface is None:
                         expression = f"\"lokalnyId\" = '{lokalnyId_text}'"
                         request = QgsFeatureRequest().setFilterExpression(expression)
                         for feature in layer.getFeatures(request):
@@ -2358,6 +2577,16 @@ def KontrolaAtrybutuGeometriaBudynek(layer, plikGML):
 
 
 def KontrolaAtrybutuKlasouzytek(layer, plikGML):
+    r"""
+    Baza: EGIB. Funkcja sprawdza obiekty klasy EGB_DzialkaEwidencyjna pod kątem poprawności
+    atrybutu oznaczenia klasy bonitacyjnej (OZK) pod kątem zgodności z klasą bonitacyjnej
+    (OZU), która mysi być równa ‘Ls’ – Las liściasty, dla oznaczającego rodzaj użytku
+    gruntowego (OFU) ‘Ls’ lub ‘W’ (Las liściasty lub Woda), znajdujących się wewnątrz
+    EGB_Klasouzytek. Oznaczenie klasy bonitacyjnej, jako ‘IIIa’, ‘IIIb’, ‘IVa’, ‘IVb’
+    jest uznawane jako błąd. Do tablicy błędów trafia wcześniej pobrany lokalnyId danego
+    obiektu. Plik badany jest w przestrzenie nazw: 'egb': 'ewidencjaGruntowIBudynkow:1.0’.
+    """
+    
     obiektyZbledami = []
     plikGML = plikGML.getroot()
     ns = {'gml': 'http://www.opengis.net/gml/3.2', 'egb': 'ewidencjaGruntowIBudynkow:1.0'}
@@ -2387,6 +2616,16 @@ def KontrolaAtrybutuKlasouzytek(layer, plikGML):
 
 
 def KontrolaAtrybutuKlasouzytek6(layer, plikGML):
+    r"""
+    Baza: EGIB. Funkcja sprawdza obiekty klasy EGB_DzialkaEwidencyjna pod kątem poprawności
+    atrybutu oznaczenia klasy bonitacyjnej (OZK) pod kątem zgodności z klasą bonitacyjnej
+    (OZU), która musi być równa ‘Lz’ - las iglasty, dla oznaczającego rodzaj użytku
+    gruntowego (OFU) wśród wartości 'Lz','W', znajdujących się wewnątrz EGB_Klasouzytek.
+    Oznaczenie klasy bonitacyjnej, innej niż 'IIIa', 'IIIb', 'IVa', 'IVb' jest uznawane
+    jako błąd. Do tablicy błędów trafia wcześniej pobrany lokalnyId danego obiektu.
+    Plik badany jest w przestrzenie nazw: 'egb': 'ewidencjaGruntowIBudynkow:1.0’.
+    """
+    
     obiektyZbledami = []
     plikGML = plikGML.getroot()
     ns = {'gml': 'http://www.opengis.net/gml/3.2', 'egb': 'ewidencjaGruntowIBudynkow:1.0'}
@@ -2416,6 +2655,16 @@ def KontrolaAtrybutuKlasouzytek6(layer, plikGML):
 
 
 def KontrolaAtrybutuKlasouzytek2(layer, plikGML):
+    r"""
+    Baza: EGIB. Funkcja sprawdza obiekty klasy EGB_DzialkaEwidencyjna pod kątem poprawności
+    atrybutu oznaczenia klasy bonitacyjnej (OZK) pod kątem zgodności z klasą bonitacyjnej (OZU),
+    która musi być równa ‘R’ - Las, dla oznaczającego rodzaj użytku gruntowego (OFU) wśród
+    wartości 'R','S', 'Br','Wsr','W','Lzr' znajdujących się wewnątrz EGB_Klasouzytek. Oznaczenie
+    klasy bonitacyjnej, innej niż ‘I','II','IIIa', 'IIIb', 'IVa', 'IVb','V','VI','VIz'jest
+    uznawane jako błąd. Do tablicy błędów trafia wcześniej pobrany lokalnyId danego
+    obiektu. Plik badany jest w przestrzenie nazw: 'egb': 'ewidencjaGruntowIBudynkow:1.0’.
+    """
+    
     obiektyZbledami = []
     plikGML = plikGML.getroot()
     ns = {'gml': 'http://www.opengis.net/gml/3.2', 'egb': 'ewidencjaGruntowIBudynkow:1.0'}
@@ -2445,6 +2694,16 @@ def KontrolaAtrybutuKlasouzytek2(layer, plikGML):
 
 
 def KontrolaAtrybutuKlasouzytek3(layer, plikGML):
+    r"""
+    Baza: EGIB. Funkcja sprawdza obiekty klasy EGB_DzialkaEwidencyjna pod kątem poprawności
+    atrybutu oznaczenia klasy bonitacyjnej (OZK) pod kątem zgodności z klasą bonitacyjnej
+    (OZU), która musi być równa ‘Ł’ - Łąka, dla oznaczającego rodzaj użytku gruntowego (OFU)
+    wśród wartości 'Ł','S', 'Br','Wsr','W','Lzr' znajdujących się wewnątrz EGB_Klasouzytek.
+    Oznaczenie klasy bonitacyjnej, innej niż ‘I','II','III', 'IV','V','VI','VIz'jest
+    uznawane jako błąd. Do tablicy błędów trafia wcześniej pobrany lokalnyId danego
+    obiektu. Plik badany jest w przestrzenie nazw: 'egb': 'ewidencjaGruntowIBudynkow:1.0’.
+    """
+    
     obiektyZbledami = []
     plikGML = plikGML.getroot()
     ns = {'gml': 'http://www.opengis.net/gml/3.2', 'egb': 'ewidencjaGruntowIBudynkow:1.0'}
@@ -2474,6 +2733,16 @@ def KontrolaAtrybutuKlasouzytek3(layer, plikGML):
 
 
 def KontrolaAtrybutuKlasouzytek4(layer, plikGML):
+    r"""
+    Baza: EGIB. Funkcja sprawdza obiekty klasy EGB_DzialkaEwidencyjna pod kątem poprawności
+    atrybutu oznaczenia klasy bonitacyjnej (OZK) pod kątem zgodności z klasą bonitacyjnej
+    (OZU), która musi być równa ‘Ł’ - Łąka, dla oznaczającego rodzaj użytku gruntowego (OFU)
+    wśród wartości 'Ł','S', 'Br','Wsr','W','Lzr' znajdujących się wewnątrz EGB_Klasouzytek.
+    Oznaczenie klasy bonitacyjnej, innej niż ‘I','II','III', 'IV','V','VI','VI' jest
+    uznawane jako błąd. Do tablicy błędów trafia wcześniej pobrany lokalnyId danego
+    obiektu. Plik badany jest w przestrzenie nazw: 'egb': 'ewidencjaGruntowIBudynkow:1.0’.
+    """
+    
     obiektyZbledami = []
     plikGML = plikGML.getroot()
     ns = {'gml': 'http://www.opengis.net/gml/3.2', 'egb': 'ewidencjaGruntowIBudynkow:1.0'}
@@ -2498,10 +2767,18 @@ def KontrolaAtrybutuKlasouzytek4(layer, plikGML):
                            request = QgsFeatureRequest().setFilterExpression(expression)
                            for feature in layer.getFeatures(request):
                                obiektyZbledami.append(feature)
-    
     return obiektyZbledami
 
+
 def kontrolaGeometriaOtWody(layer, plikGML):
+    r"""
+    Baza: BDOT500. Funkcja sprawdza obiekty klasy OT_Wody pod kątem poprawności
+    dopuszczalnych rodzajów obiektów: 'p','s','j','l','z','t','o' w obiektach o
+    typach geometrii: 'Polygon', 'Surface'. Przeciwny przypadek jest uznawany za
+    błąd. Do tablicy błędów trafia wcześniej pobrany lokalnyId danego obiektu. Plik
+    badany jest w przestrzenie nazw: 'ot': 'bazaDanychObiektowTopograficznych500:1.0'
+    """
+    
     obiektyZbledami = []
     plikGML = plikGML.getroot()
     ns = {'gml': 'http://www.opengis.net/gml/3.2', 'ot': 'bazaDanychObiektowTopograficznych500:1.0'}
@@ -2537,11 +2814,18 @@ def kontrolaGeometriaOtWody(layer, plikGML):
                         request = QgsFeatureRequest().setFilterExpression(expression)
                         for feature in layer.getFeatures(request):
                             obiektyZbledami.append(feature)
-    
     return obiektyZbledami
 
 
 def kontrolaGeometriaOtWody2(layer, plikGML):
+    r"""
+    Baza: BDOT500. Funkcja sprawdza obiekty klasy OT_Wody pod kątem poprawności
+    dopuszczalnych rodzajów obiektów: 'w','g' w obiektach o typach geometrii:
+    'Polygon', 'Surface' i 'MultiSurface'. Przeciwny przypadek jest uznawany za
+    błąd. Do tablicy błędów trafia wcześniej pobrany lokalnyId danego obiektu. Plik
+    badany jest w przestrzenie nazw: 'ot': 'bazaDanychObiektowTopograficznych500:1.0'
+    """
+    
     obiektyZbledami = []
     plikGML = plikGML.getroot()
     ns = {'gml': 'http://www.opengis.net/gml/3.2', 'ot': 'bazaDanychObiektowTopograficznych500:1.0'}
@@ -2580,6 +2864,14 @@ def kontrolaGeometriaOtWody2(layer, plikGML):
 
 
 def KontrolaGeometriaSchody(layer, plikGML):
+    r"""
+    Baza: EGIB. Funkcja sprawadza obiekty klasy EGB_ObiektTrwaleZwiazanyZBudynkiem czy
+    istnieje atrybut ‘poliliniaKierunkowa’ i czy zawiera on współrzędne o poprawnej
+    składni- w takim przypadku jest sprawdzany znajdujący się wewnątrz jej atrybut
+    ‘posList’. Do tablicy błędów trafia wcześniej pobrany lokalnyId danego obiektu.
+    Plik badany jest w przestrzenie nazw: 'egb': 'ewidencjaGruntowIBudynkow:1.0
+    """
+    
     obiektyZbledami = []
     plikGML = plikGML.getroot()
     ns = {'gml': 'http://www.opengis.net/gml/3.2', 'egb': 'ewidencjaGruntowIBudynkow:1.0'}
@@ -2617,13 +2909,19 @@ def KontrolaGeometriaSchody(layer, plikGML):
 
 
 def gminyCzyNakladajaSie(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza czy obiekty 'gmina' w klasie
+    OT_ADJA_A (jednostki administracyjnej) nie nakładają się na
+    siebie, po sprawdzeniu czy geometria warstwy jest prawidłowa.
+    """
+
     obiektyZbledami = []  
     gm = processing.run("native:extractbyexpression", {
         'INPUT':layer,
         'EXPRESSION':'"rodzaj" = \'gmina\'',
         'OUTPUT':'memory:'
     })
-    gminy = gm['OUTPUT']   
+    gminy = gm['OUTPUT']
     invalid_layer = processing.run("qgis:checkvalidity", {
         'INPUT_LAYER': gminy,
         'METHOD': 0, 
@@ -2631,7 +2929,7 @@ def gminyCzyNakladajaSie(layer):
         'VALID_OUTPUT': 'memory:',
         'INVALID_OUTPUT': 'memory:',
         'ERROR_OUTPUT': 'memory:'
-    })   
+    })
     # zawiera warstwę z niepoprawnymi geometriami
     if invalid_layer['INVALID_OUTPUT']:
               # Wykonanie naprawy geometrii
@@ -2663,7 +2961,13 @@ def gminyCzyNakladajaSie(layer):
 
 
 def miastoWiesCzyNakladajaSie(layer):
-    obiektyZbledami = []  
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza czy obiekty 'miasto' lub 'wieś'
+    w klasie OT_ADJA_A (jednostki administracyjnej) nie nakładają się
+    na siebie, po sprawdzeniu czy geometria warstwy jest prawidłowa.
+    """
+    
+    obiektyZbledami = []
     extractbyexpression = processing.run("native:extractbyexpression",{
         'INPUT': layer,
         'EXPRESSION':'"rodzaj"=\'miasto\' or "rodzaj"=\'wieś\'',
@@ -2677,7 +2981,7 @@ def miastoWiesCzyNakladajaSie(layer):
         'VALID_OUTPUT': 'memory:',
         'INVALID_OUTPUT': 'memory:',
         'ERROR_OUTPUT': 'memory:'
-    })   
+    })
     # zawiera warstwę z niepoprawnymi geometriami
     if checkvalidity['INVALID_OUTPUT']:
               # Wykonanie naprawy geometrii
@@ -2708,6 +3012,12 @@ def miastoWiesCzyNakladajaSie(layer):
 
 
 def sprawdzLokalnyId(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza składnię atrybutu ‘LokalnyId’,
+    dla klas innych niż z rzeźbą ternu (OT_RT) zgodnie z wzorcem:
+    ^[A-Za-z0-9]{8}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{12}$|^$
+    """
+    
     obiektyZbledami = []
     if layer.name()[-6:] in ['RTLW_L', 'RTPW_P']:
         return obiektyZbledami
@@ -2717,7 +3027,7 @@ def sprawdzLokalnyId(layer):
         lokalny = f.attribute('lokalnyId')
         try:
             lokalny_str = str(lokalny)
-        except Exception:
+        except Exception:  # nosec B112
             obiektyZbledami.append(f)
             continue
         if not uuid_pattern.match(lokalny_str):
@@ -2731,6 +3041,11 @@ def sprawdzLokalnyId(layer):
 
 
 def sprawdzPrzestrzenNazw(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza składnię atrybutu ‘przestrzenNazw’ dla wszystkich
+    klas po za rzeźbą terenu (OT_RT) zgodnie z wzorcem: ^PL\.PZGiK\.(\d{3,4})\.BDOT10k$
+    """
+    
     obiektyZbledami = []
     if layer.name()[-6:] in ['RTLW_L', 'RTPW_P']:
         return obiektyZbledami
@@ -2758,7 +3073,7 @@ def sprawdzPrzestrzenNazw(layer):
         przestrzen = f.attribute('przestrzenNazw')
         try:
             przestrzen_str = str(przestrzen)
-        except Exception:
+        except Exception:  # nosec B112
             obiektyZbledami.append(f)
             continue
         match = pattern.match(przestrzen_str)
@@ -2779,6 +3094,12 @@ def sprawdzPrzestrzenNazw(layer):
 
 
 def sprawdzWersja(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza składnię atrybutu ‘wersja’ zgodnie z
+    wzorcem: ^[0-9]{4}-[01][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]$|^$
+    (układ: rok-miesiąc-dzień Tgodzina:minuta:sekunda)
+    """
+    
     obiektyZbledami = []
     if layer.name()[-6:] in ['RTLW_L', 'RTPW_P']:
         return obiektyZbledami
@@ -2799,11 +3120,19 @@ def sprawdzWersja(layer):
         if not uuid_pattern.match(wersja_str):
             unique_ids.add(f.id())
             obiektyZbledami.append(f)
-
+            
     return obiektyZbledami
 
 
 def sprawdzPoczatekWersjiObiektu(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza składnię atrybutu 'początek wersji
+    obiektu’ dla wszystkich klas po za rzeźbą terenu zgodnie z wzorcem:
+    ^[0-9]{4}-[01][0-9]-[0-3][0-9]T[0-2][0-9]:[0-5][0-9]:[0-5][0-9]$
+    (układ: rok-miesiąc-dzień Tgodzina:minuta:sekunda), oraz czy
+    ma wypełniony i spójny atrybut ‘wersja’ z wyżej wymienionym.
+    """
+    
     obiektyZbledami = []
     if layer.name()[-6:] in ['RTLW_L', 'RTPW_P']:
         return obiektyZbledami
@@ -2835,6 +3164,11 @@ def sprawdzPoczatekWersjiObiektu(layer):
 
 
 def przestrzenNazw(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza składnię atrybutu ‘przestrzenNazw’ dla obiektów
+    klas OT_RTLW_L i OT_RTPW_P zgodnie z wzorcem: ^PL\.PZGiK\.(\d{3,4})\.BDOT10k$
+    """
+    
     obiektyZbledami = []
     dozwolone_kody = {
         '02': '337',  # dolnośląskie
@@ -2859,7 +3193,7 @@ def przestrzenNazw(layer):
         przestrzen = f.attribute('przestrzenNazw')
         try:
             przestrzen_str = str(przestrzen)
-        except Exception:
+        except Exception:  # nosec B112
             obiektyZbledami.append(f)
             continue
         match = pattern.match(przestrzen_str)
@@ -2881,9 +3215,11 @@ def przestrzenNazw(layer):
 
 def zapisWspolrzednych(layer, plikGML):
     """
-    Kontrola zapisu geometrii z wykrywaniem błędów geometrycznych typu spike, niezamknięty poligon, nieparzysta liczba współrzędnych,
+    Kontrola zapisu geometrii z wykrywaniem błędów geometrycznych typu
+    spike, niezamknięty poligon, nieparzysta liczba współrzędnych,
     niewystarczająca liczba punktów dla linii, błędny format współrzędnych.
-    """  
+    """
+    
     try:
         obiektyZbledami = []
         badfMember_Z_dic = {}
@@ -3059,8 +3395,10 @@ def zapisWspolrzednych(layer, plikGML):
 
 def przewerteksowanieOT(layer, plikGML):
     """
-    Kontrola przewerteksowania obiektów klas OT (bez RT), z wykluczeniem punktów na granicy opracowania.
+    Kontrola przewerteksowania obiektów klas OT (bez
+    RT), z wykluczeniem punktów na granicy opracowania.
     """
+    
     obiektyZbledami=[]
     try:
         nazwa=layer.name()
@@ -3113,8 +3451,8 @@ def przewerteksowanieOT(layer, plikGML):
                     geom_pts=[(wsp_list[i],wsp_list[i+1]) for i in range(0,len(wsp_list),2)]
                     przew_pts=[i for i in range(len(geom_pts)-1)
                                if sqrt((geom_pts[i+1][0]-geom_pts[i][0])**2+(geom_pts[i+1][1]-geom_pts[i][1])**2)<0.02]
-                except Exception as e:
-                    print(e)
+                except:  # nosec B112
+                    continue
                 if not przew_pts: continue
                 if powiat_bufor_minus2cm:
                     przew_pts=[i for i in przew_pts if QgsGeometry.fromPointXY(QgsPointXY(*geom_pts[i])).within(powiat_bufor_minus2cm)]
@@ -3145,17 +3483,21 @@ def przewerteksowanieOT(layer, plikGML):
     return obiektyZbledami
 
 
-
-
 def minDlugoscOIPR(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza czy obiekty klasy OT_OIPR_L (obiekt przyrodniczy)
+    zawierają obszary o mniejszej długości niż 40 metrów po za obszarem bufora 2
+    cm od granicy powiatu dla rodzaju 'rząd drzew' oraz 'pas krzewów lub żywopłot'.
+    """
+    
     obiektyZbledami = []
     if not layer.name().endswith('OT_OIPR_L'):
-        return obiektyZbledami   
+        return obiektyZbledami
     layers = QgsProject().instance().mapLayersByName(layer.name())
     if not layers:
-        return obiektyZbledami   
+        return obiektyZbledami
     OIPR_L_layer = layers[0]
-    granica = adjaMinus2cmBufor(layer)    
+    granica = adjaMinus2cmBufor(layer)
     for OIPR_L_feature in OIPR_L_layer.getFeatures():
         geom = OIPR_L_feature.geometry()
         if geom and geom.length() < 40 and OIPR_L_feature['rodzaj'] in ['rząd drzew','pas krzewów lub żywopłot']:
@@ -3163,11 +3505,15 @@ def minDlugoscOIPR(layer):
                 if not geom.intersects(g.geometry()):
                     obiektyZbledami.append(OIPR_L_feature)
                     break
-    return obiektyZbledami 
-    
+    return obiektyZbledami
 
 
 def minDlugoscBUUO(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza czy długość obiektów ‘falochron’ lub ‘ostroga’ z klasy
+    OT_BUUO_L po za obszarem bufora 2 cm od granicy powiatu (z PRG), jest mniejsza niż 10 m.
+    """
+    
     try:
         if not layer.isValid():
             return []
@@ -3199,6 +3545,12 @@ def minDlugoscBUUO(layer):
 
 
 def minDlugoscSUPRnaKUPG(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza czy długość przewodów rurowych (klasa OT_SUPR_L)
+    znajdujących się na obszarze kompleksu przemysłowo-gospodarczego (klasa OT_KUPG_A),
+    poza obszarem bufora 2 cm od granicy powiatu (z PRG) jest mniejsza niż 100 m.
+    """
+    
     try:
         if not layer.isValid():
             return []
@@ -3243,13 +3595,23 @@ def minDlugoscSUPRnaKUPG(layer):
         print(f"Błąd w minDlugoscSUPRnaKUPG: {e}")
         return []
 
-
 miasta_powiaty={'0261','0262','0264','0265','0461','0462','0463','0464','0661','0662','0663','0664','0861','0862',
                 '1061','1062','1063','1261','1262','1263','1461','1462','1463','1464','1465','1661','1861','1862','1863',
                 '1864','2061','2062','2063','2261','2262','2263','2264','2461','2462','2463','2464','2465','2466','2467',
                 '2468','2469','2470','2471','2472','2473','2474','2475','2476','2477','2478','2479','2661','2861','2862',
                 '3061','3062','3063','3064','3261','3262','3263'}
+
 def kontrolaZgodnosciIdentyfikatoraUlicyZNazwa(layer, plikcsv_ulic, plikcsv_simc):
+    r"""
+    Baza: BDOT10k. Funkcja w pierwszej kolejności sprawdza poprawność identyfikatorów
+    ULIC i SIMC (poprzez kontrolę długości znaków oraz obecnośc identyfikatorów
+    badanej warstwy w wykazach danych źródłowych GUS w postaci plików csv. Następnie
+    mechanizm sprawdza czy w klasach OT_SKJZ_L, OT_SKRP_L i OT_PTPL_A obiekty mające
+    wypełniony atrybuty 'identyfikatorULIC' oraz 'identyfikatorSIMC', mają wzajemną
+    zgodność atrybutów opisowych 'ulicaNazwa1', 'ulicaNazwa2' oraz 'ulicaCecha'
+    lub ‘placNazwa1’, ‘placNazwa2’, ‘placCecha’, z plikami źródłowymi GUS.
+    """
+    
     obiektyZbledami = []
     global loaded_csv_data_ulic, loaded_csv_data_simc
     loaded_csv_data_ulic = loaded_csv_data_ulic if 'loaded_csv_data_ulic' in globals() else None
@@ -3341,7 +3703,14 @@ brakiBDOT={}
 potwierdzoneUliceGUS=set()
 loaded_csv_data_ulic=None
 loaded_csv_data_simc=None
+
 def kontrolaZgodnosciIdentyfikatoraUlicyZNazwa_braki(layer, plikcsv_ulic, plikcsv_simc):
+    r"""
+    Baza: BDOT10k. Funkcja kontrolująca braki ulic i placów w OT_SK/OT_PL
+    względem danych GUS-TERYT; identyfikuje obiekty występujące w rejestrze
+    ULIC, a nieobecne w BDOT10k, z uwzględnieniem podziału na miejscowości.
+    """
+    
     global brakiBDOT, potwierdzoneUliceGUS, loaded_csv_data_ulic, loaded_csv_data_simc
     CECHA_DOZWOLONE={'OT_SKJZ_L':{'ul.','al.','bulw.','droga','os.','park','pl.','rondo','rynek','skwer','szosa'}}
     norm=lambda x,l: str(x).strip().zfill(l) if x not in (None,'','NULL') else None
@@ -3369,7 +3738,7 @@ def kontrolaZgodnosciIdentyfikatoraUlicyZNazwa_braki(layer, plikcsv_ulic, plikcs
                 if get_attr(f,'rodzaj')=='miasto':
                     simc_miasto = norm(get_attr(f,'identyfikatorSIMC'),7)
                     miasto_nazwa = get_attr(f,'nazwa')
-                    break
+                    break         
     if tryb_miasto_powiat:
         ulice_pow={r['SYM_UL_n']:(r['CECHA_n'],r['NAZWA_1'],r['NAZWA_2'])
                    for _,r in df_ulic.iterrows() if r['WOJ_n']==woj and r['POW_n']==pow}
@@ -3422,7 +3791,10 @@ def kontrolaZgodnosciIdentyfikatoraUlicyZNazwa_braki(layer, plikcsv_ulic, plikcs
     return obiektyZbledami
 
 
+
 def pyExpression(layer, sqltxt):
+    """ TODO """
+    
     obiektyZbledami = []
     
     def lexpression(layer, sqltxt):
@@ -3462,6 +3834,8 @@ def pyExpression(layer, sqltxt):
 
 
 def mgrExpression(layer, gml, sqltxt):
+    """ TODO """
+    
     obiektyZbledami = []
     
     if not QgsProject.instance().mapLayersByName(layer.name() + "_dodane_pola"):
@@ -3518,6 +3892,14 @@ def mgrExpression(layer, gml, sqltxt):
 
 
 def numerPodloza(layer, plikGML):
+    r"""
+    Baza: MGR. Funkcja sprawdza czy atrybut ‘numerPodloza’, będący częścią znacznika
+    ‘opisPodloza’ zawiera się w dopuszczalnym zakresie - między 1 a 5 w klasie
+    GR_KonturGlebowy lub czy wartość jest pusta brakuje wartości dla tego atrybutu.
+    Do tablicy błędów trafia wcześniej pobrany lokalnyId danego obiektu. Plik badany
+    jest w przestrzeni nazw: gr: urn:gugik:specyfikacje:gmlas:mapaGlebowoRolnicza:1.0
+    """
+    
     obiektyZbledami = []
     idenBledow = set()
     plikGML = plikGML.getroot()
@@ -3542,6 +3924,15 @@ def numerPodloza(layer, plikGML):
 
 
 def miazszoscPodloza(layer, plikGML):
+    r"""
+    Baza: MGR. Funkcja sprawdza czy atrybut ‘miazszosc’ ma poprawną wartość w zależności
+    od wartości atrybutu ‘numerPodloza’, które są częścią atrybutu ‘opisPodloza’
+    zgodnie z określonymi warunkami. Brak wypełnienia atrybutu ‘numerPodloza’ przy
+    wypełnionym atrybucie ‘miazszosc’ również jest traktowane jako błąd. Do tablicy
+    błędów trafia wcześniej pobrany lokalnyId danego obiektu. Plik badany jest
+    w przestrzeni nazw: gr: urn:gugik:specyfikacje:gmlas:mapaGlebowoRolnicza:1.0
+    """
+    
     obiektyZbledami = []
     idenBledow = set()
     plikGML = plikGML.getroot()
@@ -3591,6 +3982,14 @@ def miazszoscPodloza(layer, plikGML):
 
 
 def podlozeKompleks(layer, plikGML):
+    r"""
+    Baza: MGR. Funkcja sprawdza, czy atrybuty ‘podloze’, ‘typPodtyp’ oraz ‘numerPodloza’,
+    jako części atrybutu ‘opisPodloza’ są puste, w przypadku gdy teren w atrybucie
+    kompleks został oznaczony jako nieskasyfikowany (‘Tnk’), w GR_KonturGlebowy. Do
+    tablicy błędów trafia wcześniej pobrany lokalnyId danego obiektu. Plik badany
+    jest w przestrzeni nazw: gr: urn:gugik:specyfikacje:gmlas:mapaGlebowoRolnicza:1.0
+    """
+    
     obiektyZbledami = []
     idenBledow = set()
     plikGML = plikGML.getroot()
@@ -3623,6 +4022,12 @@ def podlozeKompleks(layer, plikGML):
 
 
 def kontrola_OT_ADJA_A_z_A02_Granice_powiatow(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza czy obiekty w klasie OT_ADJA_A o rodzaju
+    ‘państwo’, ‘województwo’ lub ‘powiat’ pokrywają się (w buforze 2 cm) z warstwą
+    referencyjną podaną w polu ‘Granice powiatów’- PRG, w zakładce „Dane źródłowe”.
+    """
+    
     obiektyZbledami = []
     extractbyexpression = processing.run("native:extractbyexpression", {
         'INPUT': layer,
@@ -3682,6 +4087,12 @@ def kontrola_OT_ADJA_A_z_A02_Granice_powiatow(layer):
 
 
 def kontrola_OT_ADJA_A_z_A03_Granice_gmin(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza czy obiekty w klasie OT_ADJA_A o
+    rodzaju ‘gmina’ pokrywają się w buforze 2 cm z warstwą referncyjną
+    podaną w polu ‘Granice gmin’ PRG w zakładce „Dane źródłowe”.
+    """
+    
     obiektyZbledami = []
     extractbyexpression = processing.run("native:extractbyexpression", {
         'INPUT': layer,
@@ -3746,6 +4157,12 @@ def kontrola_OT_ADJA_A_z_A03_Granice_gmin(layer):
 
 
 def kontrola_OT_ADJA_A_z_A05_Granice_jednostek_ewidencyjnych(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza czy obiekty w klasie OT_ADJA_A o rodzaju ‘miasto
+    w gminie miejsko-wiejskiej’ pokrywają się (w buforze 1 cm) z warstwą referncyjną
+    podaną w polu ‘Granice jednostek ewidencyjnych PRG w zakładce „Dane źródłowe”.
+    """
+    
     obiektyZbledami = []
     extractbyexpression = processing.run("native:extractbyexpression", {
         'INPUT': layer,
@@ -3821,6 +4238,7 @@ def kontrola_OT_ADJA_A_z_A05_Granice_jednostek_ewidencyjnych(layer):
 
 def kontrolaSpojnosci_ADJA_A_z_PRG(layer, adja_layer=None):
     """Kontrola zgodności atrybutów ADJA z PRG oraz zgodności ADMS z ADJA"""
+    
     try:
         if not layer.name().endswith(("ADJA_A","ADMS_A")): return []
         project, obiektyZbledami, zgloszone = QgsProject.instance(), [], set()
@@ -3947,6 +4365,7 @@ def kontrolaTERCpunkt(layer):
     """
     Sprawdza zgodnosć TERC punktów ADMS_P względem gmin ADJA.
     """
+    
     obiektyZbledami = []
     try:
         adms = QgsProject.instance().mapLayersByName(layer.name())[0]
@@ -3995,6 +4414,7 @@ def kontrolaTERCpowierzchnia(layer, prog=0.9):
     """
     Sprawdza zgodność TERC obiektów ADMS_A względem gmin ADJA.
     """
+    
     obiektyZbledami = []
     try:
         adms = QgsProject.instance().mapLayersByName(layer.name())[0]
@@ -4054,6 +4474,7 @@ def kontrolaReprezentacjaGeometryczna_KU(layer):
     """
     Kontrola poprawności reprezentacji punktowej obiektów OT_KUKO_P i OT_KUPG_P.
     """
+    
     try:
         if not layer.name().endswith(("KUKO_P","KUPG_P")): return []
         if layer.name().endswith("KUKO_P"):
@@ -4078,13 +4499,20 @@ def kontrolaReprezentacjaGeometryczna_KU(layer):
                 print(f"Błąd przetwarzania obiektu {f.id()}: {e_f}")
         if obiektyZbledami and layer.isEditable(): layer.commitChanges()
         return obiektyZbledami
-
+        
     except Exception as e:
         print(f"Błąd kontroli reprezentacja geometryczna: {e}")
         return []
 
 
 def kompletnoscPlikowBDOT10k(pliki):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza czy w pliku skompresowany w rozszerzeniu .zip występują
+    wszystkie klasy BDOT10k, po przez porównanie występujących nazw warstw z tablicą
+    zawierającą nazwy wszystkich warstw. W przypadku braku jakiekolwiek tworzona jest
+    warstwa punktowa, ale bez geometrii, która na liście atrybutów zawiera brakujące warstwy.
+    """
+    
     obiektyZbledami = []
     
     listaKlas = ['OT_ADJA_A','OT_ADMS_A','OT_ADMS_P','OT_BUBD_A','OT_BUHD_A','OT_BUHD_L','OT_BUIB_A','OT_BUIB_L','OT_BUIN_L','OT_BUIT_A',
@@ -4123,7 +4551,17 @@ WARSTWY_DO_SUMY = {
     for l in QgsProject.instance().mapLayers().values()
     if l.name().split('__')[-1].startswith('OT_')
 }
+
 def kompletnoscObiektowBDOT10k(layer, plikGMLzrodlowy, plikGML):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza kompletność obiektów klas pomiędzy plikiem źródłowym
+    (plikiem wydanym do aktualizacji) oraz plikiem kontrolowanym, po przez obliczenie różnicy
+    (setów) między obiektami, do czego wykorzystuje się parsowanie plików xml i wydobycie
+    z nich znaczników ‘lokalnyId’. W przypadku wykrycia różnicy obiekty te, których w
+    kontrolowanym pliku w stosunku do pliku referencyjnego brakuje, w formie listy, dodawane
+    są do warstwy z nazwą BDOT10k_dane_zrodlowe’, których gmlId wypisywany jest w raportach.
+    """
+    
     global LICZNIK_ZAKONCZONE_NIEPRZENIESIONE, PRZETWORZONE_WARSTWY
     obiektyZbledami = []
     ns = {'gml':'http://www.opengis.net/gml/3.2',
@@ -4163,15 +4601,16 @@ def kompletnoscObiektowBDOT10k(layer, plikGMLzrodlowy, plikGML):
     PRZETWORZONE_WARSTWY.add(nazwaWarstwy)
     if PRZETWORZONE_WARSTWY == WARSTWY_DO_SUMY and LICZNIK_ZAKONCZONE_NIEPRZENIESIONE > 0:
         print(f"[INFO] Kompletnosc BDOT10k – SUMA: {LICZNIK_ZAKONCZONE_NIEPRZENIESIONE} zakończonych obiektów nie zostało przeniesione")
-
+        
     return obiektyZbledami
 
 
 def kontrolaZmianAtrybutowWzgledemWersji(layer, plikGMLzrodlowy, plikGML):
     """
-    Kontrola zmian atrybutów i geometrii obiektów względem wersji.
-    Wykrywa nieuzasadnione lub pominięte aktualizacje wersji i oznaczenia zmiany.
-    """    
+    Kontrola zmian atrybutów i geometrii obiektów względem wersji. Wykrywa
+    nieuzasadnione lub pominięte aktualizacje wersji i oznaczenia zmiany.
+    """
+    
     obiektyZbledami=set()
     kolejnosc_only_count_by_layer = defaultdict(int)
     precyzja_only_count_by_layer = defaultdict(int)
@@ -4316,7 +4755,7 @@ def kontrolaZmianAtrybutowWzgledemWersji(layer, plikGMLzrodlowy, plikGML):
                 pomijaj_nieuzasadniona_zmiane_wersji = True
             else:
                 pomijaj_nieuzasadniona_zmiane_wersji = False
-
+                
             if wersja_sie_zmienila and not zmiany_danych and not pomijaj_nieuzasadniona_zmiane_wersji:
                 badfMember_Z_dic.setdefault(lokalnyId, set()).add(
                     'nieuzasadniona zmiana wersji - BŁĄD'
@@ -4421,7 +4860,6 @@ def kontrolaZmianAtrybutowWzgledemWersji(layer, plikGMLzrodlowy, plikGML):
     return obiektyZbledami
 
 
-
 global oznaczeniaWRamachKlas
 oznaczeniaWRamachKlas = {}
 def kontrolaOznaczeniaZmiany_Global(layer, plikGMLzrodlowy, plikGML):
@@ -4444,7 +4882,7 @@ def kontrolaOznaczeniaZmiany_Global(layer, plikGMLzrodlowy, plikGML):
                       if f.find('.//ot:lokalnyId', ns) is not None and f.find('.//ot:lokalnyId', ns).text}
     temp_oznaczenia = []
     badfMember_Z_dic = {}
-
+    
     # --- dominanta i niespójności (tylko na nowych lub zmienionych obiektach)
     for lokalnyId, k_fm in fMembers_K_dic.items():
         z_fm = fMembers_Z_dic.get(lokalnyId)
@@ -4484,16 +4922,17 @@ def kontrolaOznaczeniaZmiany_Global(layer, plikGMLzrodlowy, plikGML):
                 layer.updateFeature(feature)
                 obiektyZbledami.add(feature)
         layer.commitChanges()
-
+        
     return obiektyZbledami
 
 
 
 def kontrolaDatyWersji(layer, plikGMLzrodlowy, plikGML):
     """
-    Kontrola daty wersji. Sprawdza, czy nowe i zmienione obiekty nie mają daty starszej
-    niż najświeższa data w pliku źródłowym danej warstwy.
+    Kontrola daty wersji. Sprawdza, czy nowe i zmienione obiekty nie mają
+    daty starszej niż najświeższa data w pliku źródłowym danej warstwy.
     """
+    
     obiektyZbledami = set()
     parser = etree.XMLParser(remove_blank_text=True)
     try:
@@ -4509,7 +4948,7 @@ def kontrolaDatyWersji(layer, plikGMLzrodlowy, plikGML):
     fMembers_Z_dic = {f.find('.//ot:lokalnyId', ns).text: f
                       for f in z_root.findall('.//gml:featureMember', ns)
                       if f.find('.//ot:lokalnyId', ns) is not None and f.find('.//ot:lokalnyId', ns).text}
-
+    
     feature_dic = {f['lokalnyId']: f for f in layer.getFeatures()}
     data_wersji_layer = []
     for z_fm in fMembers_Z_dic.values():
@@ -4518,8 +4957,7 @@ def kontrolaDatyWersji(layer, plikGMLzrodlowy, plikGML):
             try:
                 data_z_dt = datetime.strptime(wersja_z.text.strip().split('T')[0], "%Y-%m-%d")
                 data_wersji_layer.append(int(data_z_dt.strftime('%Y%m%d')))
-            except Exception as e:
-                print(e)
+            except Exception:  # nosec B112
                 continue
     max_data_aktualizacji_layer = max(data_wersji_layer) if data_wersji_layer else None
     badfMember_dic = {}
@@ -4541,8 +4979,7 @@ def kontrolaDatyWersji(layer, plikGMLzrodlowy, plikGML):
                     badfMember_dic.setdefault(lokalnyId, set()).add(
                         f"nowy lub zmieniony obiekt ma datę wersji ({data_k_int}) starszą niż aktualność pliku źródłowego ({max_data_aktualizacji_layer}) - BŁĄD"
                     )
-            except Exception as e:
-                print(e)
+            except Exception:  # nosec B112
                 continue
     if badfMember_dic:
         idx_gml_id = layer.fields().indexFromName("gml_id")
@@ -4554,18 +4991,17 @@ def kontrolaDatyWersji(layer, plikGMLzrodlowy, plikGML):
                 layer.updateFeature(feature)
                 obiektyZbledami.add(feature)
         layer.commitChanges()
-
+        
     return obiektyZbledami
-    
 
 
 vl_cykl_zycia_global = None
 def kontrolaCykluZycia(layer, plikGML):
     """
-    Kontrola cyklu życia obiektów BDOT10k Wykrywa niespójność dat:
-    1) koniecWersjiObiektu < poczatekWersjiObiektu
-    2) wersja != koniecWersjiObiektu
+    Kontrola cyklu życia obiektów BDOT10k Wykrywa niespójność dat: 1)
+    koniecWersjiObiektu < poczatekWersjiObiektu 2) wersja != koniecWersjiObiektu
     """
+    
     obiektyZbledami=[]
     if not plikGML or not layer: return obiektyZbledami
     def safe_parse_date(s):
@@ -4604,8 +5040,8 @@ def kontrolaCykluZycia(layer, plikGML):
             feat.setAttribute("komunikat", f"topo_e5_k6 Kontrola cyklu życia: niespójność dat - {tresc}")
             try:
                 feat.setGeometry(QgsGeometry())
-            except Exception as e:
-                print(e)
+            except:  # nosec B110
+                pass
             if is_raport:
                 obiektyZbledami.append(feat)
             else:
@@ -4621,14 +5057,14 @@ def kontrolaCykluZycia(layer, plikGML):
         try: vl_cykl_zycia_global.dataProvider().addFeatures(nowe_bledy); vl_cykl_zycia_global.updateExtents()
         except Exception as e: QgsMessageLog.logMessage(f"Nie udało się dodać błędów do warstwy pamięciowej: {e}", tag="Walidator plików GML", level=Qgis.Warning)
     return obiektyZbledami
-    
-    
+
 
 def kontrolaZgodnosciZDanymiPRNG(layer, plik_prng, klasa):
     """
-    Kontrola zgodności BDOT10k z danymi PRNG.
-    Wykrywa: błędny format identyfikatora PRNG, niezgodności nazw, obiekty niepołączone / nadmiarowe w BDOT
+    Kontrola zgodności BDOT10k z danymi PRNG. Wykrywa: błędny format identyfikatora
+    PRNG, niezgodności nazw, obiekty niepołączone / nadmiarowe w BDOT
     """
+
     def get_attr(f, n, d=None): return f[n] if n in f.fields().names() else d
     global loaded_gml_prng_miejscowosci, loaded_gml_prng_obiektyfizjograficzne
     obiektyZbledami = []
@@ -4692,6 +5128,7 @@ def kontrolaZgodnosciZDanymiPRNG_braki(layer, plik_prng, klasa):
     """
     Kontrola braków obiektów PRNG w ramach powiatu - DO INTERPRETACJI
     """
+    
     def get_attr(f,n,d=None): return f[n] if n in f.fields().names() else d
     global loaded_gml_prng_miejscowosci, loaded_gml_prng_obiektyfizjograficzne, PRNG_found_in_SW_PTWP
     obiektyZbledami=[]
@@ -4755,16 +5192,17 @@ def kontrolaZgodnosciZDanymiPRNG_braki(layer, plik_prng, klasa):
                 if 'nazwa' in layer.fields().names(): f_err.setAttribute('nazwa',get_attr(f,'nazwaGlowna'))
                 f_err.setAttribute('gml_id',f"nie dotyczy | Brak obiektu w BDOT: {ident} {get_attr(f,'nazwaGlowna')} - DO INTERPRETACJI")
                 obiektyZbledami.append(f_err); PRNG_found_in_SW_PTWP.add(ident)
-
+                
     return obiektyZbledami
 
 
 
 def kontrolaZgodnosciZDanymiGDOS(layer, tc_zip, klasa):
     """
-    Kontrola zgodności BDOT10k z danymi GDOŚ.
-    Wykrywa niezgodności geometryczne, braki obiektów, rozbieżności nazw i identyfikatorów.
+    Kontrola zgodności BDOT10k z danymi GDOŚ. Wykrywa niezgodności
+    geometryczne, braki obiektów, rozbieżności nazw i identyfikatorów.
     """
+    
     global tereny_chronione_zip
     obiektyZbledami = []
     try:
@@ -4854,8 +5292,7 @@ def kontrolaZgodnosciZDanymiGDOS(layer, tc_zip, klasa):
                 try:
                     t = s.encode(enc,'ignore').decode(dec,'ignore')
                     if len(t) >= len(s): s = t; break
-                except Exception as e:
-                    print(e)
+                except Exception: pass  # nosec B110
             return unicodedata.normalize("NFC", s)
         normalize_compare = lambda t: normalize_unicode(t).casefold() if t else ""
         for f in join['OUTPUT'].getFeatures():
@@ -4879,30 +5316,31 @@ def kontrolaZgodnosciZDanymiGDOS(layer, tc_zip, klasa):
 
 def kontrolaFormatuAtrybutuWysokoscRT(layer, plikGML):
     """
-    Kontrola formatu atrybutu 'wysokosc' w klasie RT.
-    Weryfikuje zgodność wartości z określonymi patternami dla różnych rodzajów obiektów.
+    Kontrola formatu atrybutu 'wysokosc' w klasie RT. Weryfikuje zgodność
+    wartości z określonymi patternami dla różnych rodzajów obiektów.
     """
+    
     obiektyZbledami = []
     pattern_kopiec = re.compile(r"^-?\d+\.(0|5)$")
     pattern_punkt = re.compile(r"^-?\d+\.\d$")
-    pattern_poziomica = re.compile(r"^-?\d+\.(00|25|50|75)$")
+    pattern_poziomica = re.compile(r"^-?\d+\.(00|25|50|75)$")    
     plikGML = plikGML.getroot()
     otklasa = f".//ot:{layer.name()[-9:]}"
     ns = {
         'gml': 'http://www.opengis.net/gml/3.2',
         "ot": "urn:gugik:specyfikacje:gmlas:bazaDanychObiektowTopograficznych10k:2.0"
     }   
-    lokalnyId_to_feature = {f["lokalnyId"]: f for f in layer.getFeatures()}
+    lokalnyId_to_feature = {f["lokalnyId"]: f for f in layer.getFeatures()}    
     for featureMember in plikGML.findall('.//gml:featureMember', namespaces=ns):
         try:
             match = featureMember.find(otklasa, namespaces=ns)
             if match is None:
-                continue           
+                continue
             lokalnyId_elem = match.find('.//ot:lokalnyId', namespaces=ns)
             wysokosc_elem = match.find('.//ot:wysokosc', namespaces=ns)
             rodzaj_elem = match.find('.//ot:rodzaj', namespaces=ns)
             if lokalnyId_elem is None or wysokosc_elem is None or rodzaj_elem is None:
-                continue           
+                continue
             lokalnyId = (lokalnyId_elem.text or "").strip()
             wysokosc = (wysokosc_elem.text or "").strip()
             rodzaj = (rodzaj_elem.text or "").strip()
@@ -4930,6 +5368,12 @@ def kontrolaFormatuAtrybutuWysokoscRT(layer, plikGML):
 
 
 def kontrolaFormatuAtrybutuSzerokoscSW(layer, plikGML):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza poprawność formatu i precyzji zapisu atrybutu ‘ot:szerokosc’
+    w w warstwach z siecią rzeczną (OT_SW) w zależności od określonego wzorca – o ile ten
+    nie jest pusty. Do tablicy błędów trafia wcześniej pobrany lokalnyId danego obiektu.
+    """
+    
     obiektyZbledami = []
     pattern = re.compile(r"^\d+\.([05])$")
     plikGML = plikGML.getroot()
@@ -4957,6 +5401,13 @@ def kontrolaFormatuAtrybutuSzerokoscSW(layer, plikGML):
 
 
 def kontrolaFormatuAtrybutuSzerokoscSK(layer, plikGML):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza poprawność formatu i precyzji zapisu
+    atrybutu ‘ot:szerokosc’ lub ‘ot:szerokoscNawierzchni’ w warstwach z siecią
+    komunikacyjną (OT_SK) w zależności od określonego wzorca – o ile ten nie jest
+    pusty. Do tablicy błędów trafia wcześniej pobrany lokalnyId danego obiektu.
+    """
+    
     obiektyZbledami = []
     
     klasa = layer.name()[-9:]  
@@ -4995,7 +5446,8 @@ def kontrolaFormatuAtrybutuWysokoscZapory(layer, plikGML):
     """
     Kontrola formatu atrybutu 'wysokoscZapory' w klasie BUHD.
     Wykrywa brak wartości lub błąd precyzji zapisu (dla zapory).
-    """    
+    """
+    
     obiektyZbledami = []
     pattern = re.compile(r"^[1-9]\d*$")
     plikGML = plikGML.getroot()
@@ -5025,6 +5477,7 @@ def kontrolaFormatuAtrybutuWysokoscBUWT(layer, plikGML):
     Kontrola formatu atrybutu 'wysokosc' w klasie BUWT.
     Wykrywa brak wartości lub błąd precyzji zapisu.
     """
+    
     obiektyZbledami = []
     pattern = re.compile(r"^[1-9]\d*$")
     plikGML = plikGML.getroot()
@@ -5049,6 +5502,13 @@ def kontrolaFormatuAtrybutuWysokoscBUWT(layer, plikGML):
 
 
 def kontrolaFormatuParametrowBUZM(layer, plikGML):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza poprawność formatu i precyzji zapisu
+    atrybutów ‘ot:wysokosc’, ‘ot:szerokoscPodstawy’, ‘ot:szerokoscKorony’ w
+    warstwie OT_BUZM_L w zależności od określonego wzorca – o ile ten nie jest
+    pusty. Do tablicy błędów trafia wcześniej pobrany lokalnyId danego obiektu.
+    """
+    
     obiektyZbledami = []
     pattern = re.compile(r"^\d+\.[05]$")
     plikGML = plikGML.getroot()
@@ -5096,10 +5556,12 @@ def kontrolaFormatuParametrowBUZM(layer, plikGML):
 def kontrolaFormatuParametrowBUIN(layer, plikGML):
     """
     Kontrola formatu atrybutów BUIN:
-    - 'nosnosc' dla mostów, estakad, wiaduktów (="eksploatowany") – tylko weryfikacja wartości, brak nie zgłaszany
+    - 'nosnosc' dla mostów, estakad, wiaduktów (="eksploatowany")
+      – tylko weryfikacja wartości, brak nie zgłaszany
     - 'szerokosc' dla wszystkich (!= "w budowie") poza przejściami podziemnymi i dla zwierząt.
     Wykrywa brak wartości lub błędną precyzję.
     """
+    
     obiektyZbledami = []
     pattern_nosnosc = re.compile(r"^[1-9]\d*$")
     pattern_szerokosc = re.compile(r"^\d+\.\d$")
@@ -5139,7 +5601,7 @@ def kontrolaFormatuParametrowBUIN(layer, plikGML):
             feature.setAttribute(layer.fields().indexFromName("gml_id"), gml_id)
             layer.updateFeature(feature)
             obiektyZbledami.append(feature)
-
+            
     return obiektyZbledami
 
 
@@ -5171,12 +5633,12 @@ def kontrolaFormatuAtrybutuSzerokoscBUTR(layer, plikGML):
     return obiektyZbledami
 
 
-
 def kontrolaBialeZnaki(layer, plikGML):
     """
-    Kontrola występowania niepożądanych białych znaków w atrybutach opisowych BDOT10k:
-    na początku, końcu lub wewnątrz tekstu.
-    """    
+    Kontrola występowania niepożądanych białych znaków w atrybutach
+    opisowych BDOT10k: na początku, końcu lub wewnątrz tekstu.
+    """
+    
     obiektyZbledami = []
     atrybuty_opisowe = ["nazwa", "uwagi", "informacjaDodatkowa", "oznaczenieZmiany", "liczbaMieszkancow", "liczbaKondygnacji", "numerDrogi", "nazwaDrogi", "szerokoscNawierzchni", "szerokosc", "wysokosc", "szerokoscKorony", "szerokoscPodstawy", "nosnosc", "identyfikatorPRNG", "identyfikatorMPHP", "identyfikatorSIMC", "identyfikatorTERC", "identyfikatorULIC", "identyfikatorTERYTjednostki", "idTERYTjednostkiNadrzednej", "identyfikatorEGiB", "kodKst"]
     dostępne_pola = [field.name() for field in layer.fields()]
@@ -5219,7 +5681,7 @@ def kontrolaBialeZnaki(layer, plikGML):
             feature.setAttribute(layer.fields().indexFromName("gml_id"), nowy_gml_id)
             layer.updateFeature(feature)
             obiektyZbledami.append(feature)
-
+            
     return obiektyZbledami
 
 
@@ -5263,11 +5725,18 @@ def kontrolaPusteZnaczniki(layer, plikGML):
             feature.setAttribute(layer.fields().indexFromName("gml_id"), nowy_gml_id)
             layer.updateFeature(feature)
             obiektyZbledami.append(feature)
-
+            
     return obiektyZbledami
-    
+
 
 def kontrolaAtrybutuNazwa(layer, plikGML):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza poprawność formatu i precyzji zapisu atrybutu
+    ‘ot:nazwa’, w warstwach, gdzie on występuje w zależności od określonego
+    wzorca (litery polskiego alfabetu w wersji małej i dużej) – o ile ten nie jest
+    pusty. Do tablicy błędów trafia wcześniej pobrany lokalnyId danego obiektu.
+    """
+    
     obiektyZbledami = []
     if 'nazwa' not in [field.name() for field in layer.fields()]:
         return obiektyZbledami
@@ -5305,6 +5774,13 @@ def kontrolaAtrybutuNazwa(layer, plikGML):
 
 
 def kontrolaReferencjiBDOT500GESUT(layer, plikGML):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza poprawność referencji do obiektu z bazy GESUT i
+    BDOT500 w warstach, gdzie one występują poprzez obecność odpowiednich atrybutów.
+    Kontrolowane jest wypelnienie atrybutów lokalnyId i przestrzenNazw w tej
+    referencji. Do tablicy błędów trafia wcześniej pobrany lokalnyId danego obiektu.
+    """
+    
     obiektyZbledami = []
     if "OT_RT" in layer.name():
         return obiektyZbledami
@@ -5362,6 +5838,12 @@ def kontrolaReferencjiBDOT500GESUT(layer, plikGML):
 
 
 def kontrolaSpojnosciSKDR_SKJZ(layer):
+    r"""
+    Baza: BDOT10k. Funkcja działa w sposób dwojaki: 1) Sprawdza zgodność wspólnych atrybutów
+    odpowiadającej sobie geometrii obiektów klas OT_SKDR_L i OT_SKJZ_L. 2) Sprawdza
+    istnienie odpowiednika dla jednojezdniowego obiektu klasy OT_SKDR_L w warstwie OT_SKJZ_L
+    """
+    
     try:
         def normalize_attr(val, attr_name=None):
             if val is None:
@@ -5434,8 +5916,7 @@ def kontrolaSpojnosciSKDR_SKJZ(layer):
                             try:
                                 val_skdr = normalize_attr(f[attr], attr_name=attr)
                                 val_skjz = normalize_attr(skjz_attrs[attr], attr_name=attr)
-                            except Exception as e:
-                                print(e)
+                            except:  # nosec B112
                                 continue
                             if val_skdr != val_skjz:
                                 komunikaty_bledu.append(f"{attr}: SKDR='{val_skdr}' ≠ SKJZ='{val_skjz}'")
@@ -5465,10 +5946,10 @@ def kontrolaSpojnosciSKDR_SKJZ(layer):
                         intersecting_skjz = [cid for cid in candidate_ids_skjz if skjz_dict[cid]["geometry"].intersects(buf)]
                         if len(intersecting_skjz) >= 3:
                             raise StopIteration
-                except StopIteration:
+                except StopIteration:  # nosec B112
                     continue
-                except Exception as e:
-                    print(e)
+                except Exception:  # nosec B110
+                    pass                 
                 komunikaty_bledu.append("niespójność geometrii lub brak odpowiednika w OT_SKJZ_L")
             if komunikaty_bledu:
                 gml_id = str(f['gml_id']) if f['gml_id'] is not None else 'NULL'
@@ -5485,6 +5966,12 @@ def kontrolaSpojnosciSKDR_SKJZ(layer):
 
 
 def sztucznyL_SW(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza poprawność zawierania się cieków z klas OT_SWRS_L i
+    OT_SWKN_L w wodzie powierzchniowej stojącej OT_PTWP_A. Wykrywa błędne obiekty, dla
+    których brak atrybutu ‘cechaGeometrii’ lub jego wartość jest inna niż ‘sztuczny łącznik’.
+    """
+    
     try:
         obiektyZbledami = []
         dodane_ids = set()
@@ -5541,6 +6028,12 @@ def sztucznyL_SW(layer):
 
 
 def liniaUmowna_SK(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza poprawność zawierania się obiektów z klasy
+    OT_SKJZ_L w w obrębie placu OT_PTPL_A. Wykrywa błędne obiekty, dla których
+    brak atrybutu ‘cechaGeometrii’ lub jego wartość jest inna niż ‘linia umowna’.
+    """
+    
     try:
         obiektyZbledami = []
         dodane_ids = set()
@@ -5593,6 +6086,11 @@ def liniaUmowna_SK(layer):
 
 
 def zawieranieSWRM(layer):
+    r"""
+    Baza: BDOT10k. Funkcja wykrywa błędy zawierania się cieków
+    z klasy OT_SWRM_L w wodzie powierzchniowej OT_PTWP_A.
+    """
+    
     try:
         obiektyZbledami = []
         dodane_ids = set()
@@ -5644,6 +6142,12 @@ def zawieranieSWRM(layer):
 
 
 def zawieranieOI(layer):
+    r"""
+    Baza: BDOT10k. Funkcja wykrywa błędy zawierania się wybranych obiektów
+    z klas OT_OIPR_L, OT_OIPR_P, OT_OIMK_A, w obrębie obiektów klas
+    OT_PTLZ_A, OT_PTZB_A, OT_PTUT_A, OT_PTRK_A, OT_PTPL_A, OT_PTWP_A.
+    """
+    
     try:
         obiektyZbledami = []
         dodane_ids = set()
@@ -5737,8 +6241,10 @@ def zawieranieOI(layer):
 
 def zawieranieOIPR_glaz(layer):
     """
-    Kontrola zawierania obiektów OIPR_P typu ‘odosobniona skała’ lub ‘głaz narzutowy’ na PTZB_A – do interpretacji
+    Kontrola zawierania obiektów OIPR_P typu ‘odosobniona
+    skała’ lub ‘głaz narzutowy’ na PTZB_A – do interpretacji
     """
+    
     try:
         obiektyZinterpretacja = []
         if not layer or not layer.isValid(): return []
@@ -5782,9 +6288,10 @@ def zawieranieOIPR_glaz(layer):
 
 def przecinanieRTLW_SK_BUZM(layer):
     """
-    Kontrola przecinania się skarp i wąwozów z liniowymi warstwami SK, SW i BUZM.
-    Wykrywa przecinanie wewnątrz linii (styki wierzchołkami i współliniowość są ignorowane).
+    Kontrola przecinania się skarp i wąwozów z liniowymi warstwami SK, SW i BUZM. Wykrywa
+    przecinanie wewnątrz linii (styki wierzchołkami i współliniowość są ignorowane).
     """
+    
     try:
         obiektyZbledami = []
         dodane_ids = set()
@@ -5840,9 +6347,9 @@ def przecinanieRTLW_SK_BUZM(layer):
                 if feat.id() not in dodane_ids:
                     obiektyZbledami.append(feat)
                     dodane_ids.add(feat.id())
-
+                    
         return obiektyZbledami
-
+        
     except Exception as e:
         print(f"Błąd w funkcji przecinanieRTLW_SK_BUZM: {e}")
         return []
@@ -5853,6 +6360,7 @@ def przecinanieRTLW(layer):
     Kontrola przecinania w OT_RTLW_L: poziomica–poziomica, skarpa–skarpa, wąwóz–wąwóz.
     Ignoruje zamknięte linie i styki krańców linii. Zapisuje punkty kolizji.
     """
+    
     obiektyZbledami=[]
     tolerance=0.02
     lokalizator=QgsVectorLayer("Point?crs=EPSG:2180","lokalizacje kolizji OT_RTLW_L","memory")
@@ -5872,8 +6380,7 @@ def przecinanieRTLW(layer):
                 s=str(v).strip().lower()
                 return s if s else "__MISSING__"
             return "__MISSING__"
-        except: 
-            return "__MISSING__"
+        except: return "__MISSING__"
     try:
         if not layer or not layer.isValid() or not layer.name().endswith("OT_RTLW_L"): return []
         if layer.geometryType()!=QgsWkbTypes.LineGeometry: return []
@@ -5881,8 +6388,7 @@ def przecinanieRTLW(layer):
             try:
                 pts=g.asPolyline() if not g.isMultipart() else g.asMultiPolyline()[0]
                 return bool(pts) and pts[0]==pts[-1]
-            except: 
-                return False
+            except: return False
         dop=["poziomica","skarpa","wąwóz"]
         feats=[(f,get_attr(f,"rodzaj"),get_attr(f,"wysokosc")) for f in layer.getFeatures() if get_attr(f,"rodzaj") in dop]
         if not feats: return []
@@ -5920,8 +6426,7 @@ def przecinanieRTLW(layer):
                                 if inter.type()==QgsWkbTypes.PointGeometry:
                                     pts=[inter.asPoint()] if not inter.isMultipart() else [p for part in inter.asMultiPoint() for p in part]
                                     for p in pts: dodaj_punkt(p,f1["gml_id"],r2)
-                        except:
-                            obiektyZbledami.extend([f1,f2])
+                        except: obiektyZbledami.extend([f1,f2])
                         continue
                     if rodzaj in ["skarpa","wąwóz"]:
                         try:
@@ -5953,12 +6458,13 @@ def przecinanieRTLW(layer):
     except Exception as e:
         print(f"Błąd w funkcji przecinanieRTLW dla warstwy {layer.name()}: {e}")
         return []
-        
+
 
 def przecinanieOT(layer):
     """
     Kontrola przecinania się obiektów powierzchniowych w warstwach OT_BU*.
     """
+    
     from qgis.core import QgsSpatialIndex, QgsWkbTypes
     obiektyZbledami = []
     try:
@@ -5995,7 +6501,7 @@ def przecinanieOT(layer):
                 if para in sprawdzone:
                     continue
                 sprawdzone.add(para)
-
+                
                 geom2 = feat2.geometry()
                 if not geom2 or geom2.isEmpty():
                     continue
@@ -6011,19 +6517,20 @@ def przecinanieOT(layer):
                         szerokosc = overlap_area / wspolna_dlugosc
                         if overlap_area > 1.0 and szerokosc > 0.04:
                             obiektyZbledami.extend([f, feat2])
-
+                            
         return list({f['lokalnyId']: f for f in obiektyZbledami}.values())
-
+        
     except Exception as e:
         print(f"Błąd w funkcji przecinanieOT dla warstwy {layer.name()}: {e}")
         return []
-   
+
 
 def kolizjeSW(layer):
     """
-    Kontrola nakładania się cieków SWRS / SWKN / SWRM.
-    Wykrywa fragmenty obiektów z nakładaniem liniowym w ramach klasy i pomiedzy klasami SW.
+    Kontrola nakładania się cieków SWRS / SWKN / SWRM. Wykrywa fragmenty
+    obiektów z nakładaniem liniowym w ramach klasy i pomiedzy klasami SW.
     """
+    
     obiektyZbledami, tol, min_len = [], 0.04, 0.04
     try:
         if not layer or not layer.isValid(): return []
@@ -6091,9 +6598,9 @@ def kolizjeSW(layer):
                     f2 = fmap2[fid2]
                     if f1['lokalnyId'] != f2['lokalnyId']:
                         chk(f1, f2, other_layer_name=other_name)
-
+                        
         return obiektyZbledami
-
+        
     except Exception as e:
         print("Błąd kolizjeSW:", e)
         return []
@@ -6101,10 +6608,10 @@ def kolizjeSW(layer):
 
 def kolizjeLiniiOT(layer):
     """
-    Kontrola nakładania liniowego w obrębie jednej warstwy liniowej (_L).
-    Wykrywa fragmenty obiektów z nakładaniem liniowym.
-    Nie działa dla warstw SW (SWRS/SWRM/SWKN).
+    Kontrola nakładania liniowego w obrębie jednej warstwy liniowej (_L). Wykrywa
+    fragmenty obiektów z nakładaniem liniowym. Nie działa dla warstw SW (SWRS/SWRM/SWKN).
     """
+    
     obiektyZbledami, min_len = [], 0.04
     try:
         if not layer or not layer.isValid(): return []
@@ -6155,6 +6662,12 @@ def kolizjeLiniiOT(layer):
 
 
 def kontrolaSkrot_bTran(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza obecność oraz poprawność użycia
+    skrótu kartograficznego „b. tran.” ("zajezdnia autobusowa", "zajezdnia
+    tramwajowa", "zajezdnia trolejbusowa") dla warstw KUKO_A i BUBD_A
+    """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
@@ -6194,6 +6707,12 @@ def kontrolaSkrot_bTran(layer):
 
 
 def kontrolaSkrot_zaj(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza obecność oraz poprawność użycia
+    skrótu kartograficznego „zaj.” ("zajezdnia autobusowa", "zajezdnia
+    tramwajowa", "zajezdnia trolejbusowa") dla warstw KUKO_A i BUBD_A
+    """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
@@ -6255,15 +6774,20 @@ def kontrolaSkrot_zaj(layer):
                 )
                 if (not on_kuko and skrot != "zaj.") or (on_kuko and skrot == "zaj."):
                     obiektyZbledami.append(f)
-
+                    
         return obiektyZbledami
-
+        
     except Exception as e:
         print(f"Błąd w kontroli skrótu 'zaj.': {e}")
         return []
 
 
 def kontrolaSkrot_el(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza obecność oraz poprawność użycia skrótu
+    kartograficznego „el.” ("elektrownia”) dla warstw KUPG_A i BUBD_A
+    """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
@@ -6307,15 +6831,20 @@ def kontrolaSkrot_el(layer):
                 )
                 if (not na_kupg and skrot != "el.") or (na_kupg and skrot == "el."):
                     obiektyZbledami.append(f)
-
+                    
         return obiektyZbledami
-
+    
     except Exception as e:
         print(f"Błąd w kontroli skrótu 'el.': {e}")
         return []
 
 
 def kontrolaSkrot_elc(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza obecność oraz poprawność użycia skrótu
+    kartograficznego „elc.” ("elektrociepłownia”) dla warstw KUPG_A i BUBD_A
+    """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
@@ -6359,15 +6888,20 @@ def kontrolaSkrot_elc(layer):
                         obiektyZbledami.append(f)
                 elif skrot == "elc.":
                     obiektyZbledami.append(f)
-
+                    
         return obiektyZbledami
-
+        
     except Exception as e:
         print(f"Błąd w kontroli skrótu 'elc.': {e}")
         return []
 
 
 def kontrolaSkrot_gar(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza obecność oraz poprawność użycia
+    skrótu kartograficznego „gar.” ("garaż”) dla warstwy BUBD_A
+    """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
@@ -6399,8 +6933,13 @@ def kontrolaSkrot_gar(layer):
 
 
 
-
 def kontrolaSkrot_gaz(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza obecność oraz poprawność użycia
+    skrótu kartograficznego „gaz.” ("gazownia”, „zbiornik na gaz”, „stacja
+    gazowa”, „szyb naftowy lub gazowy”) dla warstw KUPG_A, BUBD_A i BUIT_P
+    """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
@@ -6465,8 +7004,13 @@ def kontrolaSkrot_gaz(layer):
         return []
 
 
-
 def kontrolaSkrot_hod(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza obecność oraz poprawność użycia skrótu kartograficznego
+    „hod.” ("gospodarstwo hodowlane”, „budynek produkcyjny zwierząt hodowlanych”, „gospodarstwo
+    hodowlane”, „budynek produkcyjny zwierząt hodowlanych”) dla warstw KUPG_A i BUBD_A
+    """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
@@ -6523,15 +7067,20 @@ def kontrolaSkrot_hod(layer):
                     obiektyZbledami.append(f)
                 elif lezy_na_kupg and skrot == "hod.":
                     obiektyZbledami.append(f)
-
+                    
         return obiektyZbledami
-
+        
     except Exception as e:
         print(f"Błąd w kontroli skrótu 'hod.': {e}")
         return []
 
 
 def kontrolaSkrot_kemp(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza obecność oraz poprawność użycia skrótu
+    kartograficznego „ląd.” ("kemping”, „domek kempingowy”) dla warstw KUHO_A i BUBD_A
+    """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"       
@@ -6574,16 +7123,20 @@ def kontrolaSkrot_kemp(layer):
                         obiektyZbledami.append(f)
                 elif skrot == "kemp.":
                     obiektyZbledami.append(f)
-
+                    
         return obiektyZbledami
-
+        
     except Exception as e:
         print(f"Błąd w kontroli skrótu 'kemp.': {e}")
         return []
 
 
-
 def kontrolaSkrot_lad(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza obecność oraz poprawność użycia skrótu kartograficznego
+    „ląd.” ("lotnisko lub lądowisko”, „lądowisko dla helikopterów”) dla warstw KUKO_A i OIKM_P
+    """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
@@ -6629,14 +7182,18 @@ def kontrolaSkrot_lad(layer):
                 if (on_kuko and skrot == "ląd.") or (not on_kuko and skrot != "ląd."):
                     obiektyZbledami.append(f)
         return obiektyZbledami
-
+        
     except Exception as e:
         print(f"Błąd w kontroli skrótu 'ląd.': {e}")
         return []
 
 
-
 def kontrolaSkrot_letn(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza obecność oraz poprawność użycia skrótu kartograficznego
+    „letn.” ("zespół domów letniskowych”, „dom letniskowy”) dla warstw KUSK_A i BUBD_A
+    """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
@@ -6679,15 +7236,21 @@ def kontrolaSkrot_letn(layer):
                         obiektyZbledami.append(f)
                 elif skrot == "letn.":
                     obiektyZbledami.append(f)
-
+                    
         return obiektyZbledami
-
+        
     except Exception as e:
         print(f"Błąd w kontroli skrótu 'letn.': {e}")
         return []
 
 
 def kontrolaSkrot_osrWyp(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza obecność oraz poprawność użycia
+    skrótu kartograficznego „ośr. wyp.” ("ośrodek wypoczynkowy”,
+    „ośrodek szkoleniowo-wypoczynkowy”) dla warstw KUHO_A i BUBD_A
+    """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
@@ -6730,15 +7293,20 @@ def kontrolaSkrot_osrWyp(layer):
                         obiektyZbledami.append(f)
                 elif skrot == "ośr. wyp.":
                     obiektyZbledami.append(f)
-
+                    
         return obiektyZbledami
-
+        
     except Exception as e:
         print(f"Błąd w kontroli skrótu 'ośr. wyp.': {e}")
         return []
 
 
 def kontrolaSkrot_parking(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza obecność oraz poprawność ość użycia skrótu
+    kartograficznego „p.” ("parking”, „parking wielopoziomowy”) dla warstw KUKO_A i BUBD_A
+    """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
@@ -6781,15 +7349,20 @@ def kontrolaSkrot_parking(layer):
                         obiektyZbledami.append(f)
                 elif skrot == "p.":
                     obiektyZbledami.append(f)
-
+                    
         return obiektyZbledami
-
+    
     except Exception as e:
         print(f"Błąd w kontroli skrótu 'p.': {e}")
         return []
 
 
 def kontrolaSkrot_pKol(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza obecność oraz poprawność użycia skrótu kartograficznego
+    „p. kol” ("stacja kolejowa", " stacja lub przystanek kolejowy”) dla warstw OIKM_P i KUKO_A
+    """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
@@ -6815,7 +7388,13 @@ def kontrolaSkrot_pKol(layer):
         print(f"Błąd w kontroli skrótu 'p. kol.': {e}")
         return []
 
+
 def kontrolaSkrot_port(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza obecność oraz poprawność użycia skrótu
+    kartograficznego „rafin” ("rafineria) dla warstw KUPG_A i BUBD_A
+    """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
@@ -6857,15 +7436,17 @@ def kontrolaSkrot_port(layer):
                     obiektyZbledami.append(f)
                 elif lezy_na_kuko and skrot == "port":
                     obiektyZbledami.append(f)
-
+                    
         return obiektyZbledami
-
+    
     except Exception as e:
         print(f"Błąd w kontroli skrótu 'port': {e}")
         return []
 
 
 def kontrolaSkrot_pomp(layer):
+    """ TODO """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
@@ -6926,14 +7507,18 @@ def kontrolaSkrot_pomp(layer):
                 elif lezy_na_kompleksie and skrot == "pomp.":
                     obiektyZbledami.append(f)
         return obiektyZbledami
-
+        
     except Exception as e:
         print(f"Błąd w kontroli skrótu 'pomp.': {e}")
         return []
 
 
-
 def kontrolaSkrot_rafin(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza obecność oraz poprawność użycia skrótu
+    kartograficznego „rafin” ("rafineria) dla warstw KUPG_A i BUBD_A
+    """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
@@ -6977,16 +7562,21 @@ def kontrolaSkrot_rafin(layer):
                         obiektyZbledami.append(f)
                 elif skrot == "rafin.":
                     obiektyZbledami.append(f)
-
+                    
         return obiektyZbledami
-
+    
     except Exception as e:
         print(f"Błąd w kontroli skrótu 'rafin.': {e}")
         return []
 
 
-
 def kontrolaSkrot_rdst(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza obecność oraz poprawność użycia
+    skrótu kartograficznego „rdst” ("centrum telekomunikacyjne",
+    "stacja nadawcza radia i telewizji") dla warstw BUWT_P i BUBD_A
+    """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
@@ -7021,6 +7611,11 @@ def kontrolaSkrot_rdst(layer):
 
 
 def kontrolaSkrot_st(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza obecność oraz poprawność użycia skrótu kartograficznego
+    „st.”( „stacja kolejowa”, „dworzec kolejowy”) dla warstw KUKO_A i BUBD_A
+    """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
@@ -7052,7 +7647,7 @@ def kontrolaSkrot_st(layer):
                 istnienie = get_attr(f, "kategoriaIstnienia")
                 skrot = get_attr(f, "skrotKartograficzny")
                 geom = f.geometry()
-
+                
                 if not geom or geom.isEmpty():
                     continue
                 if funkcja == "dworzec kolejowy" and istnienie != "zniszczony":
@@ -7069,15 +7664,17 @@ def kontrolaSkrot_st(layer):
                             obiektyZbledami.append(f)
                 elif skrot == "st.":
                     obiektyZbledami.append(f)
-
+                    
         return obiektyZbledami
-
+        
     except Exception as e:
         print(f"Błąd w kontroli skrótu 'st.': {e}")
         return []
 
 
 def kontrolaSkrot_bTran_26(layer):
+    """ TODO """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
@@ -7117,6 +7714,8 @@ def kontrolaSkrot_bTran_26(layer):
 
 
 def kontrolaSkrot_zaj_26(layer):
+    """ TODO """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
@@ -7178,15 +7777,17 @@ def kontrolaSkrot_zaj_26(layer):
                 )
                 if (not on_kuko and skrot != "zaj.") or (on_kuko and skrot == "zaj."):
                     obiektyZbledami.append(f)
-
+                    
         return obiektyZbledami
-
+        
     except Exception as e:
         print(f"Błąd w kontroli skrótu 'zaj.': {e}")
         return []
 
 
 def kontrolaSkrot_el_26(layer):
+    """ TODO """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
@@ -7230,15 +7831,17 @@ def kontrolaSkrot_el_26(layer):
                 )
                 if (not na_kupg and skrot != "el.") or (na_kupg and skrot == "el."):
                     obiektyZbledami.append(f)
-
+                    
         return obiektyZbledami
-
+        
     except Exception as e:
         print(f"Błąd w kontroli skrótu 'el.': {e}")
         return []
 
 
 def kontrolaSkrot_elc_26(layer):
+    """ TODO """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
@@ -7282,15 +7885,17 @@ def kontrolaSkrot_elc_26(layer):
                         obiektyZbledami.append(f)
                 elif skrot == "elc.":
                     obiektyZbledami.append(f)
-
+                    
         return obiektyZbledami
-
+        
     except Exception as e:
         print(f"Błąd w kontroli skrótu 'elc.': {e}")
         return []
 
 
 def kontrolaSkrot_gar_26(layer):
+    """ TODO """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
@@ -7321,9 +7926,9 @@ def kontrolaSkrot_gar_26(layer):
         return []
 
 
-
-
 def kontrolaSkrot_gaz_26(layer):
+    """ TODO """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
@@ -7373,23 +7978,24 @@ def kontrolaSkrot_gaz_26(layer):
                 rodzaj = get_attr(f, "rodzaj")
                 istnienie = get_attr(f, "kategoriaIstnienia")
                 info = get_attr(f, "informacjaDodatkowa")
-
+                
                 if rodzaj == "szyb naftowy lub gazowy" and istnienie == "eksploatowany":
                     if "gaz" in info:
                         if skrot != "gaz.":
                             obiektyZbledami.append(f)
                     elif skrot == "gaz.":
                         obiektyZbledami.append(f)
-
+                        
         return obiektyZbledami
-
+        
     except Exception as e:
         print(f"Błąd w kontroli skrótu 'gaz.': {e}")
         return []
 
 
-
 def kontrolaSkrot_hod_26(layer):
+    """ TODO """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
@@ -7446,16 +8052,17 @@ def kontrolaSkrot_hod_26(layer):
                    or (istnienie!="eksploatowany" and skrot=="hod.") \
                    or (lezy_na_kupg and skrot=="hod."):
                     obiektyZbledami.append(f)
-
+                    
         return obiektyZbledami
-
+        
     except Exception as e:
         print(f"Błąd w kontroli skrótu 'hod.': {e}")
         return []
 
 
-
 def kontrolaSkrot_kemp_26(layer):
+    """ TODO """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"       
@@ -7498,16 +8105,17 @@ def kontrolaSkrot_kemp_26(layer):
                         obiektyZbledami.append(f)
                 elif skrot == "kemp.":
                     obiektyZbledami.append(f)
-
+                    
         return obiektyZbledami
-
+        
     except Exception as e:
         print(f"Błąd w kontroli skrótu 'kemp.': {e}")
         return []
 
 
-
 def kontrolaSkrot_lad_26(layer):
+    """ TODO """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
@@ -7553,14 +8161,15 @@ def kontrolaSkrot_lad_26(layer):
                 if (on_kuko and skrot == "ląd.") or (not on_kuko and skrot != "ląd."):
                     obiektyZbledami.append(f)
         return obiektyZbledami
-
+        
     except Exception as e:
         print(f"Błąd w kontroli skrótu 'ląd.': {e}")
         return []
 
 
-
 def kontrolaSkrot_letn_26(layer):
+    """ TODO """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
@@ -7603,15 +8212,17 @@ def kontrolaSkrot_letn_26(layer):
                         obiektyZbledami.append(f)
                 elif skrot == "letn.":
                     obiektyZbledami.append(f)
-
+                    
         return obiektyZbledami
-
+        
     except Exception as e:
         print(f"Błąd w kontroli skrótu 'letn.': {e}")
         return []
 
 
 def kontrolaSkrot_osrWyp_26(layer):
+    """ TODO """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
@@ -7654,15 +8265,17 @@ def kontrolaSkrot_osrWyp_26(layer):
                         obiektyZbledami.append(f)
                 elif skrot == "ośr. wyp.":
                     obiektyZbledami.append(f)
-
+                    
         return obiektyZbledami
-
+        
     except Exception as e:
         print(f"Błąd w kontroli skrótu 'ośr. wyp.': {e}")
         return []
 
 
 def kontrolaSkrot_parking_26(layer):
+    """ TODO """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
@@ -7705,15 +8318,17 @@ def kontrolaSkrot_parking_26(layer):
                         obiektyZbledami.append(f)
                 elif skrot == "p.":
                     obiektyZbledami.append(f)
-
+                    
         return obiektyZbledami
-
+        
     except Exception as e:
         print(f"Błąd w kontroli skrótu 'p.': {e}")
         return []
 
 
 def kontrolaSkrot_pKol_26(layer):
+    """ TODO """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
@@ -7739,7 +8354,10 @@ def kontrolaSkrot_pKol_26(layer):
         print(f"Błąd w kontroli skrótu 'p. kol.': {e}")
         return []
 
+
 def kontrolaSkrot_port_26(layer):
+    """ TODO """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
@@ -7781,15 +8399,17 @@ def kontrolaSkrot_port_26(layer):
                     obiektyZbledami.append(f)
                 elif lezy_na_kuko and skrot == "port":
                     obiektyZbledami.append(f)
-
+                    
         return obiektyZbledami
-
+        
     except Exception as e:
         print(f"Błąd w kontroli skrótu 'port': {e}")
         return []
 
 
 def kontrolaSkrot_pomp_26(layer):
+    """ TODO """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
@@ -7856,8 +8476,9 @@ def kontrolaSkrot_pomp_26(layer):
         return []
 
 
-
 def kontrolaSkrot_rafin_26(layer):
+    """ TODO """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
@@ -7901,15 +8522,17 @@ def kontrolaSkrot_rafin_26(layer):
                         obiektyZbledami.append(f)
                 elif skrot == "rafin.":
                     obiektyZbledami.append(f)
-
+                    
         return obiektyZbledami
-
+        
     except Exception as e:
         print(f"Błąd w kontroli skrótu 'rafin.': {e}")
         return []
 
 
 def kontrolaSkrot_rdst_26(layer):
+    """ TODO """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
@@ -7953,9 +8576,9 @@ def kontrolaSkrot_rdst_26(layer):
         return []
 
 
-
-
 def kontrolaSkrot_st_26(layer):
+    """ TODO """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
@@ -7987,7 +8610,7 @@ def kontrolaSkrot_st_26(layer):
                 istnienie = get_attr(f, "kategoriaIstnienia")
                 skrot = get_attr(f, "skrotKartograficzny")
                 geom = f.geometry()
-
+                
                 if not geom or geom.isEmpty():
                     continue
                 if funkcja == "dworzec kolejowy" and istnienie == "eksploatowany":
@@ -8008,10 +8631,16 @@ def kontrolaSkrot_st_26(layer):
 
     except Exception as e:
         print(f"Błąd w kontroli skrótu 'st.': {e}")
-        return []    
+        return []
 
-    
+
 def kontrolaUzyciaSkrotu(layer):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza poprawność użycia skrótu kartograficznego, wykrywając
+    nadmiarowe przypadki wystąpień skrótów zarówno na warstwach, dla których skróty
+    są wymagane zgodnie z WT, jak i nadmiarowości w dowolnej klasie obiektów BDOT10k.
+    """
+    
     def get_attr(f, attr):
         return str(f[attr]).strip() if attr in f.fields().names() and f[attr] not in [None, 'NULL'] else ""
     obiektyZbledami = []
@@ -8055,19 +8684,20 @@ def kontrolaUzyciaSkrotu(layer):
                         obiektyZbledami.append(f)
                         id_zbledami.add(gml_id)
         layer.commitChanges()
-
+        
     except Exception as e:
         print(f"Błąd podczas kontroli użycia dozwolonych skrótów: {e}")
-
+        
     return obiektyZbledami
 
 
 def kontrolaUzyciaKodu(layer):
     """
-    Kontrola użycia kodu kartograficznego w odpowiedniej klasie.
-    Wykrywa nadmiarowe przypisanie kodu w warstwach nieuprawnionych
-    do posiadania tego atrybutu oraz niezgodności z listą dozwolonych wystąpień.
+    Kontrola użycia kodu kartograficznego w odpowiedniej klasie. Wykrywa
+    nadmiarowe przypisanie kodu w warstwach nieuprawnionych do posiadania
+    tego atrybutu oraz niezgodności z listą dozwolonych wystąpień.
     """
+    
     def get_attr(f, attr):
         return str(f[attr]).strip() if attr in f.fields().names() and f[attr] not in [None, 'NULL'] else ""
     obiektyZbledami, id_zbledami = [], set()
@@ -8161,6 +8791,12 @@ def kontrolaUzyciaKodu(layer):
 
 
 def kodKarto10kNULL(layer):
+    r"""
+    Baza: BDOT10k. Funkcja kontroluje czy poziomice z klasy OT_RTLW_L
+    nie posiadają nadmiarowo nadanych kodów kartograficznych w obrębie
+    wybranych obiektów z klas OT_OIMK_A, OT_PTGN_A, OT_PTSO_A, OT_PTWZ_A.
+    """
+    
     obiektyZbledami = []
     try:
         oimka = None
@@ -8293,6 +8929,12 @@ def kodKarto10kNULL(layer):
 
 
 def blednePolozeniePktWys(layer):
+    r"""
+    Baza: BDOT10k. Funkcja kontroluje błędne położenie punktów wysokościowych
+    z klasy _OT_RTPW_P w obrębie obiektów z klas OT_BUBD_A,OT_BUWT_A,
+    OT_BUZT_A, OT_OIOR_A, OT_PTNZ_A,OT_PTSO_A, OT_PTWP_A,OT_PTWZ_A.
+    """
+    
     obiektyZbledami = []
     try:
         bubda = None
@@ -8516,6 +9158,11 @@ def blednePolozeniePktWys(layer):
 
 
 def kontrolaKodKarto10k213(layer):
+    r"""
+    Baza: BDOT10k. Funkcja kotroluje zasadność użycia kodu kartograficznego 0010_213
+    zgodnie z wytycznymi (2026) nadawania kodów kartograficznych w warstwie OT_SKTR_L
+    """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
@@ -8559,13 +9206,18 @@ def kontrolaKodKarto10k213(layer):
             elif kod == "0010_213" and not warunek:
                 obiektyZbledami.append(f)
         return obiektyZbledami
-
+        
     except Exception as e:
         print(f"Błąd w kontroli kodu 0010_213: {e}")
         return []
 
 
 def kontrolaKodKarto10k217(layer):
+    r"""
+    Baza: BDOT10k. Funkcja kotroluje zasadność użycia kodu kartograficznego 0010_217
+    zgodnie z wytycznymi (2026) nadawania kodów kartograficznych w warstwie OT_SKTR_L
+    """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
@@ -8605,13 +9257,18 @@ def kontrolaKodKarto10k217(layer):
             elif kod == "0010_217":
                 obiektyZbledami.append(f)
         return obiektyZbledami
-
+    
     except Exception as e:
         print(f"Błąd w kontroli kodu 0010_217: {e}")
         return []
 
 
 def kontrolaKodKarto10k218(layer):
+    r"""
+    Baza: BDOT10k. Funkcja kotroluje zasadność użycia kodu kartograficznego 0010_218
+    zgodnie z wytycznymi (2026) nadawania kodów kartograficznych w warstwie OT_SKTR_L
+    """
+    
     try:
         def get_attr(f, attr):
             return str(f[attr] or "").strip().lower() if attr in f.fields().names() else "__MISSING__"
@@ -8651,13 +9308,18 @@ def kontrolaKodKarto10k218(layer):
             elif kod == "0010_218":
                 obiektyZbledami.append(f)
         return obiektyZbledami
-
+    
     except Exception as e:
         print(f"Błąd w kontroli kodu 0010_218: {e}")
         return []
 
 
 def kontrolaKodKarto10k219_1(layer):
+    r"""
+    Baza: BDOT10k. Funkcja kotroluje zasadność użycia kodu kartograficznego 0010_219_1
+    zgodnie z wytycznymi nadawania kodów kartograficznych w warstwie OT_BUIN_L
+    """
+    
     try:
         obiektyZbledami = []
         dodane_bledy_ids = set()
@@ -8753,6 +9415,11 @@ def kontrolaKodKarto10k219_1(layer):
 
 
 def kontrolaKodKarto10k219_2(layer):
+    r"""
+    Baza: BDOT10k. Funkcja kotroluje zasadność użycia kodu kartograficznego 0010_219_2
+    zgodnie z wytycznymi nadawania kodów kartograficznych w warstwie OT_BUIN_L
+    """
+    
     try:
         obiektyZbledami = []
         dodane_bledy_ids = set()  # Analiza unikalnych Id obiektów błędnych
@@ -8846,6 +9513,11 @@ def kontrolaKodKarto10k219_2(layer):
 
 
 def kontrolaKodKarto10k220_1(layer):
+    r"""
+    Baza: BDOT10k. Funkcja kotroluje zasadność użycia kodu kartograficznego 0010_220_1
+    zgodnie z wytycznymi nadawania kodów kartograficznych w warstwie OT_BUIN_L
+    """
+    
     try:
         obiektyZbledami = []
         dodane_bledy_ids = set()
@@ -8945,6 +9617,11 @@ def kontrolaKodKarto10k220_1(layer):
 
 
 def kontrolaKodKarto10k220_2(layer):
+    r"""
+    Baza: BDOT10k. Funkcja kotroluje zasadność użycia kodu kartograficznego 0010_220_2
+    zgodnie z wytycznymi nadawania kodów kartograficznych w warstwie OT_BUIN_L
+    """
+    
     try:
         obiektyZbledami = []
         dodane_bledy_ids = set()
@@ -9050,6 +9727,11 @@ def kontrolaKodKarto10k220_2(layer):
 
 
 def kontrolaKodKarto10k131_1(layer):
+    r"""
+    Baza: BDOT10k. Funkcja kotroluje zasadność użycia kodu kartograficznego 0010_131_1
+    zgodnie z wytycznymi nadawania kodów kartograficznych w warstwie OT_BUIN_L
+    """
+    
     try:
         if not layer.isValid():
             return []
@@ -9144,6 +9826,11 @@ def kontrolaKodKarto10k131_1(layer):
 
 
 def kontrolaKodKarto10k131_2(layer):
+    r"""
+    Baza: BDOT10k. Funkcja kotroluje zasadność użycia kodu kartograficznego 0010_131_2
+    zgodnie z wytycznymi nadawania kodów kartograficznych w warstwie OT_BUIN_L
+    """
+    
     try:
         obiektyZbledami = []
         dodane_bledy_ids = set()
@@ -9211,6 +9898,11 @@ def kontrolaKodKarto10k131_2(layer):
 
 
 def kontrolaKodKarto10k133_1(layer):
+    r"""
+    Baza: BDOT10k. Funkcja kotroluje zasadność użycia kodu kartograficznego 0010_133_1
+    zgodnie z wytycznymi nadawania kodów kartograficznych w warstwie OT_BUIN_L
+    """
+    
     try:
         if not layer.isValid():
             return []
@@ -9304,6 +9996,11 @@ def kontrolaKodKarto10k133_1(layer):
 
 
 def kontrolaKodKarto10k133_2(layer):
+    r"""
+    Baza: BDOT10k. Funkcja kotroluje zasadność użycia kodu kartograficznego 0010_133_2
+    zgodnie z wytycznymi nadawania kodów kartograficznych w warstwie OT_BUIN_L
+    """
+    
     try:
         obiektyZbledami = []
         dodane_bledy_ids = set()
@@ -9402,6 +10099,11 @@ def kontrolaKodKarto10k133_2(layer):
 
 
 def kontrolaKodKarto10k134_1(layer):
+    r"""
+    Baza: BDOT10k. Funkcja kotroluje zasadność użycia kodu kartograficznego 0010_134_1
+    zgodnie z wytycznymi nadawania kodów kartograficznych w warstwie OT_BUIN_L
+    """
+    
     try:
         obiektyZbledami = []
         granica = adjaMinus2cmBufor(layer)
@@ -9426,6 +10128,11 @@ def kontrolaKodKarto10k134_1(layer):
 
 
 def kontrolaKodKarto10k134_2(layer):
+    r"""
+    Baza: BDOT10k. Funkcja kotroluje zasadność użycia kodu kartograficznego 0010_134_2
+    zgodnie z wytycznymi nadawania kodów kartograficznych w warstwie OT_BUIN_L
+    """
+    
     try:
         obiektyZbledami = []
         granica = adjaMinus2cmBufor(layer)
@@ -9450,6 +10157,11 @@ def kontrolaKodKarto10k134_2(layer):
 
 
 def kontrolaKodKarto10k140(layer):
+    r"""
+    Baza: BDOT10k. Funkcja kotroluje zasadność użycia kodu kartograficznego 0010_140 zgodnie
+    z wytycznymi nadawania kodów kartograficznych w warstwach OT_PTKM_A, OT_PTPL_A, OT_PTZB_A
+    """
+    
     try:
         obiektyZbledami = []
         dozwolone_klasy = ['OT_PTKM_A', 'OT_PTPL_A', 'OT_PTZB_A']
@@ -9499,8 +10211,8 @@ def kontrolaKodKarto10k140(layer):
                     if ros == "brak – plac twardy":
                         if kod != "0010_140":
                             obiektyZbledami.append(f)
-            except Exception as e:
-                print(e)
+            except Exception:  # nosec B110
+                pass
         return obiektyZbledami
     except Exception as e:
         print(f"Błąd w kontroli kodKarto10k140: {e}")
@@ -9508,6 +10220,11 @@ def kontrolaKodKarto10k140(layer):
 
 
 def kontrolaKodKarto10k638_1(layer):
+    r"""
+    Baza: BDOT10k. Funkcja kotroluje zasadność użycia kodu kartograficznego 0010_638_1
+    zgodnie z wytycznymi nadawania kodów kartograficznych w warstwie OT_BUIN_L
+    """
+    
     try:
         obiektyZbledami = []
         granica = adjaMinus2cmBufor(layer)
@@ -9532,6 +10249,11 @@ def kontrolaKodKarto10k638_1(layer):
 
 
 def kontrolaKodKarto10k638_2(layer):
+    r"""
+    Baza: BDOT10k. Funkcja kotroluje zasadność użycia kodu kartograficznego 0010_638_2
+    zgodnie z wytycznymi nadawania kodów kartograficznych w warstwie OT_BUIN_L
+    """
+    
     try:
         obiektyZbledami = []
         granica = adjaMinus2cmBufor(layer)
@@ -9555,11 +10277,17 @@ def kontrolaKodKarto10k638_2(layer):
         print (f'funkcja kontrolaKodKarto10k638_2 nie zadziałała poprawnie z powodu błędu {x}. Zostanie zwrócona pusta tablica')
         return []
 
-
 global lokalneIdWRamachKlas
 lokalneIdWRamachKlas = {}
 
 def unikalnoscLokalnyIdWPliku(layer, plikGML):
+    r"""
+    Baza: BDOT10k. Funkcja sprawdza, czy występują zdublowane lokalnyId wewnątrz
+    tej samej klasy lub w innej z podaniem jej nazwy. Do tablicy błędów trafia
+    wcześniej pobrany lokalnyId danego obiektu wraz z podaniem czy jest to
+    obiekt ‘w ramach tej samej klasy’ czy też innej z podaniem jej nazwy.
+    """
+    
     obiektyZbledami = []
     
     ns = {'gml':'http://www.opengis.net/gml/3.2', 'ot':'urn:gugik:specyfikacje:gmlas:bazaDanychObiektowTopograficznych10k:2.0'}
@@ -9608,13 +10336,21 @@ def unikalnoscLokalnyIdWPliku(layer, plikGML):
 
 
 def kontrolaRelacjiDzialkaEwidencyjnaDoPunktGraniczny(layer):
+    r"""
+    Baza: EGIB. Funkcja sprawdza położenie punktów granicy działki z warstwy
+    „PunktGraniczny” na „DzialkaEwidencyjna”. Jeśli atrybut 'punktGranicyDzialki_href'
+    z warstwy ‘DzialkaEwidencyjna’ jest nie pusty to sprawdzana jest jego
+    długość, oraz obliczana jest przestrzenna różnica między warstwami w
+    celu wykrycia punktów graficznych nie referujących na żadną działkę
+    """
+    
     obiektyZbledami = []
     try:
         PunktGranicyDzialkiEwidencyjnej_layer = QgsProject().instance().mapLayersByName(layer.name().replace("DzialkaEwidencyjna","PunktGraniczny"))[0]
     except:
         PunktGranicyDzialkiEwidencyjnej_layer = None
     
-    fields =  layer.fields()
+    fields =  layer.fields()  
     for obj in layer.getFeatures():
          jestBlad = False
          
@@ -9674,6 +10410,11 @@ def kontrolaRelacjiDzialkaEwidencyjnaDoPunktGraniczny(layer):
 
 
     def kontrolaRelacjiGESRzedna(layer):
+        r"""
+        Baza: GES. Funkcja sprawdza kompatybilność powiązań obiektów typu GES_Rzedna z obiektami
+        z innych warstw sieci GES, na podstawie obecności atrybutu ‘rzednaObiektu_href’.
+        """
+        
         obiektyZbledami = []
         
         warstwyRelacji = ['GES_UrzadzenieZwiazaneZPrzewodami',
@@ -9703,8 +10444,7 @@ def kontrolaRelacjiDzialkaEwidencyjnaDoPunktGraniczny(layer):
         for warstwa in warstwyRelacji:
             try:
                 Rel_Obj_layer = QgsProject().instance().mapLayersByName(layer.name().replace("GES_Rzedna", warstwa))[0]
-            except Exception as e:
-                print(e)
+            except:  # nosec B112
                 continue
             
             fields = Rel_Obj_layer.fields()
@@ -9727,6 +10467,13 @@ def kontrolaRelacjiDzialkaEwidencyjnaDoPunktGraniczny(layer):
 
 
 def zapisWspolrzednychKonturow(layer, plikGML):
+    r"""
+    Baza: MGR. Funkcja sprawdza poprawność składni zapisu współrzędnych w warstwie:
+    ‘GR_KonturGlebowy’. Dopuszczalny układ to 6 cyfr przed separatorem dziesiętnym i do
+    3 po Do tablicy błędów trafia wcześniej pobrany lokalnyId. Sprawdzanie odbywa się
+    w przestrzeni nazw: 'gr': 'urn:gugik:specyfikacje:gmlas:mapaGlebowoRolnicza:1.0'
+    """
+    
     obiektyZbledami = []
     pattern = re.compile(r"[0-9]{6}\.[0-9]{3,}")
     plikGML = plikGML.getroot()
@@ -9753,6 +10500,13 @@ def zapisWspolrzednychKonturow(layer, plikGML):
 
 
 def zapisWspolrzednychOdkrywek(layer, plikGML):
+    r"""
+    Baza: MGR. Funkcja sprawdza poprawność składni zapisu współrzędnych w warstwie:
+    ‘GR_KonturGlebowy’. Dopuszczalny układ to 6 cyfr przed separatorem dzieciętnym i do
+    3 po Do tablicy błędów trafia wcześniej pobrany lokalnyId. Sprawdzanie odbywa się
+    w przestrzeni nazw: 'gr': 'urn:gugik:specyfikacje:gmlas:mapaGlebowoRolnicza:1.0'
+    """
+    
     obiektyZbledami = []
     pattern = re.compile(r"[0-9]{6}\.[0-9]{3,}")
     plikGML = plikGML.getroot()
@@ -9775,6 +10529,11 @@ def zapisWspolrzednychOdkrywek(layer, plikGML):
 
 
 def kontrolaGeometriiGML_luki(layer, plikGML, klasa):
+    r"""
+    Baza: GESUT. Funkcja sprawdza, czy w badanej warstwie występują
+    obiekty o niedozwolonych (nieobsługiwanych) typach geometrii
+    """
+    
     obiektyZbledami = set()
     global gml_id_set
     gml_id_set = set()

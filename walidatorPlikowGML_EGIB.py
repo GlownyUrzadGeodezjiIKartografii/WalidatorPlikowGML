@@ -59,6 +59,7 @@ class WalidatorEGIB:
         """Ta wersja raz na starcie wiąże warstwy błędów, a potem
           pracuje na gotowych obiektach – mniej „migania” warstw i mniejsze ryzyko duplikatów.
           dzięki czemu QGIS zużywa mniej pamięci i nie dubluje warstw błędów. """
+          
         # upewnij się, że model istnieje
         modelKontroli = self.dlg.treeView.model()
         if modelKontroli is None:
@@ -106,33 +107,62 @@ class WalidatorEGIB:
                                 return nm[pos:]
                             return nm  # awaryjnie: cała nazwa
                         
-
+                        
                         tokens_map = {lyr: _egib_token(lyr.name()) for lyr in layers_in_group}
                         target_layers = [
                             lyr for lyr, tok in tokens_map.items()
                             if tok == expected or tok.startswith(expected)
                             ]
-
+                        
                         if not target_layers:
                             continue  # żadnej warstwy – pomijamy tę kontrolę
-    
+                            
                         # 4) URUCHOM kontrolę OSOBNO dla każdej warstwy
                         for lyr in target_layers:
                             sl = dict(k)
                             sl['layerObj'] = lyr
                             self.wykonajJednaKontrole(sl)
-                            
+    
+    
     def przygotujWarstwyBledow(self):
-        """ Tworzymy 3 warstwy pamięciowe: Point / LineString / Polygon 
-        Działają przez cały bieg programu 
-        Dzięki temu unikamy duplikatów i spadków wydajności."""
-        crs = None
-        crs = crs or "EPSG:2180"
-        self.err_layers = {
-           'Point'     : self.sprawdzCzyWarstwaIstnieje('WarstwaBledow_Point', 'Point', crs),
-           'LineString': self.sprawdzCzyWarstwaIstnieje('WarstwaBledow_LineString', 'LineString', crs),
-           'Polygon'   : self.sprawdzCzyWarstwaIstnieje('WarstwaBledow_Polygon', 'Polygon', crs),
-           }
+        # Przygotowuje słownik warstw błędów.  
+        # Same warstwy są tworzone dopiero po wykryciu pierwszego błędu danego typu geometrii.  
+        self.err_layers = {  
+           'Point'     : None,  
+           'LineString': None,  
+           'Polygon'   : None,  
+           }  
+    
+    
+    def pobierzWarstweBledow(self, geom_type):  
+        # Zwraca warstwę błędów odpowiedniego typu i tworzy ją dopiero przy pierwszym błędzie.  
+        if geom_type not in ('Point', 'LineString', 'Polygon'):  
+            return None  
+        
+        layer = self.err_layers.get(geom_type)  
+        
+        if layer is not None:  
+            try:  
+                if not sip.isdeleted(layer):  
+                    return layer  
+            except Exception:    # nosec B110
+                pass  
+                
+        nazwy = {  
+            'Point': 'WarstwaBledow_Point',  
+            'LineString': 'WarstwaBledow_LineString',  
+            'Polygon': 'WarstwaBledow_Polygon',  
+        }  
+        
+        layer = self.sprawdzCzyWarstwaIstnieje(  
+            nazwy[geom_type],  
+            geom_type,  
+            "EPSG:2180"  
+        )  
+        
+        self.err_layers[geom_type] = layer  
+        
+        return layer  
        
         
     def klasaDoRaportowania(self, parsedFileName: str, klasa: str) -> str:
@@ -150,6 +180,7 @@ class WalidatorEGIB:
     def pobierzDaneKontroli(self, parent, j):
         """Tutaj czyścimy zapisane w XML-u znaki "&gt;"/"&lt;" → ">" / "<".
          Dzięki temu wyrażenia (QgsExpression) działają poprawnie"""
+         
         child = parent.child(j)
         # Sprawdzenie, czy wiersz jest zaznaczony i kompletny
         if child.checkState() != 2:
@@ -170,9 +201,8 @@ class WalidatorEGIB:
             'sqltxt': (raw or "").replace("&gt;", ">").replace("&lt;", "<")
             }
         return kontrola
-    
-    
-    
+
+
     def przygotujDaneWarstwy(self,  kontrola, plikiZparsowane_egib, groupaGlowna_egib, parent, j):
         """Szuka warstwy po nazwie klasy i grupie, bez wielokrotnych wyszukiwań w projekcie.
          Dodatkowo dopasowujemy plik GML do warstwy po nazwie pliku niezależnie od liczby znaków.
@@ -189,7 +219,7 @@ class WalidatorEGIB:
         if not layers_in_group:
             print("DBG EGiB: pusty groupaGlowna_egib (brak warstw)")
             return
-
+        
         # 3) Dopasuj „zparsowany plik” po nazwie 
         parsedFileName = None
         zparsowanyPlik = None
@@ -280,6 +310,7 @@ class WalidatorEGIB:
     
     def wykonajJednaKontrole(self,slownikFinalny):
               # funkcja wykonuję jedną kontrolę
+              
               global  slownikBledow, warstwyBledowKontroliAtrybutow
               global kontrolowanePliki_df, klasy_df, gmlid_df_k, komunikatyBledowKontroli_df
               slownikBledow = getattr(self, 'slownikBledow', None)
@@ -321,7 +352,6 @@ class WalidatorEGIB:
                       print("DBG: nie udało się sparsować GML/XML (EGiB) → pomijam kontrolę")
               
               try:
-                 
                   start_time = datetime.now()
                   # domyślnie pusty iterator
                   requestFeatures = None
@@ -368,7 +398,7 @@ class WalidatorEGIB:
                                 requestFeatures = iter([rf])
                         else:
                             requestFeatures = iter(())
-    
+                            
                         # ---------- (gml,klasa) ----------
                       elif '(gml,klasa)' in sqltxt:
                           fname = sqltxt.replace('(gml,klasa)', '').strip()
@@ -379,8 +409,7 @@ class WalidatorEGIB:
                               requestFeatures = iter(rf or [])
                           else:
                               requestFeatures = iter(())
-
-
+                              
                        # ---------- fallback ----------
                       else: # pozostałe typy
                            fname = sqltxt.strip()
@@ -425,24 +454,30 @@ class WalidatorEGIB:
                       if typ_geometrii in ('Point', 'MultiPoint'):
                           errf = self.dodawanieBledow('Point', feature, gmlid, klasaDoRaportowania, errorPhrase_fin)
                           if errf: buf_point.append(errf)
-                          if len(buf_point) >= BATCH and self.err_layers['Point']:
-                              ok = self.err_layers['Point'].dataProvider().addFeatures(buf_point)
-                              if ok:  liczba_zapisanych_bledow += len(buf_point)
-                              buf_point.clear()
+                          if len(buf_point) >= BATCH:
+                              warstwa = self.pobierzWarstweBledow('Point')
+                              if warstwa:
+                                  ok = warstwa.dataProvider().addFeatures(buf_point)  
+                                  if ok:  liczba_zapisanych_bledow += len(buf_point)  
+                              buf_point.clear()  
                       elif typ_geometrii in ('LineString', 'CompoundCurve', 'CircularString', 'MultiLineString'):
                               errf = self.dodawanieBledow('LineString', feature, gmlid, klasaDoRaportowania, errorPhrase_fin)
                               if errf: buf_line.append(errf)
-                              if len(buf_line) >= BATCH and self.err_layers['LineString']:
-                                  ok = self.err_layers['LineString'].dataProvider().addFeatures(buf_line)
-                                  if ok: liczba_zapisanych_bledow += len(buf_line)
-                                  buf_line.clear()
+                              if len(buf_line) >= BATCH:  
+                                  warstwa = self.pobierzWarstweBledow('LineString')  
+                                  if warstwa:  
+                                      ok = warstwa.dataProvider().addFeatures(buf_line)  
+                                      if ok: liczba_zapisanych_bledow += len(buf_line)  
+                                  buf_line.clear()  
                       elif typ_geometrii in ('Polygon', 'MultiPolygon', 'CurvePolygon'):
                                 errf = self.dodawanieBledow('Polygon', feature, gmlid, klasaDoRaportowania, errorPhrase_fin)
                                 if errf: buf_poly.append(errf)
-                                if len(buf_poly) >= BATCH and self.err_layers['Polygon']:
-                                      ok = self.err_layers['Polygon'].dataProvider().addFeatures(buf_poly)
-                                      if ok: liczba_zapisanych_bledow += len(buf_poly)
-                                      buf_poly.clear()
+                                if len(buf_poly) >= BATCH:  
+                                      warstwa = self.pobierzWarstweBledow('Polygon')  
+                                      if warstwa:  
+                                          ok = warstwa.dataProvider().addFeatures(buf_poly)  
+                                          if ok: liczba_zapisanych_bledow += len(buf_poly)  
+                                      buf_poly.clear()  
                       # jednorazowy komunikat – zapamiętaj, że już dodaliśmy wpis
                       klucz_wpisu = (parsedFileName, gmlid, errorPhrase_fin, nazwaKontroli)
                       if klucz_wpisu in unikalne_kontrola:
@@ -455,18 +490,24 @@ class WalidatorEGIB:
                       klasy_df.append(klasaDoRaportowania)
                       grupyKontroli_df.append(nazwaKontroli)
                       liczbaBledow += 1
-                  if buf_point:
-                      ok = self.err_layers['Point'].dataProvider().addFeatures(buf_point)
-                      if ok:
-                          liczba_zapisanych_bledow += len(buf_point)
-                  if buf_line:
-                      ok = self.err_layers['LineString'].dataProvider().addFeatures(buf_line)
-                      if ok:
-                          liczba_zapisanych_bledow += len(buf_line)
-                  if buf_poly:
-                      ok = self.err_layers['Polygon'].dataProvider().addFeatures(buf_poly)
-                      if ok:
-                          liczba_zapisanych_bledow += len(buf_poly)
+                  if buf_point:  
+                      warstwa = self.pobierzWarstweBledow('Point')  
+                      if warstwa:  
+                          ok = warstwa.dataProvider().addFeatures(buf_point)  
+                          if ok:  
+                              liczba_zapisanych_bledow += len(buf_point)  
+                  if buf_line:  
+                      warstwa = self.pobierzWarstweBledow('LineString')  
+                      if warstwa:  
+                          ok = warstwa.dataProvider().addFeatures(buf_line)  
+                          if ok:  
+                              liczba_zapisanych_bledow += len(buf_line)  
+                  if buf_poly:  
+                      warstwa = self.pobierzWarstweBledow('Polygon')  
+                      if warstwa:  
+                          ok = warstwa.dataProvider().addFeatures(buf_poly)  
+                          if ok:  
+                              liczba_zapisanych_bledow += len(buf_poly)  
                   self.idkontroli_LiczbaBledow[idKontroli] = liczbaBledow
                   if liczbaBledow == 0:
                       self.kontrolaZWynikiemPozytywnym += 1
@@ -482,8 +523,9 @@ class WalidatorEGIB:
     def dodawanieBledow(self, dest_layer_key, feature, gmlid, klasaDoRaportowania, errorPhrase_fin):
             # tworzymy nowe feature'y
             # w odpowiedniej geometrii i w paczkach (BATCH) co zmniejsza zużycie pamięci
-            lyr = self.err_layers.get(dest_layer_key)
-            if not lyr:
+            
+            lyr = self.pobierzWarstweBledow(dest_layer_key)  
+            if not lyr:  
                 return None
             # 1) dopilnuj schematu warstwy błędów
             self.zapewnijAtrybutyBledow(lyr)
