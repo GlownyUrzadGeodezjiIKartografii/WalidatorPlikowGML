@@ -58,6 +58,15 @@
 		<Kontrola id="egib_e1_k20" name="Kontrola atrybutu geometria dla rodzaju obiektu związanego z budynkiem=s" class="EGB_ObiektTrwaleZwiazanyZBudynkiem" errorPhrase="Brak dodatkowej geometrii dla rodzaju obiektu związanego z budynkiem równego s">
 			<Parametr typ="pythonFunction" sql="KontrolaGeometriaSchody(gml)"/>
 		</Kontrola>
+		<Kontrola id="egib_e1_k21" name="Kontrola atrybutu numerKW z paternem dla obiektu EGB_DzialkaEwidencyjna" class="EGB_DzialkaEwidencyjna" errorPhrase="Atrybut numerKW jest niepoprawny">
+			<Parametr typ="QgsExpression" sql="not regexp_match(numerKW ,'[A-Z]{2}[1-9][A-Z]/[0-9]{8}/[0-9]')"/>
+		</Kontrola>
+		<Kontrola id="egib_e1_k22" name="Kontrola atrybutu numerKW z paternem dla obiektu EGB_Budynek" class="EGB_Budynek" errorPhrase="Atrybut numerKW jest niepoprawny">
+			<Parametr typ="QgsExpression" sql="not regexp_match(numerKW ,'[A-Z]{2}[1-9][A-Z]/[0-9]{8}/[0-9]')"/>
+		</Kontrola>
+		<Kontrola id="egib_e1_k23" name="Kontrola atrybutu numerKW z paternem dla obiektu EGB_LokalSamodzielny" class="EGB_LokalSamodzielny" errorPhrase="Atrybut numerKW jest niepoprawny">
+			<Parametr typ="QgsExpression" sql="not regexp_match(numerKW ,'[A-Z]{2}[1-9][A-Z]/[0-9]{8}/[0-9]')"/>
+		</Kontrola>
 	</GrupaKontroli>
 	<!-- ....................................................................................................................................................... -->
 	<GrupaKontroli id="egib_e2" name="Kontrole geometryczne">
@@ -92,10 +101,12 @@
 </SzablonKontroli>
 
 <!-- ChangeLog
-1.0.8	usunięto kontrole:
+1.0.8   dodano kontrole:
+			egib_e1_k21
+			egib_e1_k22
+			egib_e1_k23
+1.0.7	usunięto kontrole:
 			egib_e1_k11
-1.0.7   zmodyfikowano kontrole:
-			egib_e1_k11 
 1.0.6   zmodyfikowano kontrole:
 			egib_e1_k6
 			egib_e1_k11 
