@@ -23,10 +23,10 @@ hasProcessingProvider=no
 # Uncomment the following line and add your changelog:
 changelog=
     1.3.1
-			 • Poprawiono błąd przy raportowaniu błędu w kontroli egib_e1_k6
-			 • Zmieniono kontrolę gesut_g1_k7 i gesut_g1_k8
-		 	 • Usprawniono kontrolę egib_e1_k20 pod kątem poprawności wizualizacji polilini kierunkowej
-
+			 • Poprawiono błąd przy raportowaniu błędu w kontroli egib_e1_k6.
+			 • Zmieniono kontrolę gesut_g1_k7 i gesut_g1_k8.
+		 	 • Usprawniono kontrolę egib_e1_k20 pod kątem poprawności wizualizacji polilini kierunkowej.
+		 	 • Dodano kontrole EGiB.
     1.3.0 
 			  • Poprawiono kontrolę egib_e1_k6 bazy EGiB.
 			  • Wyeliminowano generowanie pustych warstw z błędami.
