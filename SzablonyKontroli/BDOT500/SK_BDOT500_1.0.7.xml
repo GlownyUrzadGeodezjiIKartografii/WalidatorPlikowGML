@@ -1,4 +1,4 @@
-<?xml version="1.0.5" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <SzablonKontroli xmlns="http://www.gugik.gov.pl" id="bdot500" version="1.0.7" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<GrupaKontroli id="bdot500_b1" name="Kontrole atrybutowe">
 		<Kontrola id="bdot500_b1_k1" name="Kontrola atrybutów rodzajNawierzchni i rodzajObiektu" class="OT_Komunikacja" errorPhrase="Atrybut 'rodzajNawierzchni' ma pustą wartość dla obiektów o rodzaju 'j/c'.">
