@@ -65,6 +65,7 @@ from openpyxl.styles import(
     Font,
     PatternFill
 )
+from lxml import etree
 from lxml.etree import (
     parse,
     XMLSchema
@@ -74,6 +75,10 @@ from .utils import *
 from .walidatorPlikowGML_EGIB import *
 
 
+GML = "http://www.opengis.net/gml/3.2"
+XLINK = "http://www.w3.org/1999/xlink"
+TYPY_GEOM_GML = ("Surface", "Polygon", "MultiSurface",
+                 "LineString", "MultiCurve", "Curve")
 class KontroleTreeViewEventFilter(QObject):
     """Obsługuje skróty klawiaturowe i grupowe zaznaczanie kontroli w drzewie."""
 
@@ -299,6 +304,152 @@ class walidatorPlikowGML(WalidatorEGIB):
         
         global progress
         progress = None
+
+
+    def lname(self, tag):
+        return tag.split('}')[-1]
+
+
+    def epsg_z_srsname(self, el, domyslny=2180):
+        m = re.search(r'EPSG\D*(\d{4,5})', el.get('srsName') or '')
+        return int(m.group(1)) if m else domyslny
+
+
+    def qgs_geom(self,el):
+        ogr_geom = ogr.CreateGeometryFromGML(
+            et.tostring(el, encoding="unicode")
+        )
+        if not ogr_geom:
+            return None
+        ogr_geom = ogr_geom.GetLinearGeometry()
+        geom = QgsGeometry.fromWkt(ogr_geom.ExportToWkt())
+        return geom
+
+
+    def get_attrs(self, obj):
+        attrs = {"gml_id": obj.get(f"{{{GML}}}id", "")}
+        
+        for child in obj:
+             if self.lname(child.tag) in ("geometria", "poliliniaKierunkowa"):
+                 continue
+        
+             for el in child.iter():
+                 if len(el) == 0:
+                     name = self.lname(el.tag)
+                     value = (el.text or "").strip()
+        
+                     if value:
+                         attrs.setdefault(name, value)
+                     else:
+                         href = el.attrib.get(f"{{{XLINK}}}href", "")
+                         if href:
+                             attrs.setdefault(name + "_href", href)
+        
+        return attrs
+
+
+    def load_layer(self, root, geom_name, layer_name, grupa, klasa, tylko_aktualne):
+        
+        records = []
+    
+        for fm in root.findall(f".//{{{GML}}}featureMember"):
+    
+            if not list(fm):
+                continue
+    
+            obj = list(fm)[0]
+    
+            if self.lname(obj.tag) != klasa:
+                continue
+    
+            attrs = self.get_attrs(obj)
+    
+            if tylko_aktualne and (
+                "koniecWersjiObiektu" in attrs or "koniecWersjaObiekt" in attrs
+            ):
+                continue
+    
+            for el in obj:
+    
+                if self.lname(el.tag) != geom_name:
+                    continue
+    
+                for g in el.iter():
+    
+                    if self.lname(g.tag) in TYPY_GEOM_GML:
+                        geom = self.qgs_geom(g)
+    
+                        if geom and not geom.isNull():
+                            records.append((geom, attrs, self.epsg_z_srsname(g)))
+    
+                        break
+    
+        if not records:
+            return
+    
+        qgis_type = {1: "LineString", 2: "MultiPolygon"}.get(records[0][0].type())
+    
+        if qgis_type is None:
+            return
+    
+        field_names = []
+    
+        for _, attrs, _ in records:
+            for name in attrs:
+                if name not in field_names:
+                    field_names.append(name)
+    
+        epsgi = sorted({r[2] for r in records})
+    
+        for epsg_geom in epsgi:
+    
+            nazwa = layer_name if len(epsgi) == 1 else f"{layer_name}_EPSG{epsg_geom}"
+    
+            layer = QgsVectorLayer(
+                f"{qgis_type}?crs=EPSG:{epsg_geom}",
+                nazwa,
+                "memory"
+            )
+    
+            layer.dataProvider().addAttributes(
+                [QgsField(name, QVariant.String) for name in field_names]
+            )
+            layer.updateFields()
+    
+            features = []
+    
+            for geom, attrs, e in records:
+    
+                if e != epsg_geom:
+                    continue
+    
+                if qgis_type == "MultiPolygon":
+                    geom.convertToMultiType()
+                else:
+                    geom.convertToSingleType()
+    
+                f = QgsFeature(layer.fields())
+                f.setGeometry(geom)
+                f.setAttributes([attrs.get(name) for name in field_names])
+                features.append(f)
+    
+            layer.dataProvider().addFeatures(features)
+            layer.updateExtents()
+    
+            QgsProject.instance().addMapLayer(layer, False)
+            grupa.addLayer(layer)
+
+
+    def wczytaj_geometrie_z_xml(self, path, nazwa, grupa, tylko_aktualne,
+                            klasa="EGB_ObiektTrwaleZwiazanyZBudynkiem"):
+        """Zamiennik bloku z QFileDialog ze skryptu szefa: plik dostajemy z importGML."""
+        root = et.parse(path).getroot() # nosec B314
+    
+        # polilinie najpierw, żeby w grupie leżały nad poligonem
+        self.load_layer(root, "poliliniaKierunkowa", nazwa + "_poliliniaKierunkowa",
+                   grupa, klasa, tylko_aktualne)
+        self.load_layer(root, "geometria", nazwa,
+                   grupa, klasa, tylko_aktualne)
 
 
     def run(self):
@@ -1297,9 +1448,6 @@ class walidatorPlikowGML(WalidatorEGIB):
         
             if self.dlg.mQgsFileWidget.filePath() != '':
                 self.dlg.button_box.buttons()[0].setEnabled(True)
-
-
-    # wskazanie pliku i zlecenie walidacji
 
 
     def walidacjaIKontrolaAtrybutow(self):
@@ -2587,9 +2735,6 @@ class walidatorPlikowGML(WalidatorEGIB):
                         error =  QgsVectorFileWriter.writeAsVectorFormatV3(layer, outSHP, QgsCoordinateTransformContext(), options)
 
 
-    # walidacja pliku GML z conajmniej jednym obiektem
-
-
     def walidacja(self, task):
         """Wykonuje walidację pojedynczego pliku względem aktualnie wybranego schematu XSD."""
         global walidacjaZWynikiemPozytywnym, plikiZparsowane, plikGML, walidowanyPlik
@@ -2622,7 +2767,7 @@ class walidatorPlikowGML(WalidatorEGIB):
         
         
                  def wyciagnijGmlId(node):
-                     #Szuka GMLID w zależnosci od wersji standardu .gml
+                     # Szuka GMLID w zależnosci od wersji standardu .gml
                      
                      """Wyciąga identyfikator GML z treści komunikatu błędu."""
                      for el in node.iter():
@@ -2819,9 +2964,6 @@ class walidatorPlikowGML(WalidatorEGIB):
                         gmlid_df_w.append(value['error'][errors])
 
 
-    # otwarcie pliku raportu
-
-
     def otwarcieRaportuZWalidacji(self):
         """Otwiera raport walidacji zapisany w wybranym formacie."""
         for formatRaportu in self.dlg.mComboBox.checkedItems():
@@ -2837,13 +2979,11 @@ class walidatorPlikowGML(WalidatorEGIB):
                     subprocess.call(('open', path))  # macOS  # nosec B603
 
 
-    # import plików GML do QGIS
-
-
     def importGML(self, zparsowanyPlik):
         """Importuje wskazany plik GML do projektu QGIS jako warstwy robocze."""
         global epsg
         gdal.SetConfigOption('GML_ATTRIBUTES_TO_OGR_FIELDS', 'YES')
+        k20_aktywna = any(kod == 'egib_e1_k20' for kod, opis in nazwy)
         nazwaPliku = str(pathlib.Path(zparsowanyPlik).name)[:-4]
         root = QgsProject.instance().layerTreeRoot()
         typyGeometrii = {
@@ -2873,14 +3013,30 @@ class walidatorPlikowGML(WalidatorEGIB):
                 Qgis.Warning
             )
             return
+        try:
+            data_source = ogr.Open(zparsowanyPlik)
+        except RuntimeError:
+            self.iface.messageBar().pushMessage(
+                "import GML",
+                "Nie udało się otworzyć pliku GML. Skróć komenatrz przed elementem gml:FeatureCollection, lub przenieść go poniżej tego elementu.",
+                level=Qgis.Critical
+            )
+            return False
         warstwy = [x.GetName() for x in ogr.Open(zparsowanyPlik)]
-        data_source = ogr.Open(zparsowanyPlik)
         typGeometriiWarstw = [x.GetGeomType() for x in ogr.Open(zparsowanyPlik)]
         for warstwa, feature_geom in zip(warstwy, typGeometriiWarstw):
             if warstwa in nazwaPliku:
                 nazwaWarstwy = nazwaPliku
             else:
                 nazwaWarstwy = nazwaPliku + '_' + warstwa
+            if k20_aktywna and warstwa == 'EGB_ObiektTrwaleZwiazanyZBudynkiem':
+                self.wczytaj_geometrie_z_xml(
+                    zparsowanyPlik,
+                    nazwaWarstwy,
+                    groupaGlowna,
+                    not self.dlg.checkBox.isChecked()
+                )
+                continue
             if feature_geom == 100: # brak geometrii
                 qgis_layer = QgsVectorLayer(
                     f'{zparsowanyPlik}|layername={warstwa}',
@@ -2975,9 +3131,6 @@ class walidatorPlikowGML(WalidatorEGIB):
                     QgsProject.instance().addMapLayer(qgis_layer, False)
                     groupaGlowna.addLayer(qgis_layer)
                     qgis_layer = None
-
-
-    # wczytanie szablonu kontroli
 
 
     def wczytanieSzablonuKontroli(self):
@@ -3256,9 +3409,6 @@ class walidatorPlikowGML(WalidatorEGIB):
                 item.parent().setCheckState(1)
         
         self.zapiszWybraneKontrole()
-
-
-   # kontrola atrybutów
 
 
     def kontrolaAtrybutow(self):
